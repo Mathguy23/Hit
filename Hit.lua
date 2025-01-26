@@ -736,6 +736,7 @@ table.insert(G.CHALLENGES,#G.CHALLENGES+1,
                 {id = 'bl_eye', type = 'blind'},
                 {id = 'bl_serpent', type = 'blind'},
                 {id = 'bl_final_bell', type = 'blind'},
+                {id = 'bl_mouth', type = 'blind'},
             }
         },
     }

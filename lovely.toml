@@ -461,3 +461,47 @@ payload = '''G.enemy_deck.T.x = G.TILE_W - G.enemy_deck.T.w - 0.5 + 3*G.CARD_W
 G.enemy_deck.T.y = G.TILE_H - G.enemy_deck.T.h
 '''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''local nosave_shop = nil'''
+position = 'after'
+payload = '''local old_shop_exists = shop_exists
+if G.GAME.modifiers.dungeon and G.GAME.memory then
+    shop_exists = true
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''G.CONTROLLER:snap_to({node = G.shop:get_UIE_by_ID('next_round_button')})'''
+position = 'before'
+payload = '''shop_exists = old_shop_exists
+if not shop_exists and G.GAME.modifiers.dungeon and G.shop_jokers and G.GAME.memory then
+    if G.load_shop_jokers then 
+        nosave_shop = true
+        G.shop_jokers:load(G.load_shop_jokers)
+        for k, v in ipairs(G.shop_jokers.cards) do
+            create_shop_card_ui(v)
+            if v.ability.consumeable then v:start_materialize() end
+            for _kk, vvv in ipairs(G.GAME.tags) do
+                if vvv:apply_to_run({type = 'store_joker_modify', card = v}) then break end
+            end
+        end
+        G.load_shop_jokers = nil
+    elseif not G.GAME.first_shop_buffoon and not G.GAME.banned_keys['p_buffoon_normal_1'] then
+        G.GAME.first_shop_buffoon = true
+        local card = Card(G.shop_jokers.T.x + G.shop_jokers.T.w/2,
+        G.shop_jokers.T.y, G.CARD_W*1.27, G.CARD_H*1.27, G.P_CARDS.empty, G.P_CENTERS['p_buffoon_normal_'..(math.random(1, 2))], {bypass_discovery_center = true, bypass_discovery_ui = true})
+        create_shop_card_ui(card, 'Booster', G.shop_jokers)
+        card.ability.booster_pos = #G.shop_jokers.cards + 1
+        card:start_materialize()
+        G.shop_jokers:emplace(card)
+        card.ability.couponed = true
+        card:set_cost()
+        create_shop_card_ui(card, card.ability.set, G.shop_jokers)
+    end
+end'''
+match_indent = true
