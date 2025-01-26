@@ -297,10 +297,6 @@ G.FUNCS.stand = function(e)
                         return true
                     end
                 }))
-                if #G.deck.cards - bl_cards <= 0 then
-                    G.GAME.hit_busted = true
-                    G.GAME.hit_limit = 0
-                end
             elseif bl_total == total then
                 if bl_total == -1 then
                     play_area_status_text("Push (Bust = Bust)")
@@ -327,18 +323,6 @@ G.FUNCS.stand = function(e)
                         return true
                     end
                 }))
-                if #G.deck.cards - bl_cards <= 0 then
-                    G.GAME.hit_busted = true
-                    G.GAME.hit_limit = 0
-                    G.E_MANAGER:add_event(Event({
-                        trigger = 'immediate',
-                        func = function()
-                            G.STATE = G.STATES.DRAW_TO_HAND
-                            G.STATE_COMPLETE = false
-                            return true
-                        end
-                    }))
-                end
             elseif bl_total > total then
                 if total == -1 then
                     play_area_status_text("Loss (Bust < " .. tostring(bl_total) .. ")")
@@ -407,10 +391,6 @@ G.FUNCS.stand = function(e)
                         return true
                     end
                 }))
-                if #G.deck.cards - bl_cards <= 0 then
-                    G.GAME.hit_busted = true
-                    G.GAME.hit_limit = 0
-                end
             end
             return true
         end
