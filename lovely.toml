@@ -336,8 +336,37 @@ payload = '''if G.GAME.modifiers.dungeon then
     G.enemy_cards = {}
     local suits = {'H', 'S', 'D', 'C'}
     local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
+    local stones = 0
     if (blind and blind.name or '') == "Small Blind" then
         ranks = {'6', '7', '8', '8', '9', '9', 'Q', 'K', 'A'}
+    elseif (blind and blind.name or '') == "The Goad" then
+        suits = {'H', 'D', 'C'}
+    elseif (blind and blind.name or '') == "The Club" then
+        suits = {'H', 'D', 'S'}
+    elseif (blind and blind.name or '') == "The Head" then
+        suits = {'C', 'D', 'S'}
+    elseif (blind and blind.name or '') == "The Window" then
+        suits = {'C', 'H', 'S'}
+    elseif (blind and blind.name or '') == "The Plant" then
+        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'A'}
+    elseif (blind and blind.name or '') == "Violet Vessel" then
+        stones = 10
+    elseif (blind and blind.name or '') == "Crimson Heart" then
+        ranks = {'3', '3', '7', '7', '7', 'K', 'K', 'K', 'K', 'K', 'K', 'K', 'A'}
+        suits = {'H', 'H', 'H', 'H'}
+    elseif (blind and blind.name or '') == "Verdant Leaf" then
+        ranks = {'7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '8', '8', '8'}
+    elseif (blind and blind.name or '') == "Amber Acorn" then
+        for i = 1, 52 do
+            local rank = pseudorandom_element(ranks, pseudoseed('acorn'))
+            local suit = pseudorandom_element(suits, pseudoseed('acorn'))
+            local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[suit .. '_' .. rank], G.P_CENTERS['c_base'], {})
+            G.enemy_cards = G.enemy_cards or {}
+            table.insert(G.enemy_cards, _card)
+            G.enemy_deck:emplace(_card)
+        end
+        ranks = {}
+        suits = {}
     elseif (blind and blind.name or '') ~= "Big Blind" then
         ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
     end
@@ -348,6 +377,12 @@ payload = '''if G.GAME.modifiers.dungeon then
             table.insert(G.enemy_cards, _card)
             G.enemy_deck:emplace(_card)
         end
+    end
+    for i = 1, stones do
+        local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS['H_A'], G.P_CENTERS['m_stone'], {})
+        G.enemy_cards = G.enemy_cards or {}
+        table.insert(G.enemy_cards, _card)
+        G.enemy_deck:emplace(_card)
     end
     G.enemy_deck:shuffle('enemy_deck')
 end'''
