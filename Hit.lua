@@ -128,8 +128,6 @@ function dungeon_new_round(theBlind)
         }))
 end
 
------Blackjack Minigame----------
-
 local old_buttons = create_UIBox_buttons
 function create_UIBox_buttons()
     local t = old_buttons()
@@ -139,7 +137,9 @@ function create_UIBox_buttons()
             index = 1
         end
         local button = t.nodes[index]
-        button.nodes[1].nodes[1].config.text = localize("b_hit")
+        button.nodes[1].nodes[1].config.text = nil
+        button.nodes[1].nodes[1].config.ref_value = 'hit_discard_button'
+        button.nodes[1].nodes[1].config.ref_table = G.GAME
         button.config.button = 'hit'
         button.config.func = 'can_hit'
         -- button.config.color = G.C[checking[G.GAME.active].colour]
@@ -158,18 +158,68 @@ function create_UIBox_buttons()
     return t
 end
 
+function check_total_over_21()
+    local total = 0
+    for i = 1, #G.hand.cards do
+        local id = G.hand.cards[i]:get_id()
+        if id > 0 then
+            local rank = SMODS.Ranks[G.hand.cards[i].base.value] or {}
+            local nominal = rank.nominal
+            if rank.key == 'Ace' then
+                total = total + 1
+            else
+                total = total + nominal
+            end
+        end
+    end
+    if (total > 21) and not G.GAME.hit_busted then
+        G.E_MANAGER:add_event(Event({
+            trigger = 'immediate',
+            func = function()
+                play_area_status_text("Bust (" .. tostring(total) .. ")")
+                return true
+            end
+        }))
+        G.GAME.hit_busted = true
+    elseif (total <= 21) then
+        G.GAME.hit_busted = nil
+    end
+end
+
+local old_use = Card.use_consumeable
+function Card:use_consumeable(area, copier)
+    old_use(self, area, copier)
+    G.E_MANAGER:add_event(Event({
+        trigger = 'immediate',
+        func = function()
+            check_total_over_21()
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    check_total_over_21()
+                    return true
+                end
+            }))
+            return true
+        end
+    }))
+end
+
 G.FUNCS.can_hit = function(e)
-    if G.GAME.stood or G.GAME.hit_busted or (#G.deck.cards == 0) then
+    if G.hand and G.hand.highlighted and (#G.hand.highlighted == 1) and (G.GAME.current_round.discards_left > 0) then
+        e.config.colour = G.C.RED
+        e.config.button = 'discard_cards_from_highlighted'
+    elseif G.GAME.stood or G.GAME.hit_busted or (#G.deck.cards == 0) then
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
     else
-        e.config.colour = G.C.RED
+        e.config.colour = G.C.IMPORTANT
         e.config.button = 'hit'
     end
 end
 
 G.FUNCS.hit = function(e)
-    G.GAME.hit_limit = (G.GAME.hit_limit or 2) + 1
+    G.GAME.hit_limit = (G.hand and G.hand.cards and #G.hand.cards or 2) + 1
     G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
@@ -635,8 +685,7 @@ table.insert(G.CHALLENGES,#G.CHALLENGES+1,
                 {id = 'dungeon'},
             },
             modifiers = {
-                {id = 'hands', value = 4},
-                {id = 'discards', value = 6},
+                {id = 'discards', value = 5},
             }
         },
         jokers = {   
@@ -686,26 +735,12 @@ table.insert(G.CHALLENGES,#G.CHALLENGES+1,
                 {id = 'j_steel_joker'},
                 {id = 'j_ticket'},
                 -- discard based
-                {id = 'j_banner'},
-                {id = 'j_mystic_summit'},
-                {id = 'j_delayed_grat'},
-                {id = 'j_faceless'},
-                {id = 'j_green_joker'},
-                {id = 'j_drunkard'},
-                {id = 'j_trading'},
-                {id = 'j_ramen'},
-                {id = 'j_castle'},
                 {id = 'j_merry_andy'},
-                {id = 'j_hit_the_road'},
-                {id = 'j_burnt'},
-                {id = 'j_yorick'},
                 -- stuntman
                 {id = 'j_stuntman'},
                 -- non jokers
                 {id = 'v_paint_brush'},
                 {id = 'v_palette'},
-                {id = 'v_wasteful'},
-                {id = 'v_recyclomancy'},
                 {id = 'c_medium'},
                 {id = 'c_trance'},
                 {id = 'c_earth'},
@@ -717,7 +752,7 @@ table.insert(G.CHALLENGES,#G.CHALLENGES+1,
                 {id = 'c_chariot'},
             },
             banned_tags = {
-                {id = 'tag_garbage'},
+                {id = 'tag_juggle'},
             },
             banned_other = {
                 {id = 'bl_hook', type = 'blind'},

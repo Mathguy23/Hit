@@ -395,29 +395,8 @@ pattern = '''function Blind:drawn_to_hand()'''
 position = 'after'
 payload = '''   if G.GAME.modifiers.dungeon then
         G.GAME.negate_hand = nil
-        local total = 0
-        for i = 1, #G.hand.cards do
-            local id = G.hand.cards[i]:get_id()
-            if id > 0 then
-                local rank = SMODS.Ranks[G.hand.cards[i].base.value] or {}
-                local nominal = rank.nominal
-                if rank.key == 'Ace' then
-                    total = total + 1
-                else
-                    total = total + nominal
-                end
-            end
-        end
-        if total > 21 then
-            G.E_MANAGER:add_event(Event({
-                trigger = 'immediate',
-                func = function()
-                    play_area_status_text("Bust (" .. tostring(total) .. ")")
-                    return true
-                end
-            }))
-            G.GAME.hit_busted = true
-        elseif ((#G.deck.cards == 0) and (#G.hand.cards == 0)) then
+        check_total_over_21()
+        if ((#G.deck.cards == 0) and (#G.hand.cards == 0)) then
             G.STATE = G.STATES.NEW_ROUND
         end
     end'''
@@ -537,6 +516,33 @@ if not shop_exists and G.GAME.modifiers.dungeon and G.shop_jokers and G.GAME.mem
         card.ability.couponed = true
         card:set_cost()
         create_shop_card_ui(card, card.ability.set, G.shop_jokers)
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''if G.SETTINGS.paused then dt = 0 end'''
+position = 'after'
+payload = '''if G and G.GAME and G.GAME.modifiers and G.GAME.modifiers.dungeon and G.hand and G.hand.highlighted then
+    if #G.hand.highlighted == 1 then
+        G.GAME.hit_discard_button = localize('b_discard')
+    else
+        G.GAME.hit_discard_button = localize('b_hit')
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.FUNCS.discard_cards_from_highlighted = function(e, hook)'''
+position = 'after'
+payload = '''   if G.GAME.modifiers.dungeon then
+    G.GAME.hit_limit = (G.GAME.hit_limit or 2) - 1
+    if G.GAME.hit_limit < 1 then
+        G.GAME.hit_limit = 1
     end
 end'''
 match_indent = true
