@@ -350,6 +350,7 @@ payload = '''if G.GAME.modifiers.dungeon then
     elseif (blind and blind.name or '') == "The Plant" then
         ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'A'}
     elseif (blind and blind.name or '') == "Violet Vessel" then
+        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         stones = 10
     elseif (blind and blind.name or '') == "Crimson Heart" then
         ranks = {'3', '3', '7', '7', '7', 'K', 'K', 'K', 'K', 'K', 'K', 'K', 'A'}
@@ -399,6 +400,7 @@ payload = '''   if G.GAME.modifiers.dungeon then
         if ((#G.deck.cards == 0) and (#G.hand.cards == 0)) then
             G.STATE = G.STATES.NEW_ROUND
         end
+        G.GAME.last_round_drawn = G.GAME.round
     end'''
 match_indent = true 
 
@@ -543,6 +545,18 @@ payload = '''   if G.GAME.modifiers.dungeon then
     G.GAME.hit_limit = (G.GAME.hit_limit or 2) - 1
     if G.GAME.hit_limit < 1 then
         G.GAME.hit_limit = 1
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''function Card:calculate_joker(context)'''
+position = 'after'
+payload = '''   if G.GAME.modifiers.dungeon and context.first_hand_drawn then
+    if G.GAME.last_round_drawn == G.GAME.round then
+        context.first_hand_drawn = nil
     end
 end'''
 match_indent = true
