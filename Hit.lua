@@ -409,6 +409,15 @@ G.FUNCS.stand = function(e)
                                     end
                                 }))
                                 G.E_MANAGER:add_event(Event({
+                                    trigger = 'after',
+                                    delay = 0.1,
+                                    func = function()
+                                        G.GAME.hands_played = G.GAME.hands_played + 1
+                                        G.GAME.current_round.hands_played = G.GAME.current_round.hands_played + 1
+                                        return true
+                                    end
+                                }))
+                                G.E_MANAGER:add_event(Event({
                                     trigger = 'immediate',
                                     func = function()
                                         local play_count = #G.play.cards
