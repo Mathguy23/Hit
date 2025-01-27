@@ -741,7 +741,6 @@ table.insert(G.CHALLENGES,#G.CHALLENGES+1,
                 -- non jokers
                 {id = 'v_paint_brush'},
                 {id = 'v_palette'},
-                {id = 'c_medium'},
                 {id = 'c_trance'},
                 {id = 'c_earth'},
                 {id = 'c_mars'},
