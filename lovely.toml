@@ -532,7 +532,7 @@ target = 'game.lua'
 pattern = '''if G.SETTINGS.paused then dt = 0 end'''
 position = 'after'
 payload = '''if G and G.GAME and G.GAME.modifiers and G.GAME.modifiers.dungeon and G.hand and G.hand.highlighted then
-    if #G.hand.highlighted == 1 then
+    if (#G.hand.highlighted == 1) and G.GAME.current_round and G.GAME.current_round.discards_left and (G.GAME.current_round.discards_left > 0) then
         G.GAME.hit_discard_button = localize('b_discard')
     else
         G.GAME.hit_discard_button = localize('b_hit')
