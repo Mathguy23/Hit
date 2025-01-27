@@ -440,12 +440,12 @@ match_indent = true
 
 [[patches]]
 [patches.pattern]
-target = 'game.lua'
-pattern = '''self.GAME.starting_params[v.id] = v.value'''
-position = 'at'
-payload = '''if v.id == 'dungeon' then
-    G.hand.config.highlighted_limit = 25
-end'''
+target = 'cardarea.lua'
+pattern = '''function CardArea:add_to_highlighted(card, silent)'''
+position = 'after'
+payload = '''   if (self == G.hand) and G.GAME and G.GAME.modifiers and G.GAME.modifiers.dungeon then
+        self.config.highlighted_limit = 100
+    end'''
 match_indent = true
 
 [[patches]]

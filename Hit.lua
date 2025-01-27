@@ -159,30 +159,32 @@ function create_UIBox_buttons()
 end
 
 function check_total_over_21()
-    local total = 0
-    for i = 1, #G.hand.cards do
-        local id = G.hand.cards[i]:get_id()
-        if id > 0 then
-            local rank = SMODS.Ranks[G.hand.cards[i].base.value] or {}
-            local nominal = rank.nominal
-            if rank.key == 'Ace' then
-                total = total + 1
-            else
-                total = total + nominal
+    if G.STATE == G.STATES.SELECTING_HAND then
+        local total = 0
+        for i = 1, #G.hand.cards do
+            local id = G.hand.cards[i]:get_id()
+            if id > 0 then
+                local rank = SMODS.Ranks[G.hand.cards[i].base.value] or {}
+                local nominal = rank.nominal
+                if rank.key == 'Ace' then
+                    total = total + 1
+                else
+                    total = total + nominal
+                end
             end
         end
-    end
-    if (total > 21) and not G.GAME.hit_busted then
-        G.E_MANAGER:add_event(Event({
-            trigger = 'immediate',
-            func = function()
-                play_area_status_text("Bust (" .. tostring(total) .. ")")
-                return true
-            end
-        }))
-        G.GAME.hit_busted = true
-    elseif (total <= 21) then
-        G.GAME.hit_busted = nil
+        if (total > 21) and not G.GAME.hit_busted then
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    play_area_status_text("Bust (" .. tostring(total) .. ")")
+                    return true
+                end
+            }))
+            G.GAME.hit_busted = true
+        elseif (total <= 21) then
+            G.GAME.hit_busted = nil
+        end
     end
 end
 
