@@ -340,12 +340,16 @@ payload = '''if G.GAME.modifiers.dungeon then
     if (blind and blind.name or '') == "Small Blind" then
         ranks = {'2', '3', '4', '5', '6', '8', '9', 'T', 'J', 'Q', 'K'}
     elseif (blind and blind.name or '') == "The Goad" then
+        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         suits = {'H', 'D', 'C'}
     elseif (blind and blind.name or '') == "The Club" then
+        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         suits = {'H', 'D', 'S'}
     elseif (blind and blind.name or '') == "The Head" then
+        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         suits = {'C', 'D', 'S'}
     elseif (blind and blind.name or '') == "The Window" then
+        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         suits = {'C', 'H', 'S'}
     elseif (blind and blind.name or '') == "The Plant" then
         ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'A'}
