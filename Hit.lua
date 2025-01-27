@@ -459,7 +459,7 @@ G.FUNCS.draw_from_deck_to_hand = function(e)
             end
         end
     else
-        old_draw_from_deck()
+        old_draw_from_deck(e)
     end
 end
 
