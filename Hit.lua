@@ -159,7 +159,7 @@ function create_UIBox_buttons()
 end
 
 function check_total_over_21()
-    if G.STATE == G.STATES.SELECTING_HAND then
+    if not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
         local total = 0
         for i = 1, #G.hand.cards do
             local id = G.hand.cards[i]:get_id()
