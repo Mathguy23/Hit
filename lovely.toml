@@ -362,6 +362,7 @@ payload = '''if G.GAME.modifiers.dungeon then
     elseif (blind and blind.name or '') == "Verdant Leaf" then
         ranks = {'7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '8', '8', '8'}
     elseif (blind and blind.name or '') == "Amber Acorn" then
+        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         for i = 1, 52 do
             local rank = pseudorandom_element(ranks, pseudoseed('acorn'))
             local suit = pseudorandom_element(suits, pseudoseed('acorn'))
