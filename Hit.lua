@@ -492,6 +492,11 @@ SMODS.Back {
             return true
             end
         }))
+        for hand, j in pairs(G.GAME.hands) do
+            G.GAME.hands[hand].level = math.max(0, G.GAME.hands[hand].level + 2)
+            G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].s_mult + G.GAME.hands[hand].l_mult*(G.GAME.hands[hand].level - 1), 1)
+            G.GAME.hands[hand].chips = math.max(G.GAME.hands[hand].s_chips + G.GAME.hands[hand].l_chips*(G.GAME.hands[hand].level - 1), 0)
+        end
     end
 }
 
@@ -722,8 +727,7 @@ table.insert(G.CHALLENGES,#G.CHALLENGES+1,
                 {id = 'discards', value = 5},
             }
         },
-        jokers = {   
-            {id = 'j_splash', eternal = true, edition = 'negative'},
+        jokers = {
         },
         consumeables = {
             {id = 'c_black_hole'},
