@@ -497,6 +497,11 @@ SMODS.Back {
             G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].s_mult + G.GAME.hands[hand].l_mult*(G.GAME.hands[hand].level - 1), 1)
             G.GAME.hands[hand].chips = math.max(G.GAME.hands[hand].s_chips + G.GAME.hands[hand].l_chips*(G.GAME.hands[hand].level - 1), 0)
         end
+        for _, list in pairs(bj_ban_list) do
+            for k, v in ipairs(list) do
+                G.GAME.banned_keys[v.id] = true
+            end
+        end
     end
 }
 
@@ -716,6 +721,71 @@ end
 
 --------------------------------
 
+bj_ban_list = {
+    banned_cards = {
+        {id = 'j_burglar'},
+        -- effective useless
+        {id = 'j_crazy'},
+        {id = 'j_droll'},
+        {id = 'j_devious'},
+        {id = 'j_crafty'},
+        {id = 'j_four_fingers'},
+        {id = 'j_runner'},
+        {id = 'j_superposition'},
+        {id = 'j_seance'},
+        {id = 'j_shortcut'},
+        {id = 'j_obelisk'},
+        {id = 'j_family'},
+        {id = 'j_order'},
+        {id = 'j_tribe'},
+        -- really useless
+        {id = 'j_mime'},
+        {id = 'j_raised_fist'},
+        {id = 'j_blackboard'},
+        {id = 'j_dna'},
+        {id = 'j_sixth_sense'},
+        {id = 'j_baron'},
+        {id = 'j_reserved_parking'},
+        {id = 'j_mail'},
+        {id = 'j_juggler'},
+        {id = 'j_troubadour'},
+        {id = 'j_turtle_bean'},
+        {id = 'j_shoot_the_moon'},
+        {id = 'j_dusk'},
+        {id = 'j_acrobat'},
+        {id = 'j_steel_joker'},
+        {id = 'j_ticket'},
+        -- discard based
+        {id = 'j_merry_andy'},
+        -- stuntman
+        {id = 'j_stuntman'},
+        -- non jokers
+        {id = 'v_paint_brush'},
+        {id = 'v_palette'},
+        {id = 'c_trance'},
+        {id = 'c_earth'},
+        {id = 'c_mars'},
+        {id = 'c_jupiter'},
+        {id = 'c_neptune'},
+        {id = 'c_saturn'},
+        {id = 'c_devil'},
+        {id = 'c_chariot'},
+    },
+    banned_tags = {
+        {id = 'tag_juggle'},
+    },
+    banned_other = {
+        {id = 'bl_hook', type = 'blind'},
+        {id = 'bl_psychic', type = 'blind'},
+        {id = 'bl_manacle', type = 'blind'},
+        {id = 'bl_eye', type = 'blind'},
+        {id = 'bl_serpent', type = 'blind'},
+        {id = 'bl_final_bell', type = 'blind'},
+        {id = 'bl_mouth', type = 'blind'},
+        {id = 'bl_ox', type = 'blind'},
+    }
+}
+
 table.insert(G.CHALLENGES,#G.CHALLENGES+1,
     {name = 'Dungeon',
         id = 'c_blackjack',
@@ -738,70 +808,7 @@ table.insert(G.CHALLENGES,#G.CHALLENGES+1,
         deck = {
             type = 'Challenge Deck',
         },
-        restrictions = {
-            banned_cards = {
-                {id = 'j_burglar'},
-                -- effective useless
-                {id = 'j_crazy'},
-                {id = 'j_droll'},
-                {id = 'j_devious'},
-                {id = 'j_crafty'},
-                {id = 'j_four_fingers'},
-                {id = 'j_runner'},
-                {id = 'j_superposition'},
-                {id = 'j_seance'},
-                {id = 'j_shortcut'},
-                {id = 'j_obelisk'},
-                {id = 'j_family'},
-                {id = 'j_order'},
-                {id = 'j_tribe'},
-                -- really useless
-                {id = 'j_mime'},
-                {id = 'j_raised_fist'},
-                {id = 'j_blackboard'},
-                {id = 'j_dna'},
-                {id = 'j_sixth_sense'},
-                {id = 'j_baron'},
-                {id = 'j_reserved_parking'},
-                {id = 'j_mail'},
-                {id = 'j_juggler'},
-                {id = 'j_troubadour'},
-                {id = 'j_turtle_bean'},
-                {id = 'j_shoot_the_moon'},
-                {id = 'j_dusk'},
-                {id = 'j_acrobat'},
-                {id = 'j_steel_joker'},
-                {id = 'j_ticket'},
-                -- discard based
-                {id = 'j_merry_andy'},
-                -- stuntman
-                {id = 'j_stuntman'},
-                -- non jokers
-                {id = 'v_paint_brush'},
-                {id = 'v_palette'},
-                {id = 'c_trance'},
-                {id = 'c_earth'},
-                {id = 'c_mars'},
-                {id = 'c_jupiter'},
-                {id = 'c_neptune'},
-                {id = 'c_saturn'},
-                {id = 'c_devil'},
-                {id = 'c_chariot'},
-            },
-            banned_tags = {
-                {id = 'tag_juggle'},
-            },
-            banned_other = {
-                {id = 'bl_hook', type = 'blind'},
-                {id = 'bl_psychic', type = 'blind'},
-                {id = 'bl_manacle', type = 'blind'},
-                {id = 'bl_eye', type = 'blind'},
-                {id = 'bl_serpent', type = 'blind'},
-                {id = 'bl_final_bell', type = 'blind'},
-                {id = 'bl_mouth', type = 'blind'},
-                {id = 'bl_ox', type = 'blind'},
-            }
-        },
+        restrictions = bj_ban_list,
     }
 )
 
