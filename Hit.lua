@@ -16,6 +16,8 @@ end
 
 SMODS.Atlas({ key = "tags", atlas_table = "ASSET_ATLAS", path = "tags.png", px = 34, py = 34})
 
+SMODS.Atlas({ key = "decks", atlas_table = "ASSET_ATLAS", path = "backs.png", px = 71, py = 95})
+
 
 function dunegon_selection(theBlind)
     stop_use()
@@ -471,6 +473,27 @@ G.FUNCS.draw_from_deck_to_hand = function(e)
         old_draw_from_deck(e)
     end
 end
+
+SMODS.Back {
+    key = 'aced',
+    name = "Aced Deck",
+    pos = { x = 0, y = 0 },
+    atlas = 'decks',
+    apply = function(self)
+        G.GAME.modifiers = G.GAME.modifiers or {}
+        G.GAME.modifiers.dungeon = true
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                for i, j in ipairs({'H', 'S', 'D', 'C'}) do
+                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[j .. '_A'], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+                    G.deck:emplace(_card)
+                    table.insert(G.playing_cards, _card)
+                end
+            return true
+            end
+        }))
+    end
+}
 
 -----------Memory Game----------
 

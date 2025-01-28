@@ -1,4 +1,16 @@
 return {
+    descriptions = {
+        Back = {
+            b_hit_aced = {
+                name = "Aced Deck",
+                text = {
+                    "{C:attention}Blackjack Mode{}",
+                    "Start with {C:attention}4{} extra",
+                    "{C:attention}Aces{}",
+                }
+            },
+        },
+    },
     misc = {
         dictionary = {
             k_blindeffect = "Blind Effect",
