@@ -330,10 +330,12 @@ position = 'after'
 payload = '''if G.GAME.modifiers.dungeon then
     G.GAME.hit_busted = nil
     G.GAME.hit_limit = 2
-    for i = 1, #(G.enemy_cards or {}) do
-        G.enemy_cards[i]:remove()
+    for i = #G.enemy_deck.cards, 1, -1 do
+        if G.enemy_deck.cards[i] and not G.enemy_deck.cards[i].removed then G.enemy_deck.cards[i]:remove() end
     end
-    G.enemy_cards = {}
+    for i = #G.enemy_discard.cards, 1, -1 do
+        if G.enemy_discard.cards[i] and not G.enemy_discard.cards[i].removed then G.enemy_discard.cards[i]:remove() end
+    end
     local suits = {'H', 'S', 'D', 'C'}
     local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
     local stones = 0
@@ -367,8 +369,6 @@ payload = '''if G.GAME.modifiers.dungeon then
             local rank = pseudorandom_element(ranks, pseudoseed('acorn'))
             local suit = pseudorandom_element(suits, pseudoseed('acorn'))
             local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[suit .. '_' .. rank], G.P_CENTERS['c_base'], {})
-            G.enemy_cards = G.enemy_cards or {}
-            table.insert(G.enemy_cards, _card)
             G.enemy_deck:emplace(_card)
         end
         ranks = {}
@@ -379,15 +379,11 @@ payload = '''if G.GAME.modifiers.dungeon then
     for _, i in ipairs(suits) do
         for _, j in ipairs(ranks) do
             local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[i .. '_' .. j], G.P_CENTERS['c_base'], {})
-            G.enemy_cards = G.enemy_cards or {}
-            table.insert(G.enemy_cards, _card)
             G.enemy_deck:emplace(_card)
         end
     end
     for i = 1, stones do
         local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS['H_A'], G.P_CENTERS['m_stone'], {})
-        G.enemy_cards = G.enemy_cards or {}
-        table.insert(G.enemy_cards, _card)
         G.enemy_deck:emplace(_card)
     end
     G.enemy_deck:shuffle('enemy_deck')
@@ -469,8 +465,13 @@ pattern = '''self.discard = CardArea('''
 position = 'before'
 payload = '''self.enemy_deck = CardArea(
     0, 0,
-    CAI.deck_W,CAI.dexk_H,
-    {card_limit = 520, type = 'deck'})'''
+    CAI.deck_W,CAI.deck_H,
+    {card_limit = 520, type = 'deck'})
+
+self.enemy_discard = CardArea(
+    0, 0,
+    CAI.discard_W,CAI.discard_H,
+    {card_limit = 500, type = 'discard'})'''
 match_indent = true
 
 [[patches]]
@@ -480,7 +481,8 @@ pattern = '''G.deck.T.x = G.TILE_W - G.deck.T.w - 0.5'''
 position = 'before'
 payload = '''G.enemy_deck.T.x = G.TILE_W - G.enemy_deck.T.w - 0.5 + 3*G.CARD_W
 G.enemy_deck.T.y = G.TILE_H - G.enemy_deck.T.h
-'''
+G.enemy_discard.T.x = G.jokers.T.x + G.jokers.T.w/2 + 0.3 + 15
+G.enemy_discard.T.y = 4.2'''
 match_indent = true
 
 [[patches]]

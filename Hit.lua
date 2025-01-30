@@ -249,7 +249,7 @@ G.FUNCS.stand = function(e)
     local aces = 0
     G.GAME.hit_busted = nil
     G.GAME.stood = true
-    G.enemy_deck:shuffle('enemy_deck')
+    -- G.enemy_deck:shuffle('enemy_deck')
     for i = 1, #G.hand.cards do
         local id = G.hand.cards[i]:get_id()
         if id > 0 then
@@ -326,7 +326,7 @@ G.FUNCS.stand = function(e)
                     trigger = 'immediate',
                     func = function()
                         for i = 1, #G.play.cards do
-                            draw_card(G.play, G.enemy_deck, i*100/5, 'up')
+                            draw_card(G.play, G.enemy_discard, i*100/5, 'up')
                         end
                         G.E_MANAGER:add_event(Event({
                             trigger = 'immediate',
@@ -362,7 +362,7 @@ G.FUNCS.stand = function(e)
                     trigger = 'immediate',
                     func = function()
                         for i = 1, #G.play.cards do
-                            draw_card(G.play, G.enemy_deck, i*100/5, 'up')
+                            draw_card(G.play, G.enemy_discard, i*100/5, 'up')
                         end
                         for i = 1, #G.hand.cards do
                             draw_card(G.hand, G.discard, i*100/5, 'up')
@@ -426,7 +426,7 @@ G.FUNCS.stand = function(e)
                                         local it = 1
                                         for k, v in ipairs(G.play.cards) do
                                             if (not v.shattered) and (not v.destroyed) then 
-                                                draw_card(G.play,G.enemy_deck, it*100/play_count,'down', false, v)
+                                                draw_card(G.play,G.enemy_discard, it*100/play_count,'down', false, v)
                                                 it = it + 1
                                             end
                                         end
@@ -451,6 +451,24 @@ G.FUNCS.stand = function(e)
                                 return true
                             end
                         }))
+                        return true
+                    end
+                }))
+            end
+            if #G.enemy_deck.cards - bl_cards <= 0 then
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'immediate',
+                    func = function()
+                        for i = 1, #G.enemy_discard.cards do
+                            draw_card(G.enemy_discard, G.enemy_deck, i*100/5, 'up')
+                        end
+                        return true
+                    end
+                }))
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'immediate',
+                    func = function()
+                        G.enemy_deck:shuffle('enemy_deck')
                         return true
                     end
                 }))
@@ -783,6 +801,7 @@ bj_ban_list = {
         {id = 'bl_final_bell', type = 'blind'},
         {id = 'bl_mouth', type = 'blind'},
         {id = 'bl_ox', type = 'blind'},
+        {id = 'bl_fish', type = 'blind'},
     }
 }
 
@@ -814,16 +833,26 @@ table.insert(G.CHALLENGES,#G.CHALLENGES+1,
 
 function G.UIDEF.view_enemy_deck(unplayed_only)
 	local deck_tables = {}
-	remove_nils(G.enemy_cards or {})
+    local all_cards = {}
+    if G.enemy_deck and G.enemy_deck.cards then
+        for i = 1, #G.enemy_deck.cards do
+            table.insert(all_cards, G.enemy_deck.cards[i])
+        end
+    end
+    if G.enemy_discard and G.enemy_discard.cards then
+        for i = 1, #G.enemy_discard.cards do
+            table.insert(all_cards, G.enemy_discard.cards[i])
+        end
+    end
 	G.VIEWING_DECK = true
-	table.sort(G.enemy_cards or {}, function(a, b) return a:get_nominal('suit') > b:get_nominal('suit') end)
+	table.sort(all_cards, function(a, b) return a:get_nominal('suit') > b:get_nominal('suit') end)
 	local SUITS = {}
 	local suit_map = {}
 	for i = #SMODS.Suit.obj_buffer, 1, -1 do
 		SUITS[SMODS.Suit.obj_buffer[i]] = {}
 		suit_map[#suit_map + 1] = SMODS.Suit.obj_buffer[i]
 	end
-	for k, v in ipairs(G.enemy_cards or {}) do
+	for k, v in ipairs(all_cards) do
 		if v.base.suit then table.insert(SUITS[v.base.suit], v) end
 	end
 	local num_suits = 0
@@ -854,6 +883,9 @@ function G.UIDEF.view_enemy_deck(unplayed_only)
 				if SUITS[suit_map[j]][i] then
 					local greyed, _scale = nil, 0.7
 					local copy = copy_card(SUITS[suit_map[j]][i], nil, _scale)
+                    if not ((SUITS[suit_map[j]][i].area and SUITS[suit_map[j]][i].area == G.enemy_deck)) then
+                        greyed = true
+                    end
 					copy.greyed = greyed
 					copy.T.x = view_deck.T.x + view_deck.T.w / 2
 					copy.T.y = view_deck.T.y
@@ -888,8 +920,8 @@ function G.UIDEF.view_enemy_deck(unplayed_only)
 	local mod_ace_tally = 0
 	local wheel_flipped = 0
 
-	for k, v in ipairs(G.enemy_cards or {}) do
-		if v.ability.name ~= 'Stone Card' then
+	for k, v in ipairs(all_cards) do
+		if (v.ability.name ~= 'Stone Card') and (v.area and v.area == G.enemy_deck) then
 			--For the suits
 			if v.base.suit then suit_tallies[v.base.suit] = (suit_tallies[v.base.suit] or 0) + 1 end
 			for kk, vv in pairs(mod_suit_tallies) do
