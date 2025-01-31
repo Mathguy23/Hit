@@ -163,6 +163,10 @@ end
 function check_total_over_21()
     if not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
         local total = 0
+        local bust_limit = 21
+        if G.GAME.selected_back and (G.GAME.selected_back.name == "Overload Deck") then
+            bust_limit = bust_limit + 3
+        end
         for i = 1, #G.hand.cards do
             local id = G.hand.cards[i]:get_id()
             if id > 0 then
@@ -175,7 +179,7 @@ function check_total_over_21()
                 end
             end
         end
-        if (total > 21) and not G.GAME.hit_busted then
+        if (total > bust_limit) and not G.GAME.hit_busted then
             G.E_MANAGER:add_event(Event({
                 trigger = 'immediate',
                 func = function()
@@ -184,7 +188,7 @@ function check_total_over_21()
                 end
             }))
             G.GAME.hit_busted = true
-        elseif (total <= 21) then
+        elseif (total <= bust_limit) then
             G.GAME.hit_busted = nil
         end
     end
@@ -249,7 +253,10 @@ G.FUNCS.stand = function(e)
     local aces = 0
     G.GAME.hit_busted = nil
     G.GAME.stood = true
-    -- G.enemy_deck:shuffle('enemy_deck')
+    local bust_limit = 21
+    if G.GAME.selected_back.name == "Overload Deck" then
+        bust_limit = bust_limit + 3
+    end
     for i = 1, #G.hand.cards do
         local id = G.hand.cards[i]:get_id()
         if id > 0 then
@@ -263,17 +270,17 @@ G.FUNCS.stand = function(e)
             end
         end
     end
-    while (total <= 11) and (aces >= 1) do
+    while (total <= bust_limit - 10) and (aces >= 1) do
         total = total + 10
         aces = aces + 1
     end
-    if total > 21 then
+    if total > bust_limit + 1 then
         total = -1
     end
     local bl_total = 0
     local bl_aces = 0
     local bl_cards = 0
-    while bl_total <= 21 do
+    while bl_total <= bust_limit do
         local index = #G.enemy_deck.cards - bl_cards
         if index <= 0 then
             break
@@ -289,20 +296,20 @@ G.FUNCS.stand = function(e)
                     bl_total = bl_total + nominal
                 end
             end
-            if bl_total > 21 then
-                while (bl_total > 21) and (bl_aces > 0) do
+            if bl_total > bust_limit then
+                while (bl_total > bust_limit) and (bl_aces > 0) do
                     bl_total = bl_total - 10
                     bl_aces = bl_aces - 1
                 end
             end
-            if (bl_total >= 17) and (bl_total <= 21) then
+            if (bl_total >= bust_limit - 4) and (bl_total <= bust_limit) then
                 bl_cards = bl_cards + 1
                 break
             end
         end
         bl_cards = bl_cards + 1
     end 
-    if bl_total > 21 then
+    if bl_total > bust_limit then
         bl_total = -1
     end
     G.E_MANAGER:add_event(Event({
@@ -510,6 +517,27 @@ SMODS.Back {
             return true
             end
         }))
+        for hand, j in pairs(G.GAME.hands) do
+            G.GAME.hands[hand].level = math.max(0, G.GAME.hands[hand].level + 2)
+            G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].s_mult + G.GAME.hands[hand].l_mult*(G.GAME.hands[hand].level - 1), 1)
+            G.GAME.hands[hand].chips = math.max(G.GAME.hands[hand].s_chips + G.GAME.hands[hand].l_chips*(G.GAME.hands[hand].level - 1), 0)
+        end
+        for _, list in pairs(bj_ban_list) do
+            for k, v in ipairs(list) do
+                G.GAME.banned_keys[v.id] = true
+            end
+        end
+    end
+}
+
+SMODS.Back {
+    key = 'overload',
+    name = "Overload Deck",
+    pos = { x = 1, y = 0 },
+    atlas = 'decks',
+    apply = function(self)
+        G.GAME.modifiers = G.GAME.modifiers or {}
+        G.GAME.modifiers.dungeon = true
         for hand, j in pairs(G.GAME.hands) do
             G.GAME.hands[hand].level = math.max(0, G.GAME.hands[hand].level + 2)
             G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].s_mult + G.GAME.hands[hand].l_mult*(G.GAME.hands[hand].level - 1), 1)

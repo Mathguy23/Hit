@@ -9,6 +9,13 @@ return {
                     "{C:attention}Aces{}",
                 }
             },
+            b_hit_overload = {
+                name = "Overload Deck",
+                text = {
+                    "{C:attention}Blackjack Mode{}",
+                    "{C:attention}+3{} Bust Limit",
+                }
+            },
         },
     },
     misc = {
