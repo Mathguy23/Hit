@@ -18,6 +18,7 @@ SMODS.Atlas({ key = "tags", atlas_table = "ASSET_ATLAS", path = "tags.png", px =
 
 SMODS.Atlas({ key = "decks", atlas_table = "ASSET_ATLAS", path = "backs.png", px = 71, py = 95})
 
+MODS.Atlas({ key = "sleeves", atlas_table = "ASSET_ATLAS", path = "Sleeves.png", px = 71, py = 95})
 
 function dunegon_selection(theBlind)
     stop_use()
@@ -550,6 +551,62 @@ SMODS.Back {
         end
     end
 }
+
+if CardSleeves and CardSleeves.Sleeve then
+    CardSleeves.Sleeve {
+		key = "aced_sl",
+		name = "Aced Sleeve",
+		atlas = "sleeves",
+		pos = { x = 0, y = 0 },
+
+		loc_vars = function(self)
+			local key
+			if self.get_current_deck_key() ~= "b_hit_aced" and self.get_current_deck_key() ~= "b_hit_overload" then
+				key = self.key
+			else
+				key = self.key .. "_alt"
+			end
+			return {key = key}
+		end,
+		apply = function(self)
+			if self.get_current_deck_key() ~= "b_hit_aced" and self.get_current_deck_key() ~= "b_hit_overload" then
+				G.GAME.modifiers = G.GAME.modifiers or {}
+				G.GAME.modifiers.dungeon = true
+				G.E_MANAGER:add_event(Event({
+					func = function()
+						for i, j in ipairs({'H', 'S', 'D', 'C'}) do
+							local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[j .. '_A'], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+							G.deck:emplace(_card)
+							table.insert(G.playing_cards, _card)
+						end
+					return true
+					end
+				}))
+				for hand, j in pairs(G.GAME.hands) do
+					G.GAME.hands[hand].level = math.max(0, G.GAME.hands[hand].level + 2)
+					G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].s_mult + G.GAME.hands[hand].l_mult*(G.GAME.hands[hand].level - 1), 1)
+					G.GAME.hands[hand].chips = math.max(G.GAME.hands[hand].s_chips + G.GAME.hands[hand].l_chips*(G.GAME.hands[hand].level - 1), 0)
+				end
+				for _, list in pairs(bj_ban_list) do
+					for k, v in ipairs(list) do
+						G.GAME.banned_keys[v.id] = true
+					end
+				end
+			else
+				G.E_MANAGER:add_event(Event({
+					func = function()
+						for i, j in ipairs({'H', 'S', 'D', 'C'}) do
+							local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[j .. '_A'], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+							G.deck:emplace(_card)
+							table.insert(G.playing_cards, _card)
+						end
+					return true
+					end
+				}))
+			end
+		end
+	}
+end
 
 -----------Memory Game----------
 
