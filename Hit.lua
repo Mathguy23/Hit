@@ -7,6 +7,11 @@
 --- VERSION: 1.0.0
 ----------------------------------------------
 ------------MOD CODE -------------------------
+-------------Credits--------------------------
+
+--- Aced Sleeve - Code: SMG9000, Art: GenEric1110
+
+----------------------------------------------
 
 SMODS.current_mod.set_debuff = function(card)
     if card.ability.temp_debuff then
