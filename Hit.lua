@@ -169,10 +169,7 @@ end
 function check_total_over_21()
     if not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
         local total = 0
-        local bust_limit = 21
-        if G.GAME.selected_back and (G.GAME.selected_back.name == "Overload Deck") then
-            bust_limit = bust_limit + 3
-        end
+        local bust_limit = G.GAME.hit_bust_limit or 21
         for i = 1, #G.hand.cards do
             local id = G.hand.cards[i]:get_id()
             if id > 0 then
@@ -259,10 +256,7 @@ G.FUNCS.stand = function(e)
     local aces = 0
     G.GAME.hit_busted = nil
     G.GAME.stood = true
-    local bust_limit = 21
-    if G.GAME.selected_back.name == "Overload Deck" then
-        bust_limit = bust_limit + 3
-    end
+    local bust_limit = G.GAME.hit_bust_limit or 21
     for i = 1, #G.hand.cards do
         local id = G.hand.cards[i]:get_id()
         if id > 0 then
@@ -554,6 +548,7 @@ SMODS.Back {
                 G.GAME.banned_keys[v.id] = true
             end
         end
+        G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) + 3
     end
 }
 
