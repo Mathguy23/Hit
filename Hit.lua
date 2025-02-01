@@ -23,7 +23,7 @@ SMODS.Atlas({ key = "tags", atlas_table = "ASSET_ATLAS", path = "tags.png", px =
 
 SMODS.Atlas({ key = "decks", atlas_table = "ASSET_ATLAS", path = "backs.png", px = 71, py = 95})
 
-MODS.Atlas({ key = "sleeves", atlas_table = "ASSET_ATLAS", path = "Sleeves.png", px = 71, py = 95})
+SMODS.Atlas({ key = "sleeves", atlas_table = "ASSET_ATLAS", path = "Sleeves.png", px = 71, py = 95})
 
 function dunegon_selection(theBlind)
     stop_use()
