@@ -17,6 +17,23 @@ return {
                 }
             },
         },
+        Sleeve = {
+            sleeve_hit_aced_sl = {
+                name = "Aced Sleeve",
+                text = { 
+					"{C:attention}Blackjack Mode{}",
+                    "Start with {C:attention}4{} extra",
+                    "{C:attention}Aces{}",
+				}
+            },
+            sleeve_hit_aced_sl_alt = {
+                name = "Aced Sleeve",
+                text = { 
+                    "Start with {C:attention}4{} more extra",
+                    "{C:attention}Aces{}",
+				}
+			},		
+		},
     },
     misc = {
         dictionary = {
