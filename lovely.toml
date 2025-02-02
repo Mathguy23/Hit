@@ -576,3 +576,42 @@ position = 'after'
 payload = '''elseif G.GAME.modifiers.dungeon then
     scoring_hand[i + 0] = G.play.cards[i]'''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''v.ability.discarded = nil'''
+position = 'after'
+payload = '''if v.ability.revert_base then
+    v:set_base(v.ability.revert_base)
+    G.GAME.blind:debuff_card(v)
+    v.ability.revert_base = nil
+    v.ability.hit_hermit_indicator = true
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.deck:shuffle('nr'..G.GAME.round_resets.ante)'''
+position = 'after'
+payload = '''for i = 1, #G.deck.cards do
+    if G.deck.cards[i].ability and G.deck.cards[i].ability.shuffle_bottom then
+        G.deck.cards[i].ability.shuffle_bottom = nil
+        G.deck.cards[i].ability.hit_hermit_indicator = true
+        local card = G.deck.cards[i]
+        table.remove(G.deck.cards, i)
+        table.insert(G.deck.cards, 1, card)
+    end
+    G.deck:set_ranks()
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''--Fill all remaining info if this is the main desc'''
+position = 'before'
+payload = '''if card and card.ability and card.ability.hit_hermit_indicator then info_queue[#info_queue+1] = {key = 'hit_hermit_indicator', set = 'Other'} end
+if card and card.ability and card.ability.revert_base then info_queue[#info_queue+1] = {key = 'revert_base', set = 'Other', vars = {localize(card.ability.revert_base.value, 'ranks'), localize(card.ability.revert_base.suit, 'suits_plural')}} end'''
+match_indent = true

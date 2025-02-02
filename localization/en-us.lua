@@ -34,6 +34,93 @@ return {
 				}
 			},		
 		},
+        Other = {
+            undiscovered_untarot = {
+                name = "Not Discovered",
+                text = {
+                    "Purchase or use",
+                    "this card in an",
+                    "unseeded run to",
+                    "learn what it does"
+                }
+            },
+            hit_hermit_indicator = {
+                name = "Note",
+                text = {
+                    "Shuffled to",
+                    "bottom of deck",
+                }
+            },
+            revert_base = {
+                name = "Note",
+                text = {
+                    "Reverts to a {C:attention}#1#{}",
+                    "of {C:attention}#2#{} at",
+                    "end of round"
+                }
+            },
+        },
+        Untarot = {
+            c_hit_unmagician = {
+                name = "The Reversed Magician",
+                text = {
+                    "Converts up to {C:attention}#1#{}",
+                    "selected cards to {C:attention}#2#s{}",
+                    "until next round"
+                }
+            },
+            c_hit_unhigh_priestess = {
+                name = "The Reversed High Priestess",
+                text = {
+                    "Create {C:attention}1{} card of your",
+                    "most played {C:attention}rank{} and {C:attention}1{} of",
+                    "your most played {C:attention}suit{}",
+                    "{C:inactive}({C:attention}#1#{C:inactive}, {C:attention}#2#{C:inactive}){}"
+                }
+            },
+            c_hit_unemperor = {
+                name = "The Reversed Emperor",
+                text = {
+                    "Converts up to {C:attention}#1#{}",
+                    "selected cards to {C:attention}#2#s{}",
+                }
+            },
+            c_hit_unheirophant = {
+                name = "The Reversed Heirophant",
+                text = {
+                    "Convert all {C:attention}selected{} cards",
+                    "to the most currently {C:attention}selected{}",
+                    "{C:attention}suit{}"
+                }
+            },
+            c_hit_unchariot = {
+                name = "The Reversed Chariot",
+                text = {
+                    "Converts up to {C:attention}#1#{}",
+                    "selected cards to {C:attention}random{}",
+                    "{C:attention}ranks{}",
+
+                }
+            },
+            c_hit_unjustice = {
+                name = "The Reversed Justice",
+                text = {
+                    "Lose {C:red}$#1#{}, Increases",
+                    "rank of up to {C:attention}#2#{}",
+                    "selected cards by {C:attention}2{}"
+
+                }
+            },
+            c_hit_unhermit = {
+                name = "The Reversed Hermit",
+                text = {
+                    "Up to {C:attention}#1#{} selected cards will",
+                    "be shuffled to the {C:attention}bottom{} of the",
+                    "deck at the start of {C:attention}next round{}"
+
+                }
+            },
+        }
     },
     misc = {
         dictionary = {
@@ -49,7 +136,9 @@ return {
             b_choose_cards = "Choose Cards",
             b_exit = "Exit",
             ph_test_memory = "Test your Memory!",
-            b_enemy_deck = "Enemy Deck"
+            b_enemy_deck = "Enemy Deck",
+            k_untarot = "Untarot",
+            b_untarot_cards = "Untarot Cards",
         },
         v_text = {
             ch_c_ante_hand_discard_reset = {"{C:blue}Hands{} and {C:red}Discards{} are only reset each {C:attention}Ante{}."},
