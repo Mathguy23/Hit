@@ -586,8 +586,8 @@ payload = '''if v.ability.revert_base then
     v:set_base(v.ability.revert_base)
     G.GAME.blind:debuff_card(v)
     v.ability.revert_base = nil
-    v.ability.hit_hermit_indicator = true
-end'''
+end
+v.ability.hit_hermit_indicator = nil'''
 match_indent = true
 
 [[patches]]

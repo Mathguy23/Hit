@@ -129,6 +129,36 @@ return {
 
                 }
             },
+            c_hit_unhanged_man = {
+                name = "The Reversed Hanged Man",
+                text = {
+                    "Create {C:attention}#1#{} Enhanced",
+                    "cards",
+                }
+            },
+            c_hit_untemperance = {
+                name = "Reversed Temperance",
+                text = {
+                    "Converts up to {C:attention}#1#{}",
+                    "selected cards to {C:attention}#2#s{}",
+                    "and {C:attention}Face Cards{}"
+                }
+            },
+            c_hit_undevil = {
+                name = "The Reversed Devil",
+                text = {
+                    "Converts up to {C:attention}#1#{}",
+                    "selected cards to",
+                    "{C:red}debuffed{} {C:attention}#2#s{}"
+                }
+            },
+            c_hit_unstar = {
+                name = "The Reversed Star",
+                text = {
+                    "Destroy {C:attention}#1#{} random",
+                    "cards in hand",
+                }
+            },
         }
     },
     misc = {
