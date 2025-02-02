@@ -32,6 +32,7 @@ SMODS.ConsumableType {
     collection_rows = { 5, 6 },
     primary_colour = HEX('424e54'),
     secondary_colour = HEX('a58547'),
+    shop_rate = 4,
 }
 
 SMODS.UndiscoveredSprite {
@@ -42,6 +43,9 @@ SMODS.UndiscoveredSprite {
 
 SMODS.Untarot = SMODS.Consumable:extend {
     set = 'Untarot',
+    in_pool = function(self)
+        return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+    end,
 }
 
 --- Fool
@@ -367,6 +371,52 @@ SMODS.Untarot {
         if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.highlighted > 1) and (#G.hand.highlighted <= (card and card.ability.max_highlighted or 6)) then
             return true
         end
+    end
+}
+
+SMODS.Untarot {
+    key = 'unstrength',
+    atlas = 'reversed_tarots',
+    pos = {x = 1, y = 2},
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
+        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+            play_sound('tarot1')
+            used_tarot:juice_up(0.3, 0.5)
+            return true end }))
+        for i=1, #G.hand.highlighted do
+            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+        end
+        delay(0.2)
+        local did_debuff = (pseudorandom('untarot_debuff') < G.GAME.probabilities.normal/card.ability.odds)
+        for i=1, #G.hand.highlighted do
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                local pool = {}
+                for j, k in pairs(G.P_CENTER_POOLS['Enhanced']) do
+                    if not k.in_pool or (type(k.in_pool) ~= 'function') or k:in_pool() then
+                        table.insert(pool, k)
+                    end
+                end
+                local enhancement = pseudorandom_element(pool, pseudoseed('untarot'))
+                G.hand.highlighted[i]:set_ability(enhancement)
+                if did_debuff then
+                    G.hand.highlighted[i].ability.perma_debuff = true
+                end
+                G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                return true 
+            end }))
+        end
+        for i=1, #G.hand.highlighted do
+            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+        end
+        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+        delay(0.5)
+    end,
+    config = {odds = 2, max_highlighted = 4},
+    loc_vars = function(self, info_queue, card)
+        return {vars = {card and card.ability.max_highlighted or 4, G.GAME.probabilities and G.GAME.probabilities.normal or 1, card and card.ability.odds or 5}}
     end
 }
 

@@ -120,6 +120,15 @@ return {
 
                 }
             },
+            c_hit_unstrength = {
+                name = "Reversed Strength",
+                text = {
+                    "Enhances up to {C:attention}#1#{} selected",
+                    "cards, {C:green}#2# in #3#{} chance to",
+                    "{C:red}debuff{} selected cards"
+
+                }
+            },
         }
     },
     misc = {
