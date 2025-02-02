@@ -51,6 +51,13 @@ return {
                     "bottom of deck",
                 }
             },
+            hit_moon_indicator = {
+                name = "Note",
+                text = {
+                    "Shuffled to",
+                    "top of deck",
+                }
+            },
             revert_base = {
                 name = "Note",
                 text = {
@@ -61,12 +68,19 @@ return {
             },
         },
         Untarot = {
+            c_hit_unfool = {
+                name = "The Reversed Fool",
+                text = {
+                    "Create a",
+                    "{C:attention}#1#{}"
+                },
+            },
             c_hit_unmagician = {
                 name = "The Reversed Magician",
                 text = {
                     "Converts up to {C:attention}#1#{}",
                     "selected cards to {C:attention}#2#s{}",
-                    "until next round"
+                    "until end of round"
                 }
             },
             c_hit_unhigh_priestess = {
@@ -76,6 +90,14 @@ return {
                     "most played {C:attention}rank{} and {C:attention}1{} of",
                     "your most played {C:attention}suit{}",
                     "{C:inactive}({C:attention}#1#{C:inactive}, {C:attention}#2#{C:inactive}){}"
+                }
+            },
+            c_hit_unempress = {
+                name = "The Reversed Empress",
+                text = {
+                    "Creates up to {C:attention}#1#",
+                    "random {C:attention}Untarot{} cards",
+                    "{C:inactive}(Must have room)"
                 }
             },
             c_hit_unemperor = {
@@ -117,7 +139,13 @@ return {
                     "Up to {C:attention}#1#{} selected cards will",
                     "be shuffled to the {C:attention}bottom{} of the",
                     "deck at the start of {C:attention}next round{}"
-
+                }
+            },
+            c_hit_unwheel_of_fortune = {
+                name = "The Reversed Wheel of Fortune",
+                text = {
+                    "Earn {C:money}$#1#{}, {C:green}#2# in #3#{} chance",
+                    "to create a {C:attention}#4#",
                 }
             },
             c_hit_unstrength = {
@@ -136,6 +164,14 @@ return {
                     "cards",
                 }
             },
+            c_hit_undeath = {
+                name = "Reversed Death",
+                text = {
+                    "Enhances {C:attention}#1#{}",
+                    "selected cards to",
+                    "{C:attention}#2#s{}"
+                }
+            },
             c_hit_untemperance = {
                 name = "Reversed Temperance",
                 text = {
@@ -152,11 +188,93 @@ return {
                     "{C:red}debuffed{} {C:attention}#2#s{}"
                 }
             },
+            c_hit_untower = {
+                name = "The Reversed Tower",
+                text = {
+                    "Enhances {C:attention}#1#{} selected",
+                    "card into a",
+                    "{C:attention}#2#s{}"
+                }
+            },
             c_hit_unstar = {
                 name = "The Reversed Star",
                 text = {
                     "Destroy {C:attention}#1#{} random",
                     "cards in hand",
+                }
+            },
+            c_hit_unmoon = {
+                name = "The Reversed Moon",
+                text = {
+                    "Up to {C:attention}#1#{} selected cards will",
+                    "be shuffled to the {C:attention}top{} of the",
+                    "deck at the start of {C:attention}next round{}"
+                }
+            },
+            c_hit_unsun = {
+                name = "The Reversed Sun",
+                text = {
+                    "{C:attention}Shuffle{} the {C:attention}ranks{} of",
+                    "selected cards",
+                }
+            },
+            c_hit_unjudgement = {
+                name = "Reversed Judgement",
+                text = {
+                    "Converts up to {C:attention}#1#{}",
+                    "selected cards to the",
+                    "{C:attention}rank{} of the {C:attention}leftmost{}",
+                    "card in hand"
+                }
+            },
+            c_hit_unworld = {
+                name = "The Reversed World",
+                text = {
+                    "Enhances {C:attention}#1#{}",
+                    "selected cards to",
+                    "{C:attention}#2#s{}"
+                }
+            },
+        },
+        Enhanced = {
+            m_hit_blackjack = {
+                name = 'Mega Blackjack Card',
+                text = {
+                    "{C:chips}+#1#{} Chips",
+                    "no rank or suit",
+                    "Contributes {C:attention}21{}",
+                    "to hand sums",
+                }
+            },
+            m_hit_nope = {
+                name = 'Nope Card',
+                text = {
+                    "no rank or suit",
+                    "Contributes {C:attention}22{}",
+                    "to hand sums",
+                }
+            },
+            m_hit_garnet = {
+                name = 'Garnet Card',
+                text = {
+                    "On {C:attention}Stand{}, this card",
+                    "is not {C:attention}discarded{}",
+                }
+            },
+            m_hit_crazy = {
+                name = 'Crazy Card',
+                text = {
+                    "{C:chips}+#1#{} Chips",
+                    "no rank or suit",
+                    "Contributes {C:attention}-3{} or",
+                    "{C:attention}7{} to hand sums",
+                }
+            },
+            m_hit_osmium = {
+                name = 'Osmium Card',
+                text = {
+                    "+2 to {C:attention}your's{} and",
+                    "{C:attention}enemy's{} hand sums",
                 }
             },
         }

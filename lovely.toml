@@ -587,7 +587,8 @@ payload = '''if v.ability.revert_base then
     G.GAME.blind:debuff_card(v)
     v.ability.revert_base = nil
 end
-v.ability.hit_hermit_indicator = nil'''
+v.ability.hit_hermit_indicator = nil
+v.ability.hit_moon_indicator = nil'''
 match_indent = true
 
 [[patches]]
@@ -604,6 +605,16 @@ payload = '''for i = 1, #G.deck.cards do
         table.insert(G.deck.cards, 1, card)
     end
     G.deck:set_ranks()
+end
+for i = #G.deck.cards, 1, -1 do
+    if G.deck.cards[i].ability and G.deck.cards[i].ability.shuffle_top then
+        G.deck.cards[i].ability.shuffle_top = nil
+        G.deck.cards[i].ability.hit_moon_indicator = true
+        local card = G.deck.cards[i]
+        table.remove(G.deck.cards, i)
+        table.insert(G.deck.cards, card)
+    end
+    G.deck:set_ranks()
 end'''
 match_indent = true
 
@@ -613,5 +624,6 @@ target = 'functions/common_events.lua'
 pattern = '''--Fill all remaining info if this is the main desc'''
 position = 'before'
 payload = '''if card and card.ability and card.ability.hit_hermit_indicator then info_queue[#info_queue+1] = {key = 'hit_hermit_indicator', set = 'Other'} end
+if card and card.ability and card.ability.hit_moon_indicator then info_queue[#info_queue+1] = {key = 'hit_moon_indicator', set = 'Other'} end
 if card and card.ability and card.ability.revert_base then info_queue[#info_queue+1] = {key = 'revert_base', set = 'Other', vars = {localize(card.ability.revert_base.value, 'ranks'), localize(card.ability.revert_base.suit, 'suits_plural')}} end'''
 match_indent = true
