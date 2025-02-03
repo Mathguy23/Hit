@@ -988,7 +988,7 @@ for i = 1, 4 do
             name = "Unarcana Pack",
             text = {
                 "Choose {C:attention}#1#{} of up to",
-                "{C:attention}#2#{C:tarot} Tarot{} cards to",
+                "{C:attention}#2#{C:attention} Untarot{} cards to",
                 "be used immediately"
             }
         },
@@ -1013,7 +1013,7 @@ for i = 1, 2 do
             name = "Jumbo Unarcana Pack",
             text = {
                 "Choose {C:attention}#1#{} of up to",
-                "{C:attention}#2#{C:tarot} Tarot{} cards to",
+                "{C:attention}#2#{C:attention} Untarot{} cards to",
                 "be used immediately"
             }
         },
@@ -1035,7 +1035,7 @@ for i = 1, 2 do
             name = "Mega Unarcana Pack",
             text = {
                 "Choose {C:attention}#1#{} of up to",
-                "{C:attention}#2#{C:tarot} Tarot{} cards to",
+                "{C:attention}#2#{C:attention} Untarot{} cards to",
                 "be used immediately"
             }
         },
