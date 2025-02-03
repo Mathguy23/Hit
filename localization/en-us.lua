@@ -115,6 +115,13 @@ return {
                     "{C:attention}suit{}"
                 }
             },
+            c_hit_unlovers = {
+                name = "The Reversed Lovers",
+                text = {
+                    "Converts {C:attention}#1#{} selected",
+                    "card to a {C:attention}#2#{}",
+                }
+            },
             c_hit_unchariot = {
                 name = "The Reversed Chariot",
                 text = {
@@ -125,7 +132,7 @@ return {
                 }
             },
             c_hit_unjustice = {
-                name = "The Reversed Justice",
+                name = "Reversed Justice",
                 text = {
                     "Lose {C:red}$#1#{}, Increases",
                     "rank of up to {C:attention}#2#{}",
@@ -193,7 +200,7 @@ return {
                 text = {
                     "Enhances {C:attention}#1#{} selected",
                     "card into a",
-                    "{C:attention}#2#s{}"
+                    "{C:attention}#2#{}"
                 }
             },
             c_hit_unstar = {
@@ -296,6 +303,7 @@ return {
             b_enemy_deck = "Enemy Deck",
             k_untarot = "Untarot",
             b_untarot_cards = "Untarot Cards",
+            k_unarcana_pack = "Unarcana Pack",
         },
         v_text = {
             ch_c_ante_hand_discard_reset = {"{C:blue}Hands{} and {C:red}Discards{} are only reset each {C:attention}Ante{}."},

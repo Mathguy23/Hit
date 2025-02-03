@@ -29,6 +29,10 @@ SMODS.Atlas({ key = "reversed_tarots", atlas_table = "ASSET_ATLAS", path = "Unta
 
 SMODS.Atlas({ key = "enhance", atlas_table = "ASSET_ATLAS", path = "Enhance.png", px = 71, py = 95})
 
+SMODS.Atlas({ key = "boosters", atlas_table = "ASSET_ATLAS", path = "boosters.png", px = 71, py = 95})
+
+SMODS.Atlas({ key = "ranks", atlas_table = "ASSET_ATLAS", path = "ranks.png", px = 71, py = 95})
+
 SMODS.ConsumableType {
     key = 'Untarot',
     collection_rows = { 5, 6 },
@@ -348,7 +352,58 @@ SMODS.Untarot {
     end
 }
 
---- Lovers
+SMODS.Rank {
+    key = '0',
+    card_key = 'Z',
+    pos = { x = 0 },
+    lc_atlas = 'ranks',
+    hc_atlas = 'ranks',
+    nominal = 0,
+    next = { 'Ace' },
+    loc_txt = {
+        name = "0"
+    },
+    in_pool = function(self, args)
+        return false
+    end
+}
+
+SMODS.Untarot {
+    key = 'unlovers',
+    atlas = 'reversed_tarots',
+    pos = {x = 1, y = 1},
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
+        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+            play_sound('tarot1')
+            used_tarot:juice_up(0.3, 0.5)
+            return true end }))
+        for i=1, #G.hand.highlighted do
+            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+        end
+        delay(0.2)
+        for i=1, #G.hand.highlighted do
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
+            
+                G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_hit_Z'])
+                G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                return true 
+            end }))
+        end
+        for i=1, #G.hand.highlighted do
+            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+        end
+        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+        delay(0.5)
+    end,
+    config = {max_highlighted = 1},
+    loc_vars = function(self, info_queue, card)
+        return {vars = {card and card.ability.max_highlighted or 1, '0'}}
+    end
+}
 
 SMODS.Untarot {
     key = 'unchariot',
@@ -916,6 +971,78 @@ SMODS.Untarot {
     end
 }
 
+for i = 1, 4 do
+    SMODS.Booster {
+        key = 'unarcana_normal_' .. tostring(i),
+        group_key = 'k_unarcana_pack',
+        weight = 1,
+        cost = 4,
+        name = "Unarcana Pack",
+        atlas = "boosters",
+        pos = {x = i - 1, y = 0},
+        config = {extra = 3, choose = 1, name = "Unarcana Pack"},
+        create_card = function(self, card)
+            return {set = "Untarot", skip_materialize = true}
+        end,
+        loc_txt = {
+            name = "Unarcana Pack",
+            text = {
+                "Choose {C:attention}#1#{} of up to",
+                "{C:attention}#2#{C:tarot} Tarot{} cards to",
+                "be used immediately"
+            }
+        },
+        draw_hand = true
+    }
+end
+
+for i = 1, 2 do
+    SMODS.Booster {
+        key = 'unarcana_jumbo_' .. tostring(i),
+        group_key = 'k_unarcana_pack',
+        weight = 1,
+        cost = 6,
+        name = "Unarcana Pack",
+        atlas = "boosters",
+        pos = {x = i - 1, y = 1},
+        config = {extra = 5, choose = 1, name = "Unarcana Pack"},
+        create_card = function(self, card)
+            return {set = "Untarot", skip_materialize = true}
+        end,
+        loc_txt = {
+            name = "Jumbo Unarcana Pack",
+            text = {
+                "Choose {C:attention}#1#{} of up to",
+                "{C:attention}#2#{C:tarot} Tarot{} cards to",
+                "be used immediately"
+            }
+        },
+        draw_hand = true
+    }
+    SMODS.Booster {
+        key = 'unarcana_mega_' .. tostring(i),
+        group_key = 'k_unarcana_pack',
+        weight = 1,
+        cost = 8,
+        name = "Unarcana Pack",
+        atlas = "boosters",
+        pos = {x = i + 1, y = 1},
+        config = {extra = 5, choose = 2, name = "Unarcana Pack"},
+        create_card = function(self, card)
+            return {set = "Untarot", skip_materialize = true}
+        end,
+        loc_txt = {
+            name = "Mega Unarcana Pack",
+            text = {
+                "Choose {C:attention}#1#{} of up to",
+                "{C:attention}#2#{C:tarot} Tarot{} cards to",
+                "be used immediately"
+            }
+        },
+        draw_hand = true
+    }
+end
+
 function dunegon_selection(theBlind)
     stop_use()
     if G.blind_select then 
@@ -1185,7 +1312,7 @@ G.FUNCS.stand = function(e)
     total = total + add_total
     while (total <= bust_limit - 10) and (aces >= 1) do
         total = total + 10
-        aces = aces + 1
+        aces = aces - 1
     end
     if total > bust_limit then
         total = -1
