@@ -1198,6 +1198,9 @@ function check_total_over_21()
                 else
                     total = total + nominal
                 end
+                if G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.name == "Mega Ace" then
+                    total = total + 10
+                end
             elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
                 total = total + 21
             elseif G.hand.cards[i].ability.name == 'Nope Card' then
@@ -1300,6 +1303,9 @@ G.FUNCS.stand = function(e)
             else
                 total = total + nominal
             end
+            if G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.name == "Mega Ace" then
+                total = total + 10
+            end
         elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
             total = total + 21
         elseif G.hand.cards[i].ability.name == 'Nope Card' then
@@ -1334,6 +1340,9 @@ G.FUNCS.stand = function(e)
                     bl_aces = bl_aces + 1
                 else
                     bl_total = bl_total + nominal
+                end
+                if G.enemy_deck.cards[index].ability.trading and G.enemy_deck.cards[index].ability.trading.name == "Mega Ace" then
+                    total = total + 10
                 end
             elseif G.enemy_deck.cards[index].ability.name == 'Mega Blackjack Card' then
                 bl_total = bl_total + 21
@@ -1889,7 +1898,40 @@ function G.UIDEF.memory()
     return t
 end
 
---------------------------------
+-----------Cross Mod Stuff----
+if pc_add_cross_mod_card then
+    -- pc_add_cross_mod_card {
+    --     key = 'mega_ace',
+    --     card = {
+    --         key = 'mega_ace', 
+    --         unlocked = true, 
+    --         discovered = true, 
+    --         atlas = 'pc_trading', 
+    --         cost = 1, 
+    --         name = "Mega Ace", 
+    --         pos = {x=0,y=0},
+    --         config = {chips = 11}, 
+    --         base = "H_A"
+    --     },
+    --     calculate = function(card, effects, context, reps)
+    --         local config_thing = card.ability.trading.config 
+    --         if context.playing_card_main then
+    --             table.insert(effects, {
+    --                 chips = config_thing.chips,
+    --                 card = card
+    --             })
+    --         elseif context.get_id then
+    --             return 14
+    --         end
+    --     end,
+    --     loc_vars = function(specific_vars, info_queue, card)
+    --         local config_thing = specific_vars.collect.config
+    --         return {config_thing.chips}
+    --     end
+    -- }
+end
+
+------------------------------
 
 bj_ban_list = {
     banned_cards = {

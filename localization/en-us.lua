@@ -66,6 +66,11 @@ return {
                     "end of round"
                 }
             },
+            mega_ace = {
+                text = {
+                    "Mega Ace",
+                }
+            },
         },
         Untarot = {
             c_hit_unfool = {
@@ -282,6 +287,15 @@ return {
                 text = {
                     "+2 to {C:attention}your's{} and",
                     "{C:attention}enemy's{} hand sums",
+                }
+            },
+        },
+        CustomCard = {
+            mega_ace = {
+                text = {
+                    "{C:attention}Ace{}, {C:blue}+#1#{} Chips",
+                    "Contributes {C:attention}11{} or",
+                    "{C:attention}21{} to hand sums",
                 }
             },
         }
