@@ -33,6 +33,8 @@ SMODS.Atlas({ key = "boosters", atlas_table = "ASSET_ATLAS", path = "boosters.pn
 
 SMODS.Atlas({ key = "ranks", atlas_table = "ASSET_ATLAS", path = "ranks.png", px = 71, py = 95})
 
+SMODS.Atlas({ key = "pc_cards", atlas_table = "ASSET_ATLAS", path = "pc_cards.png", px = 71, py = 95})
+
 SMODS.ConsumableType {
     key = 'Untarot',
     collection_rows = { 5, 6 },
@@ -360,9 +362,6 @@ SMODS.Rank {
     hc_atlas = 'ranks',
     nominal = 0,
     next = { 'Ace' },
-    loc_txt = {
-        name = "0"
-    },
     in_pool = function(self, args)
         return false
     end
@@ -1175,8 +1174,11 @@ function create_UIBox_buttons()
         if G.SETTINGS.play_button_pos ~= 1 then
             index = 3
         end
+        G.GAME.hit_hand_sum_total = G.GAME.hit_hand_sum_total or '???'
         local button = t.nodes[index]
-        button.nodes[1].nodes[1].config.text = localize("b_stand")
+        button.nodes[1].nodes[1].config.text = nil
+        button.nodes[1].nodes[1].config.ref_value = 'hit_hand_sum_total'
+        button.nodes[1].nodes[1].config.ref_table = G.GAME
         button.config.button = 'stand'
         button.config.func = 'can_stand'
         -- button.config.color = G.C[checking[G.GAME.passive].colour]
@@ -1186,6 +1188,7 @@ end
 
 function check_total_over_21()
     if not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
+        G.GAME.hit_hand_sum_total = get_hand_sum()
         local total = 0
         local bust_limit = G.GAME.hit_bust_limit or 21
         for i = 1, #G.hand.cards do
@@ -1221,6 +1224,49 @@ function check_total_over_21()
         elseif (total <= bust_limit) then
             G.GAME.hit_busted = nil
         end
+    end
+    
+end
+
+function get_hand_sum()
+    local total = 0
+    local aces = 0
+    local bust_limit = G.GAME.hit_bust_limit or 21
+    local soft = false
+    for i = 1, #G.hand.cards do
+        local id = G.hand.cards[i]:get_id()
+        if id > 0 then
+            local rank = get_smods_rank_from_id(G.hand.cards[i])
+            local nominal = rank.nominal
+            if rank.key == 'Ace' then
+                total = total + 1
+                aces = aces + 1
+            else
+                total = total + nominal
+            end
+            if G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.name == "Mega Ace" then
+                total = total + 10
+            end
+        elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
+            total = total + 21
+        elseif G.hand.cards[i].ability.name == 'Nope Card' then
+            total = total + 22
+        elseif G.hand.cards[i].ability.name == 'Crazy Card' then
+            total = total - 3
+            aces = aces + 1
+        end
+    end
+    while (total <= bust_limit - 10) and (aces >= 1) do
+        total = total + 10
+        aces = aces - 1
+        soft = true
+    end
+    if soft then
+        return localize("b_stand") .. ' S' .. tostring(total)
+    elseif total > bust_limit then
+        return localize("b_stand") .. ' ' .. tostring(total) .. 'B'
+    else
+        return localize("b_stand") .. ' ' ..tostring(total)
     end
 end
 
@@ -1315,14 +1361,6 @@ G.FUNCS.stand = function(e)
             aces = aces + 1
         end
     end
-    total = total + add_total
-    while (total <= bust_limit - 10) and (aces >= 1) do
-        total = total + 10
-        aces = aces - 1
-    end
-    if total > bust_limit then
-        total = -1
-    end
     local bl_total = 0
     local bl_aces = 0
     local bl_cards = 0
@@ -1333,6 +1371,9 @@ G.FUNCS.stand = function(e)
         else
             local id = G.enemy_deck.cards[index]:get_id()
             if id > 0 then
+                if G.enemy_deck.cards[index].ability.name == 'Osmium Card' then
+                    add_total = add_total + 2
+                end
                 local rank = get_smods_rank_from_id(G.enemy_deck.cards[index])
                 local nominal = rank.nominal
                 if rank.key == 'Ace' then
@@ -1364,6 +1405,14 @@ G.FUNCS.stand = function(e)
             end
         end
         bl_cards = bl_cards + 1
+    end
+    total = total + add_total
+    while (total <= bust_limit - 10) and (aces >= 1) do
+        total = total + 10
+        aces = aces - 1
+    end
+    if total > bust_limit then
+        total = -1
     end
     bl_total = bl_total + add_total
     if bl_total > bust_limit then
@@ -1900,35 +1949,35 @@ end
 
 -----------Cross Mod Stuff----
 if pc_add_cross_mod_card then
-    -- pc_add_cross_mod_card {
-    --     key = 'mega_ace',
-    --     card = {
-    --         key = 'mega_ace', 
-    --         unlocked = true, 
-    --         discovered = true, 
-    --         atlas = 'pc_trading', 
-    --         cost = 1, 
-    --         name = "Mega Ace", 
-    --         pos = {x=0,y=0},
-    --         config = {chips = 11}, 
-    --         base = "H_A"
-    --     },
-    --     calculate = function(card, effects, context, reps)
-    --         local config_thing = card.ability.trading.config 
-    --         if context.playing_card_main then
-    --             table.insert(effects, {
-    --                 chips = config_thing.chips,
-    --                 card = card
-    --             })
-    --         elseif context.get_id then
-    --             return 14
-    --         end
-    --     end,
-    --     loc_vars = function(specific_vars, info_queue, card)
-    --         local config_thing = specific_vars.collect.config
-    --         return {config_thing.chips}
-    --     end
-    -- }
+    pc_add_cross_mod_card {
+        key = 'mega_ace',
+        card = {
+            key = 'mega_ace', 
+            unlocked = true, 
+            discovered = true, 
+            atlas = 'hit_pc_cards', 
+            cost = 1, 
+            name = "Mega Ace", 
+            pos = {x=0,y=0},
+            config = {chips = 11}, 
+            base = "H_A"
+        },
+        calculate = function(card, effects, context, reps)
+            local config_thing = card.ability.trading.config 
+            if context.playing_card_main then
+                table.insert(effects, {
+                    chips = config_thing.chips,
+                    card = card
+                })
+            elseif context.get_id then
+                return 14
+            end
+        end,
+        loc_vars = function(specific_vars, info_queue, card)
+            local config_thing = specific_vars.collect.config
+            return {config_thing.chips}
+        end
+    }
 end
 
 ------------------------------

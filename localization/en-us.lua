@@ -329,6 +329,9 @@ return {
             c_blackjack = "Blackjack"
         },
         labels = {
+        },
+        ranks = {
+            hit_0 = '0'
         }
     }
 }

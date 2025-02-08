@@ -338,6 +338,10 @@ payload = '''if G.GAME.modifiers.dungeon then
     end
     local suits = {'H', 'S', 'D', 'C'}
     local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
+    local power = (not G.GAME.modifiers.scaling and 1 or (G.GAME.modifiers.scaling == 1) and 1 or (G.GAME.modifiers.scaling == 2) and 1.3 or (G.GAME.modifiers.scaling == 3) and 1.5) * (0.33 * (G.GAME.round_resets.ante))
+    if power < 0 then
+        power = 0
+    end
     local stones = 0
     if (blind and blind.name or '') == "Small Blind" then
         ranks = {'2', '3', '4', '5', '6', '8', '9', 'T', 'J', 'Q', 'K'}
@@ -368,7 +372,22 @@ payload = '''if G.GAME.modifiers.dungeon then
         for i = 1, 52 do
             local rank = pseudorandom_element(ranks, pseudoseed('acorn'))
             local suit = pseudorandom_element(suits, pseudoseed('acorn'))
-            local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[suit .. '_' .. rank], G.P_CENTERS['c_base'], {})
+            local center = G.P_CENTERS['c_base']
+            local rng = 5 * pseudorandom('power_level')
+            power = power + rng
+            if pseudorandom('enhancing') > 1 / (0.1 * G.GAME.round_resets.ante + 0.9) then
+                if power >= 17 then
+                    center = G.P_CENTERS['m_glass']
+                elseif power >= 13 then
+                    center = G.P_CENTERS['m_lucky']
+                elseif power >= 9 then
+                    center = G.P_CENTERS['m_mult']
+                elseif power >= 6 then
+                    center = G.P_CENTERS['m_bonus']
+                end
+            end
+            power = power - rng
+            local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[suit .. '_' .. rank], center, {})
             G.enemy_deck:emplace(_card)
         end
         ranks = {}
@@ -378,7 +397,20 @@ payload = '''if G.GAME.modifiers.dungeon then
     end
     for _, i in ipairs(suits) do
         for _, j in ipairs(ranks) do
-            local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[i .. '_' .. j], G.P_CENTERS['c_base'], {})
+            local center = G.P_CENTERS['c_base']
+            local rng = 3.5 * pseudorandom('power_level')
+            if pseudorandom('enhancing') > 1 / (0.1 * G.GAME.round_resets.ante + 0.9) then
+                if power * rng >= 4 then
+                    center = G.P_CENTERS['m_glass']
+                elseif power * rng >= 3.5 then
+                    center = G.P_CENTERS['m_lucky']
+                elseif power * rng >= 2.2 then
+                    center = G.P_CENTERS['m_mult']
+                elseif power * rng >= 1.5 then
+                    center = G.P_CENTERS['m_bonus']
+                end
+            end
+            local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[i .. '_' .. j], center, {})
             G.enemy_deck:emplace(_card)
         end
     end
