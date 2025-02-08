@@ -659,3 +659,11 @@ payload = '''if card and card.ability and card.ability.hit_hermit_indicator then
 if card and card.ability and card.ability.hit_moon_indicator then info_queue[#info_queue+1] = {key = 'hit_moon_indicator', set = 'Other'} end
 if card and card.ability and card.ability.revert_base then info_queue[#info_queue+1] = {key = 'revert_base', set = 'Other', vars = {localize(card.ability.revert_base.value, 'ranks'), localize(card.ability.revert_base.suit, 'suits_plural')}} end'''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''{string = 'rand()', colour = G.C.JOKER_GREY},{string = "#@"..(G.deck and G.deck.cards[1] and G.deck.cards[#G.deck.cards].base.id or 11)..(G.deck and G.deck.cards[1] and G.deck.cards[#G.deck.cards].base.suit:sub(1,1) or 'D'), colour = G.C.RED},'''
+position = 'at'
+payload = '''{string = 'rand()', colour = G.C.JOKER_GREY},{string = "#@NO", colour = G.C.RED},'''
+match_indent = true
