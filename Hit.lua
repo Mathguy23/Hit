@@ -1272,7 +1272,7 @@ function get_hand_sum()
     elseif total > bust_limit then
         return localize("b_stand") .. ' ' .. tostring(total) .. 'B'
     else
-        return localize("b_stand") .. ' ??'
+        return localize("b_stand") .. ' ' .. tostring(total)
     end
 end
 
