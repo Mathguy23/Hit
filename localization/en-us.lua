@@ -290,8 +290,8 @@ return {
             m_hit_osmium = {
                 name = 'Osmium Card',
                 text = {
-                    "+2 to {C:attention}your's{} and",
-                    "{C:attention}enemy's{} hand sums",
+                    "On {C:attention}Stand{}, {C:attention}+2{} to all",
+                    "{C:attention}hand sums{}",
                 }
             },
         },
@@ -306,7 +306,7 @@ return {
             sun_two = {
                 text = {
                     "{C:attention}2{}",
-                    "On {C:attention}Stand{}, {C:attention}Non-Bust{} hand",
+                    "On {C:attention}Stand{}, all {C:attention}Non-Bust{} hand",
                     "sums are considered {C:attention}0{}",
                 }
             },
