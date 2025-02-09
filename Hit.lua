@@ -1216,7 +1216,11 @@ function check_total_over_21()
             G.E_MANAGER:add_event(Event({
                 trigger = 'immediate',
                 func = function()
-                    play_area_status_text("Bust (" .. tostring(total) .. ")")
+                    if hide_sum() then
+                        play_area_status_text("Bust (??)")
+                    else
+                        play_area_status_text("Bust (" .. tostring(total) .. ")")
+                    end
                     return true
                 end
             }))
@@ -1261,13 +1265,24 @@ function get_hand_sum()
         aces = aces - 1
         soft = true
     end
-    if soft then
+    if hide_sum() then
+        return localize("b_stand") .. ' ??'
+    elseif soft then
         return localize("b_stand") .. ' S' .. tostring(total)
     elseif total > bust_limit then
         return localize("b_stand") .. ' ' .. tostring(total) .. 'B'
     else
-        return localize("b_stand") .. ' ' ..tostring(total)
+        return localize("b_stand") .. ' ??'
     end
+end
+
+function hide_sum()
+    for i = 1, #G.hand.cards do
+        if G.hand.cards[i].facing == 'back' then
+            return true
+        end
+    end
+    return false
 end
 
 local old_use = Card.use_consumeable
@@ -1428,7 +1443,7 @@ G.FUNCS.stand = function(e)
     end
     local force_push = nil
     for i = 0, bl_cards - 1 do
-        if G.enemy_deck.cards[#G.enemy_deck.cards - 1].ability.trading and (G.enemy_deck.cards[#G.enemy_deck.cards - 1].ability.trading.name == 'Sun Two') then
+        if G.enemy_deck.cards[#G.enemy_deck.cards - i].ability.trading and (G.enemy_deck.cards[#G.enemy_deck.cards - i].ability.trading.name == 'Sun Two') then
             force_push = true
             break
         end
@@ -1513,9 +1528,17 @@ G.FUNCS.stand = function(e)
                 }))
             elseif bl_total == total then
                 if bl_total == -1 then
-                    play_area_status_text("Push (Bust = Bust)")
+                    if hide_sum() then
+                        play_area_status_text("Push (?? = Bust)")
+                    else
+                        play_area_status_text("Push (Bust = Bust)")
+                    end
                 else
-                    play_area_status_text("Push (" .. tostring(total) .. " = " .. tostring(bl_total) .. ")")
+                    if hide_sum() then
+                        play_area_status_text("Push (?? = " .. tostring(bl_total) .. ")")
+                    else
+                        play_area_status_text("Push (" .. tostring(total) .. " = " .. tostring(bl_total) .. ")")
+                    end
                 end
                 G.GAME.hit_limit = 2
                 G.E_MANAGER:add_event(Event({
@@ -1541,9 +1564,17 @@ G.FUNCS.stand = function(e)
                 }))
             elseif bl_total > total then
                 if total == -1 then
-                    play_area_status_text("Loss (Bust < " .. tostring(bl_total) .. ")")
+                    if hide_sum() then
+                        play_area_status_text("Loss (?? < " .. tostring(bl_total) .. ")")
+                    else
+                        play_area_status_text("Loss (Bust < " .. tostring(bl_total) .. ")")
+                    end
                 else
-                    play_area_status_text("Loss (" .. tostring(total) .. " < " .. tostring(bl_total) .. ")")
+                    if hide_sum() then
+                        play_area_status_text("Loss (?? < " .. tostring(bl_total) .. ")")
+                    else
+                        play_area_status_text("Loss (" .. tostring(total) .. " < " .. tostring(bl_total) .. ")")
+                    end
                 end
                 G.GAME.hit_limit = 2
                 ease_hands_played(-1)
