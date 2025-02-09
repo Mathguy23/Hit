@@ -1187,7 +1187,7 @@ function create_UIBox_buttons()
 end
 
 function check_total_over_21()
-    if not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
+    if G.GAME.modifiers.dungeon and not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
         G.GAME.hit_hand_sum_total = get_hand_sum()
         local total = 0
         local bust_limit = G.GAME.hit_bust_limit or 21
