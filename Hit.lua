@@ -828,7 +828,7 @@ SMODS.Untarot {
         return {vars = {card and card.ability.cards or 3}}
     end,
     can_use = function(self, card)
-        if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.cards > (card and card.ability.cards or 3)) then
+        if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.cards >= (card and card.ability.cards or 3)) then
             return true
         end
     end
@@ -1319,6 +1319,11 @@ end
 
 G.FUNCS.hit = function(e)
     G.GAME.hit_limit = (G.hand and G.hand.cards and #G.hand.cards or 2) + 1
+    for i = 1, #G.hand.cards do
+        if G.hand.cards[i].calculate_exotic then
+            G.hand.cards[i]:calculate_exotic({hit = true, cardarea = G.hand})
+        end
+    end
     G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
@@ -2061,6 +2066,39 @@ if pc_add_cross_mod_card then
                 return 2
             end
         end,
+    }
+
+    pc_add_cross_mod_card {
+        key = 'adrenaline_ace',
+        card = {
+            key = 'adrenaline_ace', 
+            unlocked = true, 
+            discovered = true, 
+            atlas = 'hit_pc_cards', 
+            cost = 1, 
+            name = "Adrenaline Ace", 
+            pos = {x=2,y=0},
+            config = {mult = 0, gain = 1}, 
+            base = "H_A"
+        },
+        calculate = function(card, effects, context, reps)
+            local config_thing = card.ability.trading.config 
+            if context.get_id then
+                return 14
+            elseif context.playing_card_main then
+                table.insert(effects, {
+                    mult = config_thing.mult,
+                    card = card
+                })
+            elseif context.hit then
+                config_thing.mult = config_thing.mult + config_thing.gain
+                card_eval_status_text(card, 'jokers', nil, nil, nil, {message = localize{type='variable',key='a_mult',vars={config_thing.gain}}, colour = G.C.RED})
+            end
+        end,
+        loc_vars = function(specific_vars, info_queue, card)
+            local config_thing = specific_vars.collect.config
+            return {localize("Hearts", 'suits_plural'), config_thing.gain, config_thing.mult}
+        end
     }
 end
 

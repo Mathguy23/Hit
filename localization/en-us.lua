@@ -76,6 +76,11 @@ return {
                     "Sun Two",
                 }
             },
+            adrenaline_ace = {
+                text = {
+                    "Adrenaline Ace",
+                }
+            },
         },
         Untarot = {
             c_hit_unfool = {
@@ -308,6 +313,13 @@ return {
                     "{C:attention}2{}",
                     "On {C:attention}Stand{}, all {C:attention}Non-Bust{} hand",
                     "sums are considered {C:attention}0{}",
+                }
+            },
+            adrenaline_ace = {
+                text = {
+                   "{C:attention}Ace{}, {C:hearts}#1#{}",
+                    "On {C:attention}Hit{}, Gains {C:red}+1{} Mult",
+                    "{C:inactive}(Currently {C:red}+#3# {C:inactive}Mult){}",
                 }
             },
         }
