@@ -71,6 +71,11 @@ return {
                     "Mega Ace",
                 }
             },
+            sun_two = {
+                text = {
+                    "Sun Two",
+                }
+            },
         },
         Untarot = {
             c_hit_unfool = {
@@ -296,6 +301,13 @@ return {
                     "{C:attention}Ace{}, {C:blue}+#1#{} Chips",
                     "Contributes {C:attention}11{} or",
                     "{C:attention}21{} to hand sums",
+                }
+            },
+            sun_two = {
+                text = {
+                    "{C:attention}2{}",
+                    "On {C:attention}Stand{}, {C:attention}Non-Bust{} hand",
+                    "sums are considered {C:attention}0{}",
                 }
             },
         }

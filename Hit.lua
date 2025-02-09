@@ -1364,6 +1364,7 @@ G.FUNCS.stand = function(e)
     local bl_total = 0
     local bl_aces = 0
     local bl_cards = 0
+    local total_list = {}
     while bl_total <= bust_limit do
         local index = #G.enemy_deck.cards - bl_cards
         if index <= 0 then
@@ -1399,6 +1400,7 @@ G.FUNCS.stand = function(e)
                     bl_aces = bl_aces - 1
                 end
             end
+            table.insert(total_list, bl_total)
             if (bl_total >= bust_limit - 4) and (bl_total <= bust_limit) then
                 bl_cards = bl_cards + 1
                 break
@@ -1424,12 +1426,42 @@ G.FUNCS.stand = function(e)
     if bl_total > bust_limit then
         bl_total = -1
     end
+    local force_push = nil
+    for i = 0, bl_cards - 1 do
+        if G.enemy_deck.cards[#G.enemy_deck.cards - 1].ability.trading and (G.enemy_deck.cards[#G.enemy_deck.cards - 1].ability.trading.name == 'Sun Two') then
+            force_push = true
+            break
+        end
+    end
+    for i = 1, #G.hand.cards do
+        if G.hand.cards[i].ability.trading and (G.hand.cards[i].ability.trading.name == 'Sun Two') then
+            force_push = true
+            break
+        end
+    end
+    if force_push then
+        if (bl_total ~= -1) then
+            bl_total = 0
+        end
+        if (total ~= -1) then
+            total = 0
+        end
+    end
     G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
             if bl_cards > 0 then
                 for i = 1, bl_cards do
                     draw_card(G.enemy_deck, G.play, i*100/5, 'up')
+                    force_up_status_text = true
+                    local color = G.C.FILTER
+                    if total_list[i] > (bust_limit) then
+                        color = G.C.RED
+                    elseif total_list[i] >= (bust_limit - 4) then
+                        color = G.C.GREEN
+                    end
+                    card_eval_status_text(G.enemy_deck.cards[#G.enemy_deck.cards - i + 1], 'extra', nil, nil, nil, {message = tostring(total_list[i]), colour = color})
+                    force_up_status_text = nil
                 end
             end
             delay(0.5)
@@ -1948,6 +1980,7 @@ function G.UIDEF.memory()
 end
 
 -----------Cross Mod Stuff----
+
 if pc_add_cross_mod_card then
     pc_add_cross_mod_card {
         key = 'mega_ace',
@@ -1977,6 +2010,26 @@ if pc_add_cross_mod_card then
             local config_thing = specific_vars.collect.config
             return {config_thing.chips}
         end
+    }
+
+    pc_add_cross_mod_card {
+        key = 'sun_two',
+        card = {
+            key = 'sun_two', 
+            unlocked = true, 
+            discovered = true, 
+            atlas = 'hit_pc_cards', 
+            cost = 1, 
+            name = "Sun Two", 
+            pos = {x=1,y=0},
+            config = {}, 
+            base = "D_2"
+        },
+        calculate = function(card, effects, context, reps)
+            if context.get_id then
+                return 2
+            end
+        end,
     }
 end
 

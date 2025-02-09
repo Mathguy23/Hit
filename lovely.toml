@@ -667,3 +667,14 @@ pattern = '''{string = 'rand()', colour = G.C.JOKER_GREY},{string = "#@"..(G.dec
 position = 'at'
 payload = '''{string = 'rand()', colour = G.C.JOKER_GREY},{string = "#@NO", colour = G.C.RED},'''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''local config = {}'''
+position = 'before'
+payload = '''if card.area == G.enemy_deck then
+    y_off = -0.05*G.CARD_H
+    card_aligned = 'tm'
+end'''
+match_indent = true
