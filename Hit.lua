@@ -2069,9 +2069,9 @@ if pc_add_cross_mod_card then
     }
 
     pc_add_cross_mod_card {
-        key = 'adrenaline_ace',
+        key = 'adrenalten',
         card = {
-            key = 'adrenaline_ace', 
+            key = 'adrenalten', 
             unlocked = true, 
             discovered = true, 
             atlas = 'hit_pc_cards', 
@@ -2079,12 +2079,12 @@ if pc_add_cross_mod_card then
             name = "Adrenaline Ace", 
             pos = {x=2,y=0},
             config = {mult = 0, gain = 1}, 
-            base = "H_A"
+            base = "H_T"
         },
         calculate = function(card, effects, context, reps)
             local config_thing = card.ability.trading.config 
             if context.get_id then
-                return 14
+                return 10
             elseif context.playing_card_main then
                 table.insert(effects, {
                     mult = config_thing.mult,
