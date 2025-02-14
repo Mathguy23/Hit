@@ -1196,13 +1196,15 @@ function check_total_over_21()
             if id > 0 then
                 local rank = get_smods_rank_from_id(G.hand.cards[i])
                 local nominal = rank.nominal
-                if rank.key == 'Ace' then
+                if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_value then
+                    total = total + G.hand.cards[i].ability.trading.config.hit_hand_value
+                elseif rank.key == 'Ace' then
                     total = total + 1
                 else
                     total = total + nominal
                 end
-                if G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.name == "Mega Ace" then
-                    total = total + 10
+                if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_aces then
+                    total = total + G.hand.cards[i].ability.trading.config.hit_hand_aces
                 end
             elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
                 total = total + 21
@@ -1242,14 +1244,16 @@ function get_hand_sum()
         if id > 0 then
             local rank = get_smods_rank_from_id(G.hand.cards[i])
             local nominal = rank.nominal
-            if rank.key == 'Ace' then
+            if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_value then
+                total = total + G.hand.cards[i].ability.trading.config.hit_hand_value
+            elseif rank.key == 'Ace' then
                 total = total + 1
                 aces = aces + 1
             else
                 total = total + nominal
             end
-            if G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.name == "Mega Ace" then
-                total = total + 10
+            if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_aces then
+                total = total + G.hand.cards[i].ability.trading.config.hit_hand_aces
             end
         elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
             total = total + 21
@@ -1350,6 +1354,9 @@ G.FUNCS.stand = function(e)
         if G.hand.cards[i].ability.name == 'Osmium Card' then
             add_total = add_total + 2
         end
+        if G.hand.cards[i].calculate_exotic then
+            G.hand.cards[i]:calculate_exotic({stand = true, cardarea = G.hand})
+        end
     end
     local total = 0
     local aces = 0
@@ -1363,14 +1370,16 @@ G.FUNCS.stand = function(e)
         if id > 0 then
             local rank = get_smods_rank_from_id(G.hand.cards[i])
             local nominal = rank.nominal
-            if rank.key == 'Ace' then
+            if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_value then
+                total = total + G.hand.cards[i].ability.trading.config.hit_hand_value
+            elseif rank.key == 'Ace' then
                 total = total + 1
                 aces = aces + 1
             else
                 total = total + nominal
             end
-            if G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.name == "Mega Ace" then
-                total = total + 10
+            if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_aces then
+                total = total + G.hand.cards[i].ability.trading.config.hit_hand_aces
             end
         elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
             total = total + 21
@@ -1397,14 +1406,16 @@ G.FUNCS.stand = function(e)
                 end
                 local rank = get_smods_rank_from_id(G.enemy_deck.cards[index])
                 local nominal = rank.nominal
-                if rank.key == 'Ace' then
+                if not G.enemy_deck.cards[index].debuff and G.enemy_deck.cards[index].ability.trading and G.enemy_deck.cards[index].ability.trading.config.hit_hand_value then
+                    total = total + G.enemy_deck.cards[index].ability.trading.config.hit_hand_value
+                elseif rank.key == 'Ace' then
                     bl_total = bl_total + 11
                     bl_aces = bl_aces + 1
                 else
                     bl_total = bl_total + nominal
                 end
-                if G.enemy_deck.cards[index].ability.trading and G.enemy_deck.cards[index].ability.trading.name == "Mega Ace" then
-                    total = total + 10
+                if not G.enemy_deck.cards[index].debuff and G.enemy_deck.cards[index].ability.trading and G.enemy_deck.cards[index].ability.trading.config.hit_hand_aces then
+                    total = total + G.enemy_deck.cards[index].ability.trading.config.hit_hand_aces
                 end
             elseif G.enemy_deck.cards[index].ability.name == 'Mega Blackjack Card' then
                 bl_total = bl_total + 21
@@ -1434,7 +1445,7 @@ G.FUNCS.stand = function(e)
         aces = aces - 1
     end
     if total > bust_limit then
-        total = -1
+        total = -1e15
     end
     bl_total = bl_total + add_total
     if bl_total > bust_limit then
@@ -1444,26 +1455,26 @@ G.FUNCS.stand = function(e)
         end
     end
     if bl_total > bust_limit then
-        bl_total = -1
+        bl_total = -1e15
     end
     local force_push = nil
     for i = 0, bl_cards - 1 do
-        if G.enemy_deck.cards[#G.enemy_deck.cards - i].ability.trading and (G.enemy_deck.cards[#G.enemy_deck.cards - i].ability.trading.name == 'Sun Two') then
+        if not G.enemy_deck.cards[#G.enemy_deck.cards - i].debuff and G.enemy_deck.cards[#G.enemy_deck.cards - i].ability.trading and (G.enemy_deck.cards[#G.enemy_deck.cards - i].ability.trading.name == 'Sun Two') then
             force_push = true
             break
         end
     end
     for i = 1, #G.hand.cards do
-        if G.hand.cards[i].ability.trading and (G.hand.cards[i].ability.trading.name == 'Sun Two') then
+        if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and (G.hand.cards[i].ability.trading.name == 'Sun Two') then
             force_push = true
             break
         end
     end
     if force_push then
-        if (bl_total ~= -1) then
+        if (bl_total ~= -1e15) then
             bl_total = 0
         end
-        if (total ~= -1) then
+        if (total ~= -1e15) then
             total = 0
         end
     end
@@ -1486,7 +1497,7 @@ G.FUNCS.stand = function(e)
             end
             delay(0.5)
             if bl_total < total then
-                if bl_total == -1 then
+                if bl_total == -1e15 then
                     play_area_status_text("Win (" .. tostring(total) .. " > Bust)")
                 else
                     play_area_status_text("Win (" .. tostring(total) .. " > " .. tostring(bl_total) .. ")")
@@ -1532,7 +1543,7 @@ G.FUNCS.stand = function(e)
                     end
                 }))
             elseif bl_total == total then
-                if bl_total == -1 then
+                if bl_total == -1e15 then
                     if hide_sum() then
                         play_area_status_text("Push (?? = Bust)")
                     else
@@ -1568,7 +1579,7 @@ G.FUNCS.stand = function(e)
                     end
                 }))
             elseif bl_total > total then
-                if total == -1 then
+                if total == -1e15 then
                     if hide_sum() then
                         play_area_status_text("Loss (?? < " .. tostring(bl_total) .. ")")
                     else
@@ -2028,7 +2039,7 @@ if pc_add_cross_mod_card then
             cost = 1, 
             name = "Mega Ace", 
             pos = {x=0,y=0},
-            config = {chips = 11}, 
+            config = {chips = 11, hit_hand_value = 11, hit_hand_aces = 1}, 
             base = "H_A"
         },
         calculate = function(card, effects, context, reps)
@@ -2064,6 +2075,8 @@ if pc_add_cross_mod_card then
         calculate = function(card, effects, context, reps)
             if context.get_id then
                 return 2
+            elseif context.is_face then
+                return true
             end
         end,
     }
@@ -2098,6 +2111,84 @@ if pc_add_cross_mod_card then
         loc_vars = function(specific_vars, info_queue, card)
             local config_thing = specific_vars.collect.config
             return {localize("Hearts", 'suits_plural'), config_thing.gain, config_thing.mult}
+        end
+    }
+
+    pc_add_cross_mod_card {
+        key = 'bottomless_pit',
+        card = {
+            key = 'bottomless_pit', 
+            unlocked = true, 
+            discovered = true, 
+            atlas = 'hit_pc_cards', 
+            cost = 1, 
+            name = "Bottomless Pit", 
+            pos = {x=3,y=0},
+            config = {chips = 10, hit_hand_value = 10, gain = -10}, 
+            base = "S_T"
+        },
+        calculate = function(card, effects, context, reps)
+            local config_thing = card.ability.trading.config 
+            if context.playing_card_main then
+                table.insert(effects, {
+                    chips = config_thing.chips,
+                    card = card
+                })
+            elseif context.get_id then
+                return 10
+            elseif context.stand and G.GAME.hit_busted then
+                config_thing.hit_hand_value = config_thing.hit_hand_value + config_thing.gain
+                card_eval_status_text(card, 'jokers', nil, nil, nil, {message = tostring(config_thing.gain), colour = G.C.RED})
+            end
+        end,
+        loc_vars = function(specific_vars, info_queue, card)
+            local config_thing = specific_vars.collect.config
+            return {config_thing.chips, config_thing.gain, config_thing.hit_hand_value}
+        end
+    }
+
+    pc_add_cross_mod_card {
+        key = 'hydra',
+        card = {
+            key = 'hydra', 
+            unlocked = true, 
+            discovered = true, 
+            atlas = 'hit_pc_cards', 
+            cost = 1, 
+            name = "Adrenaline Ace", 
+            pos = {x=0,y=1},
+            config = {chips = 3}, 
+            base = "D_3"
+        },
+        calculate = function(card, effects, context, reps)
+            local config_thing = card.ability.trading.config 
+            if context.get_id then
+                return 3
+            elseif context.playing_card_main then
+                table.insert(effects, {
+                    chips = config_thing.chips,
+                    card = card
+                })
+            elseif context.hit then
+                card_eval_status_text(card, 'jokers', nil, nil, nil, {message = localize('ow_ex'), colour = G.C.RED})
+                G.E_MANAGER:add_event(Event({ func = function()
+                    local card2 = copy_card(card, nil, nil, true)
+                    card2:start_materialize()
+                    G.hand:emplace(card2)
+                    table.insert(G.playing_cards, card2)
+                    card2.ability.fleeting = true
+                    return true
+                end
+                }))
+                G.GAME.hit_limit = (G.GAME.hit_limit or 2) + 1
+            elseif context.is_face then
+                return true
+            end
+        end,
+        loc_vars = function(specific_vars, info_queue, card)
+            local config_thing = specific_vars.collect.config
+            info_queue[#info_queue+1] = {key = 'fleeting', set = 'Other'}
+            return {config_thing.chips}
         end
     }
 end

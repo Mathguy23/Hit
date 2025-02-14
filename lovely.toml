@@ -479,6 +479,14 @@ match_indent = true
 
 [[patches]]
 [patches.pattern]
+target = 'cardarea.lua'
+pattern = '''if #self.cards < self.config.card_limit or self == G.deck or self == G.hand then'''
+position = 'at'
+payload = '''if #self.cards < self.config.card_limit or self == G.deck or self == G.hand or ((self == G.play) and G.GAME and G.GAME.modifiers and G.GAME.modifiers.dungeon) then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
 target = 'functions/UI_definitions.lua'
 pattern = '''   label = localize('b_full_deck'),
     tab_definition_function = G.UIDEF.view_deck

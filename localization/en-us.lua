@@ -81,6 +81,16 @@ return {
                     "Adrenalten",
                 }
             },
+            bottomless_pit = {
+                text = {
+                   "Bottomless Pit",
+                }
+            },
+            hydra = {
+                text = {
+                   "Hydra",
+                }
+            },
         },
         Untarot = {
             c_hit_unfool = {
@@ -310,7 +320,7 @@ return {
             },
             sun_two = {
                 text = {
-                    "{C:attention}2{}",
+                    "{C:attention}2{}, {C:attention}Face Card{}",
                     "On {C:attention}Stand{}, all {C:attention}Non-Bust{} hand",
                     "sums are considered {C:attention}0{}",
                 }
@@ -320,6 +330,21 @@ return {
                    "{C:attention}10{}, {C:hearts}#1#{}",
                     "On {C:attention}Hit{}, Gains {C:red}+1{} Mult",
                     "{C:inactive}(Currently {C:red}+#3# {C:inactive}Mult){}",
+                }
+            },
+            bottomless_pit = {
+                text = {
+                   "{C:attention}10{}, {C:blue}+#1#{} Chips",
+                    "On {C:attention}Stand{} if {C:attention}Bust{},",
+                    "{C:red}#2#{} hand value",
+                    "{C:inactive}(Currently {C:attention}#3# {C:inactive}hand value){}",
+                }
+            },
+            hydra = {
+                text = {
+                   "{C:attention}3{}, {C:blue}+#1#{} Chips, {C:attention}Face Card{}",
+                    "On {C:attention}Hit{}, Create a {C:attention}Fleeting{}",
+                    "copy of this card",
                 }
             },
         }
@@ -342,6 +367,7 @@ return {
             k_untarot = "Untarot",
             b_untarot_cards = "Untarot Cards",
             k_unarcana_pack = "Unarcana Pack",
+            ow_ex = "Ow!"
         },
         v_text = {
             ch_c_ante_hand_discard_reset = {"{C:blue}Hands{} and {C:red}Discards{} are only reset each {C:attention}Ante{}."},
