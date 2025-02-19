@@ -40,7 +40,6 @@ SMODS.ConsumableType {
     collection_rows = { 5, 6 },
     primary_colour = HEX('424e54'),
     secondary_colour = HEX('a58547'),
-    shop_rate = 4,
 }
 
 SMODS.UndiscoveredSprite {
@@ -991,7 +990,10 @@ for i = 1, 4 do
                 "be used immediately"
             }
         },
-        draw_hand = true
+        draw_hand = true,
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon
+        end,
     }
 end
 
@@ -1016,7 +1018,10 @@ for i = 1, 2 do
                 "be used immediately"
             }
         },
-        draw_hand = true
+        draw_hand = true,
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon
+        end,
     }
     SMODS.Booster {
         key = 'unarcana_mega_' .. tostring(i),
@@ -1038,7 +1043,10 @@ for i = 1, 2 do
                 "be used immediately"
             }
         },
-        draw_hand = true
+        draw_hand = true,
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon
+        end,
     }
 end
 
@@ -1731,7 +1739,8 @@ SMODS.Back {
                 G.GAME.banned_keys[v.id] = true
             end
         end
-    end
+        G.GAME.untarot_rate = 4
+    end,
 }
 
 SMODS.Back {
@@ -1753,7 +1762,8 @@ SMODS.Back {
             end
         end
         G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) + 3
-    end
+        G.GAME.untarot_rate = 4
+    end,
 }
 
 if CardSleeves and CardSleeves.Sleeve then
@@ -2258,32 +2268,6 @@ bj_ban_list = {
         {id = 'bl_fish', type = 'blind'},
     }
 }
-
-table.insert(G.CHALLENGES,#G.CHALLENGES+1,
-    {name = 'Dungeon',
-        id = 'c_blackjack',
-        rules = {
-            custom = {
-                {id = 'dungeon'},
-            },
-            modifiers = {
-                {id = 'discards', value = 5},
-            }
-        },
-        jokers = {
-        },
-        consumeables = {
-            {id = 'c_black_hole'},
-            {id = 'c_black_hole'},
-        },
-        vouchers = {
-        },
-        deck = {
-            type = 'Challenge Deck',
-        },
-        restrictions = bj_ban_list,
-    }
-)
 
 function G.UIDEF.view_enemy_deck(unplayed_only)
 	local deck_tables = {}
