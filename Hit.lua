@@ -35,6 +35,8 @@ SMODS.Atlas({ key = "ranks", atlas_table = "ASSET_ATLAS", path = "ranks.png", px
 
 SMODS.Atlas({ key = "pc_cards", atlas_table = "ASSET_ATLAS", path = "pc_cards.png", px = 71, py = 95})
 
+SMODS.Atlas({ key = "planets", atlas_table = "ASSET_ATLAS", path = "Planets.png", px = 71, py = 95})
+
 SMODS.ConsumableType {
     key = 'Untarot',
     collection_rows = { 5, 6 },
@@ -47,6 +49,479 @@ SMODS.UndiscoveredSprite {
     atlas = 'reversed_tarots',
     pos = {x = 2, y = 4}
 }
+
+SMODS.PokerHand {
+    key = 'High Card0',
+    chips = 30,
+    l_chips = 10,
+    mult = 3,
+    l_mult = 1,
+    example = {
+        { 'C_5', false },
+        { 'H_K', false },
+        { 'D_4', false },
+        { 'H_7', false },
+        { 'C_A', true } 
+    },
+    evaluate = function(parts, hand)
+        if not G.GAME.modifiers.dungeon then
+            return {}
+        end
+        if #hand == 0 then
+            return {}
+        end
+        return parts._highest
+    end,
+    visible = false,
+    order_offset = 3000,
+    bj_mode = true
+}
+
+SMODS.PokerHand {
+    key = 'Court',
+    chips = 40,
+    l_chips = 10,
+    mult = 4,
+    l_mult = 1,
+    example = {
+        { 'D_K', true },
+        { 'H_J', true },
+        { 'C_6', false },
+        { 'H_9', false },
+        { 'S_2', false } 
+    },
+    evaluate = function(parts, hand)
+        if not G.GAME.modifiers.dungeon then
+            return {}
+        end
+        local faces = {}
+        for i, j in ipairs(hand) do
+            if j:is_face() then
+                table.insert(faces, j)
+            end
+        end
+        if #faces >= 2 then
+            local highest = nil
+            local highest2 = nil
+            for i = 1, #faces do
+                if not highest then
+                    highest = i
+                elseif not highest2 then
+                    if (faces[i]:get_nominal() > faces[highest]:get_nominal()) then
+                        highest2 = highest
+                        highest = i
+                    else
+                        highest2 = i
+                    end
+                elseif (faces[i]:get_nominal() > faces[highest]:get_nominal()) then
+                    highest2 = highest
+                    highest = i
+                elseif (faces[i]:get_nominal() > faces[highest2]:get_nominal()) then
+                    highest2 = i
+                end
+            end
+            return { {faces[highest], faces[highest2]} }
+        end
+        return {}
+    end,
+    visible = false,
+    order_offset = 3000,
+    bj_mode = true
+}
+
+SMODS.PokerHand {
+    key = 'Duo',
+    chips = 50,
+    l_chips = 15,
+    mult = 4,
+    l_mult = 2,
+    example = {
+        { 'D_A', true },
+        { 'S_Q', false },
+        { 'C_8', true },
+        { 'D_8', true },
+        { 'C_4', false } 
+    },
+    evaluate = function(parts, hand)
+        if not G.GAME.modifiers.dungeon then
+            return {}
+        end
+        local pair = get_X_same(2, hand)
+        if next(pair) then
+            best_pair = pair[1]
+            best_card = nil
+            for i, j in ipairs(hand) do
+                if (j ~= best_pair[1]) and (j ~= best_pair[2]) then
+                    if not best_card then
+                        best_card = j
+                    elseif j:get_nominal() > best_card:get_nominal() then
+                        best_card = j
+                    end
+                end
+            end
+            if best_card then
+                return { {best_pair[1], best_pair[2], best_card} }
+            end
+        end
+        return {}
+    end,
+    visible = false,
+    order_offset = 3000,
+    bj_mode = true
+}
+
+SMODS.PokerHand {
+    key = 'Batch',
+    chips = 60,
+    l_chips = 20,
+    mult = 6,
+    l_mult = 2,
+    example = {
+        { 'C_9', true },
+        { 'H_6', false },
+        { 'C_A', true },
+        { 'D_7', false },
+        { 'C_5', true } 
+    },
+    evaluate = function(parts, hand)
+        if not G.GAME.modifiers.dungeon then
+            return {}
+        end
+        local suits = SMODS.Suit.obj_buffer
+        local map = {}
+        for i=1, #hand do
+            for j = 1, #suits do
+                if hand[i]:is_suit(suits[j], nil, true) then
+                    map[suits[j]] = map[suits[j]] or {}
+                    map[suits[j]][#map[suits[j]]+1] = hand[i] 
+                    if #map[suits[j]] >= 3 then
+                        return { map[suits[j]] }
+                    end
+                end
+            end
+        end
+        return {}
+    end,
+    visible = false,
+    order_offset = 3000,
+    bj_mode = true
+}
+
+SMODS.PokerHand {
+    key = 'Blackjack',
+    chips = 70,
+    l_chips = 20,
+    mult = 6,
+    l_mult = 1,
+    example = {
+        { 'C_4', true },
+        { 'H_7', true },
+        { 'H_J', true },
+    },
+    evaluate = function(parts, hand)
+        if not G.GAME.modifiers.dungeon then
+            return {}
+        end
+        local total = 0
+        local aces = 0
+        local bust_limit = G.GAME.hit_bust_limit or 21
+        for i = 1, #hand do
+            local id = hand[i]:get_id()
+            if id > 0 then
+                local rank = get_smods_rank_from_id(hand[i])
+                local nominal = rank.nominal
+                if not hand[i].debuff and hand[i].ability.trading and hand[i].ability.trading.config.hit_hand_value then
+                    total = total + hand[i].ability.trading.config.hit_hand_value
+                elseif rank.key == 'Ace' then
+                    total = total + 1
+                    aces = aces + 1
+                else
+                    total = total + nominal
+                end
+                if not hand[i].debuff and hand[i].ability.trading and hand[i].ability.trading.config.hit_hand_aces then
+                    aces = aces + hand[i].ability.trading.config.hit_hand_aces
+                end
+            elseif hand[i].ability.name == 'Mega Blackjack Card' then
+                total = total + 21
+            elseif hand[i].ability.name == 'Nope Card' then
+                total = total + 22
+            elseif hand[i].ability.name == 'Crazy Card' then
+                total = total - 3
+            end
+        end
+        while (total <= bust_limit - 10) and (aces >= 1) do
+            aces = aces - 1
+            total = total + 10
+        end
+        if total == bust_limit then
+            return { hand }
+        end
+        return {}
+    end,
+    visible = false,
+    order_offset = 3000,
+    bj_mode = true
+}
+
+SMODS.PokerHand {
+    key = 'Duo+',
+    chips = 80,
+    l_chips = 20,
+    mult = 7,
+    l_mult = 2,
+    example = {
+        { 'S_A', true },
+        { 'D_3', true },
+        { 'H_3', true },
+        { 'C_3', true },
+        { 'C_K', false } 
+    },
+    evaluate = function(parts, hand)
+        if not G.GAME.modifiers.dungeon then
+            return {}
+        end
+        local oaK = get_X_same(3, hand, true)
+        if next(oaK) then
+            best_oaK = oaK[1]
+            best_card = nil
+            for i, j in ipairs(hand) do
+                local valid = true
+                for i2, j2 in ipairs(best_oaK) do
+                    if j2 == j then
+                        valid = false
+                        break
+                    end
+                end
+                if valid then
+                    if not best_card then
+                        best_card = j
+                    elseif j:get_nominal() > best_card:get_nominal() then
+                        best_card = j
+                    end
+                end
+            end
+            if best_card then
+                local result = {}
+                for i, j in ipairs(best_oaK) do
+                    table.insert(result, j)
+                end
+                table.insert(result, best_card)
+                return { result }
+            end
+        end
+        return {}
+    end,
+    visible = false,
+    order_offset = 3000,
+    bj_mode = true
+}
+
+SMODS.PokerHand {
+    key = 'Batch+',
+    chips = 80,
+    l_chips = 25,
+    mult = 8,
+    l_mult = 3,
+    example = {
+        { 'D_Q', true },
+        { 'H_6', true },
+        { 'D_J', false },
+        { 'D_2', true },
+        { 'D_4', true } 
+    },
+    evaluate = function(parts, hand)
+        if not G.GAME.modifiers.dungeon then
+            return {}
+        end
+        local suits = SMODS.Suit.obj_buffer
+        local map = {}
+        for i=1, #hand do
+            for j = 1, #suits do
+                if hand[i]:is_suit(suits[j], nil, true) then
+                    map[suits[j]] = map[suits[j]] or {}
+                    map[suits[j]][#map[suits[j]]+1] = hand[i] 
+                    if #map[suits[j]] >= 4 then
+                        return { map[suits[j]] }
+                    end
+                end
+            end
+        end
+        return {}
+    end,
+    visible = false,
+    order_offset = 3000,
+    bj_mode = true
+}
+
+SMODS.PokerHand {
+    key = 'Blackjack Batch',
+    chips = 90,
+    l_chips = 25,
+    mult = 9,
+    l_mult = 2,
+    example = {
+        { 'S_4', true },
+        { 'S_5', true },
+        { 'S_6', true },
+        { 'S_7', true },
+        { 'C_5', false } 
+    },
+    evaluate = function(parts, hand)
+        if not G.GAME.modifiers.dungeon then
+            return {}
+        end
+        local suits = SMODS.Suit.obj_buffer
+        local map = {}
+        local total = 0
+        local aces = 0
+        local bust_limit = G.GAME.hit_bust_limit or 21
+        for i = 1, #hand do
+            local id = hand[i]:get_id()
+            if id > 0 then
+                local rank = get_smods_rank_from_id(hand[i])
+                local nominal = rank.nominal
+                if not hand[i].debuff and hand[i].ability.trading and hand[i].ability.trading.config.hit_hand_value then
+                    total = total + hand[i].ability.trading.config.hit_hand_value
+                elseif rank.key == 'Ace' then
+                    total = total + 1
+                    aces = aces + 1
+                else
+                    total = total + nominal
+                end
+                if not hand[i].debuff and hand[i].ability.trading and hand[i].ability.trading.config.hit_hand_aces then
+                    aces = aces + hand[i].ability.trading.config.hit_hand_aces
+                end
+            elseif hand[i].ability.name == 'Mega Blackjack Card' then
+                total = total + 21
+            elseif hand[i].ability.name == 'Nope Card' then
+                total = total + 22
+            elseif hand[i].ability.name == 'Crazy Card' then
+                total = total - 3
+            end
+        end
+        while (total <= bust_limit - 10) and (aces >= 1) do
+            aces = aces - 1
+            total = total + 10
+        end
+        if (total == bust_limit) then
+            local req_count = 0
+            for i=1, #hand do
+                local has_suit = false
+                for i0, j in pairs(SMODS.Suits) do
+                    if hand[i]:is_suit(j.key) then
+                        has_suit = true
+                        break
+                    end
+                end
+                local id = hand[i]:get_id()
+                if (id >= 0) and has_suit then
+                    req_count = req_count + 1
+                end
+            end
+            if req_count < 3 then
+                return {}
+            end
+            for i=1, #hand do
+                for j = 1, #suits do
+                    if hand[i]:is_suit(suits[j], nil, true) then
+                        map[suits[j]] = map[suits[j]] or {}
+                        map[suits[j]][#map[suits[j]]+1] = hand[i] 
+                        if #map[suits[j]] >= req_count then
+                            return { map[suits[j]] }
+                        end
+                    end
+                end
+            end
+        end
+        return {}
+    end,
+    visible = false,
+    order_offset = 3000,
+    bj_mode = true
+}
+
+SMODS.PokerHand {
+    key = 'Supreme',
+    chips = 100,
+    l_chips = 15,
+    mult = 10,
+    l_mult = 2,
+    example = {
+        { 'S_7', true },
+        { 'H_A', true },
+        { 'D_2', true },
+        { 'C_K', true },
+        { 'S_2', true },
+        { 'D_8', true } 
+    },
+    evaluate = function(parts, hand)
+        if not G.GAME.modifiers.dungeon then
+            return {}
+        end
+        cards = {}
+        for i=1, #hand do
+            local has_suit = false
+            for i0, j in pairs(SMODS.Suits) do
+                if hand[i]:is_suit(j.key) then
+                    has_suit = true
+                    break
+                end
+            end
+            local id = hand[i]:get_id()
+            if (id >= 0) and has_suit then
+                table.insert(cards, hand[i])
+            end
+        end
+        if #cards >= 6 then
+            return { cards }
+        end
+        return {}
+    end,
+    visible = false,
+    order_offset = 3000,
+    bj_mode = true
+}
+
+local bj_hands = {
+    {hand = 'hit_High Card0', x = 0, y = 0, key = 'pluto'},
+    {hand = 'hit_Court', x = 1, y = 0, key = 'mercury'},
+    {hand = 'hit_Duo', x = 2, y = 0, key = 'uranus'},
+    {hand = 'hit_Batch', x = 3, y = 0, key = 'venus'},
+    {hand = 'hit_Blackjack', x = 0, y = 1, key = 'saturn'},
+    {hand = 'hit_Duo+', x = 1, y = 1, key = 'jupiter'},
+    {hand = 'hit_Batch+', x = 2, y = 1, key = 'earth'},
+    {hand = 'hit_Blackjack Batch', x = 3, y = 1, key = 'mars'},
+    {hand = 'hit_Supreme', x = 0, y = 2, key = 'neptune'},
+}
+
+for i, j in ipairs(bj_hands) do
+    SMODS.Planet {
+        key = j.key,
+        name = string.upper(string.sub(j.key, 0, 0)) .. string.sub(j.key, 1, -1),
+        loc_txt = {
+            name = string.upper(string.sub(j.key, 0, 0)) .. string.sub(j.key, 1, -1),
+            text = {
+                "{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up",
+                "{C:attention}#2#",
+                "{C:mult}+#3#{} Mult and",
+                "{C:chips}+#4#{} chips"
+            }
+        },
+        config = {hand_type = j.hand},
+        atlas = "planets",
+        pos = {x = j.x, y = j.y},
+        loc_vars = function(self, info_queue, card)
+            local hand = self.config.hand_type
+            return { vars = {G.GAME.hands[hand].level,localize(hand, 'poker_hands'), G.GAME.hands[hand].l_mult, G.GAME.hands[hand].l_chips, colours = {(G.GAME.hands[hand].level==1 and G.C.UI.TEXT_DARK or G.C.HAND_LEVELS[math.min(7, G.GAME.hands[hand].level)])}} }
+        end,
+        in_pool = function(self)
+            if G.GAME.hands[j.hand].played > 0 then
+                return true
+            end
+            return false
+        end
+    }
+end
 
 SMODS.Untarot = SMODS.Consumable:extend {
     set = 'Untarot',
@@ -1211,9 +1686,6 @@ function check_total_over_21()
                 else
                     total = total + nominal
                 end
-                if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_aces then
-                    total = total + G.hand.cards[i].ability.trading.config.hit_hand_aces
-                end
             elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
                 total = total + 21
             elseif G.hand.cards[i].ability.name == 'Nope Card' then
@@ -1239,7 +1711,6 @@ function check_total_over_21()
             G.GAME.hit_busted = nil
         end
     end
-    
 end
 
 function get_hand_sum()
@@ -1261,7 +1732,7 @@ function get_hand_sum()
                 total = total + nominal
             end
             if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_aces then
-                total = total + G.hand.cards[i].ability.trading.config.hit_hand_aces
+                aces = aces + G.hand.cards[i].ability.trading.config.hit_hand_aces
             end
         elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
             total = total + 21
@@ -1387,7 +1858,7 @@ G.FUNCS.stand = function(e)
                 total = total + nominal
             end
             if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_aces then
-                total = total + G.hand.cards[i].ability.trading.config.hit_hand_aces
+                aces = aces + G.hand.cards[i].ability.trading.config.hit_hand_aces
             end
         elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
             total = total + 21
@@ -1423,7 +1894,7 @@ G.FUNCS.stand = function(e)
                     bl_total = bl_total + nominal
                 end
                 if not G.enemy_deck.cards[index].debuff and G.enemy_deck.cards[index].ability.trading and G.enemy_deck.cards[index].ability.trading.config.hit_hand_aces then
-                    total = total + G.enemy_deck.cards[index].ability.trading.config.hit_hand_aces
+                    bl_aces = bl_aces + G.enemy_deck.cards[index].ability.trading.config.hit_hand_aces
                 end
             elseif G.enemy_deck.cards[index].ability.name == 'Mega Blackjack Card' then
                 bl_total = bl_total + 21
@@ -1730,9 +2201,13 @@ SMODS.Back {
             end
         }))
         for hand, j in pairs(G.GAME.hands) do
-            G.GAME.hands[hand].level = math.max(0, G.GAME.hands[hand].level + 2)
-            G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].s_mult + G.GAME.hands[hand].l_mult*(G.GAME.hands[hand].level - 1), 1)
-            G.GAME.hands[hand].chips = math.max(G.GAME.hands[hand].s_chips + G.GAME.hands[hand].l_chips*(G.GAME.hands[hand].level - 1), 0)
+            -- G.GAME.hands[hand].level = math.max(0, G.GAME.hands[hand].level + 2)
+            -- G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].s_mult + G.GAME.hands[hand].l_mult*(G.GAME.hands[hand].level - 1), 1)
+            -- G.GAME.hands[hand].chips = math.max(G.GAME.hands[hand].s_chips + G.GAME.hands[hand].l_chips*(G.GAME.hands[hand].level - 1), 0)
+            G.GAME.hands[hand].visible = false
+            if G.GAME.hands[hand].bj_mode then
+                G.GAME.hands[hand].visible = true
+            end
         end
         for _, list in pairs(bj_ban_list) do
             for k, v in ipairs(list) do
@@ -2209,6 +2684,12 @@ bj_ban_list = {
     banned_cards = {
         {id = 'j_burglar'},
         -- effective useless
+        {id = 'j_jolly'},
+        {id = 'j_zany'},
+        {id = 'j_mad'},
+        {id = 'j_sly'},
+        {id = 'j_wily'},
+        {id = 'j_clever'},
         {id = 'j_crazy'},
         {id = 'j_droll'},
         {id = 'j_devious'},
@@ -2219,6 +2700,8 @@ bj_ban_list = {
         {id = 'j_seance'},
         {id = 'j_shortcut'},
         {id = 'j_obelisk'},
+        {id = 'j_duo'},
+        {id = 'j_trio'},
         {id = 'j_family'},
         {id = 'j_order'},
         {id = 'j_tribe'},
@@ -2250,6 +2733,13 @@ bj_ban_list = {
         {id = 'c_jupiter'},
         {id = 'c_neptune'},
         {id = 'c_saturn'},
+        {id = 'c_pluto'},
+        {id = 'c_mercury'},
+        {id = 'c_venus'},
+        {id = 'c_uranus'},
+        {id = 'c_planet_x'},
+        {id = 'c_ceres'},
+        {id = 'c_eris'},
         {id = 'c_devil'},
         {id = 'c_chariot'},
     },

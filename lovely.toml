@@ -611,15 +611,6 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = 'functions/state_events.lua'
-pattern = '''scoring_hand[i] = G.play.cards[i]'''
-position = 'after'
-payload = '''elseif G.GAME.modifiers.dungeon then
-    scoring_hand[i + 0] = G.play.cards[i]'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'functions/state_events.lua'
 pattern = '''v.ability.discarded = nil'''
 position = 'after'
 payload = '''if v.ability.revert_base then

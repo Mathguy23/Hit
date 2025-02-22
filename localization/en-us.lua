@@ -382,6 +382,56 @@ return {
         },
         ranks = {
             hit_0 = '0'
+        },
+        poker_hands = {
+            ["hit_High Card0"] = "High Card",
+            ["hit_Court"] = "Court",
+            ["hit_Duo"] = "Duo",
+            ["hit_Batch"] = "Batch",
+            ["hit_Blackjack"] = "Blackjack",
+            ["hit_Duo+"] = "Duo+",
+            ["hit_Batch+"] = "Batch+",
+            ["hit_Blackjack Batch"] = "Blackjack Batch",
+            ["hit_Supreme"] = "Supreme",
+        },
+        poker_hand_descriptions = {
+            ["hit_High Card0"] = {
+                "If the played hand is not any of the above",
+                "hands, only the highest ranked card scores"
+            },
+            ["hit_Court"] = {
+                "2 face cards. They may be played",
+                "with up to 3 other unscored cards"
+            },
+            ["hit_Duo"] = {
+                "2 cards that share the same rank and another",
+                "card of another rank. They may be played",
+                "with up to 2 other unscored cards"
+            },
+            ["hit_Batch"] = {
+                "3 cards that share the same suit. They may",
+                "be played with up to 2 other unscored cards"
+            },
+            ["hit_Blackjack"] = {
+                "Cards where hand sum is",
+                "equal to bust limit"
+            },
+            ["hit_Duo+"] = {
+                "3 or more cards that share the same rank and",
+                "another card of another rank. They may be played",
+                "with up to 1 other unscored card"
+            },
+            ["hit_Batch+"] = {
+                "4 cards that share the same suit. They may",
+                "be played with up to 1 other unscored card"
+            },
+            ["hit_Blackjack Batch"] = {
+                "3 or more cards all the same suit where",
+                "hand sum is equal to bust limit"
+            },
+            ["hit_Supreme"] = {
+                "6 or more cards"
+            },
         }
     }
 }
