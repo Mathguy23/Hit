@@ -497,9 +497,9 @@ local bj_hands = {
 for i, j in ipairs(bj_hands) do
     SMODS.Planet {
         key = j.key,
-        name = string.upper(string.sub(j.key, 0, 0)) .. string.sub(j.key, 1, -1),
+        name = string.upper(string.sub(j.key, 1, 1)) .. string.sub(j.key, 2, -1),
         loc_txt = {
-            name = string.upper(string.sub(j.key, 0, 0)) .. string.sub(j.key, 1, -1),
+            name = string.upper(string.sub(j.key, 1, 1)) .. string.sub(j.key, 2, -1),
             text = {
                 "{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up",
                 "{C:attention}#2#",
@@ -515,10 +515,7 @@ for i, j in ipairs(bj_hands) do
             return { vars = {G.GAME.hands[hand].level,localize(hand, 'poker_hands'), G.GAME.hands[hand].l_mult, G.GAME.hands[hand].l_chips, colours = {(G.GAME.hands[hand].level==1 and G.C.UI.TEXT_DARK or G.C.HAND_LEVELS[math.min(7, G.GAME.hands[hand].level)])}} }
         end,
         in_pool = function(self)
-            if G.GAME.hands[j.hand].played > 0 then
-                return true
-            end
-            return false
+            return G.GAME.modifiers.dungeon
         end
     }
 end
