@@ -47,15 +47,15 @@ return {
             hit_hermit_indicator = {
                 name = "Note",
                 text = {
-                    "Shuffled to",
-                    "bottom of deck",
+                    "Shuffled to bottom",
+                    "of deck for {C:attention}#1#{} rounds",
                 }
             },
             hit_moon_indicator = {
                 name = "Note",
                 text = {
-                    "Shuffled to",
-                    "top of deck",
+                    "Shuffled to top of",
+                    "deck for {C:attention}#1#{} rounds",
                 }
             },
             revert_base = {
@@ -170,7 +170,8 @@ return {
                 text = {
                     "Up to {C:attention}#1#{} selected cards will",
                     "be shuffled to the {C:attention}bottom{} of the",
-                    "deck at the start of {C:attention}next round{}"
+                    "deck at the start of the {C:attention}next{}",
+                    "{C:attention}#2# rounds{}"
                 }
             },
             c_hit_unwheel_of_fortune = {
@@ -240,7 +241,8 @@ return {
                 text = {
                     "Up to {C:attention}#1#{} selected cards will",
                     "be shuffled to the {C:attention}top{} of the",
-                    "deck at the start of {C:attention}next round{}"
+                    "deck at the start of the {C:attention}next{}",
+                    "{C:attention}#2# rounds{}"
                 }
             },
             c_hit_unsun = {
@@ -272,18 +274,14 @@ return {
             m_hit_blackjack = {
                 name = 'Mega Blackjack Card',
                 text = {
-                    "{C:chips}+#1#{} Chips",
-                    "no rank or suit",
-                    "Contributes {C:attention}21{}",
-                    "to hand sums",
+                    "{C:attention}+1{}, {C:attention}2{}, {C:attention}3{}, or {C:attention}4{} extra",
+                    "hand sum"
                 }
             },
             m_hit_nope = {
                 name = 'Nope Card',
                 text = {
-                    "no rank or suit",
-                    "Contributes {C:attention}22{}",
-                    "to hand sums",
+                    "{C:attention}+13{} extra hand sum",
                 }
             },
             m_hit_garnet = {
@@ -430,7 +428,7 @@ return {
                 "hand sum is equal to bust limit"
             },
             ["hit_Supreme"] = {
-                "6 or more cards"
+                "6 or more cards with a rank"
             },
         }
     }

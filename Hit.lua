@@ -222,38 +222,8 @@ SMODS.PokerHand {
         if not G.GAME.modifiers.dungeon then
             return {}
         end
-        local total = 0
-        local aces = 0
-        local bust_limit = G.GAME.hit_bust_limit or 21
-        for i = 1, #hand do
-            local id = hand[i]:get_id()
-            if id > 0 then
-                local rank = get_smods_rank_from_id(hand[i])
-                local nominal = rank.nominal
-                if not hand[i].debuff and hand[i].ability.trading and hand[i].ability.trading.config.hit_hand_value then
-                    total = total + hand[i].ability.trading.config.hit_hand_value
-                elseif rank.key == 'Ace' then
-                    total = total + 1
-                    aces = aces + 1
-                else
-                    total = total + nominal
-                end
-                if not hand[i].debuff and hand[i].ability.trading and hand[i].ability.trading.config.hit_hand_aces then
-                    aces = aces + hand[i].ability.trading.config.hit_hand_aces
-                end
-            elseif hand[i].ability.name == 'Mega Blackjack Card' then
-                total = total + 21
-            elseif hand[i].ability.name == 'Nope Card' then
-                total = total + 22
-            elseif hand[i].ability.name == 'Crazy Card' then
-                total = total - 3
-            end
-        end
-        while (total <= bust_limit - 10) and (aces >= 1) do
-            aces = aces - 1
-            total = total + 10
-        end
-        if total == bust_limit then
+        local data = get_card_total(hand)
+        if data.total == data.bust_limit then
             return { hand }
         end
         return {}
@@ -370,66 +340,14 @@ SMODS.PokerHand {
         if not G.GAME.modifiers.dungeon then
             return {}
         end
-        local suits = SMODS.Suit.obj_buffer
-        local map = {}
-        local total = 0
-        local aces = 0
-        local bust_limit = G.GAME.hit_bust_limit or 21
-        for i = 1, #hand do
-            local id = hand[i]:get_id()
-            if id > 0 then
-                local rank = get_smods_rank_from_id(hand[i])
-                local nominal = rank.nominal
-                if not hand[i].debuff and hand[i].ability.trading and hand[i].ability.trading.config.hit_hand_value then
-                    total = total + hand[i].ability.trading.config.hit_hand_value
-                elseif rank.key == 'Ace' then
-                    total = total + 1
-                    aces = aces + 1
-                else
-                    total = total + nominal
-                end
-                if not hand[i].debuff and hand[i].ability.trading and hand[i].ability.trading.config.hit_hand_aces then
-                    aces = aces + hand[i].ability.trading.config.hit_hand_aces
-                end
-            elseif hand[i].ability.name == 'Mega Blackjack Card' then
-                total = total + 21
-            elseif hand[i].ability.name == 'Nope Card' then
-                total = total + 22
-            elseif hand[i].ability.name == 'Crazy Card' then
-                total = total - 3
-            end
-        end
-        while (total <= bust_limit - 10) and (aces >= 1) do
-            aces = aces - 1
-            total = total + 10
-        end
-        if (total == bust_limit) then
-            local req_count = 0
-            for i=1, #hand do
-                local has_suit = false
-                for i0, j in pairs(SMODS.Suits) do
-                    if hand[i]:is_suit(j.key) then
-                        has_suit = true
-                        break
-                    end
-                end
-                local id = hand[i]:get_id()
-                if (id >= 0) and has_suit then
-                    req_count = req_count + 1
-                end
-            end
-            if req_count < 3 then
+        local data = get_card_total(hand)
+        if (data.total == data.bust_limit) then
+            if data.card_count < 3 then
                 return {}
             end
-            for i=1, #hand do
-                for j = 1, #suits do
-                    if hand[i]:is_suit(suits[j], nil, true) then
-                        map[suits[j]] = map[suits[j]] or {}
-                        map[suits[j]][#map[suits[j]]+1] = hand[i] 
-                        if #map[suits[j]] >= req_count then
-                            return { map[suits[j]] }
-                        end
-                    end
+            for i, j in pairs(data.suit_map) do
+                if #j >= data.card_count then
+                    return { j }
                 end
             end
         end
@@ -460,15 +378,8 @@ SMODS.PokerHand {
         end
         cards = {}
         for i=1, #hand do
-            local has_suit = false
-            for i0, j in pairs(SMODS.Suits) do
-                if hand[i]:is_suit(j.key) then
-                    has_suit = true
-                    break
-                end
-            end
             local id = hand[i]:get_id()
-            if (id >= 0) and has_suit then
+            if (id >= 0) then
                 table.insert(cards, hand[i])
             end
         end
@@ -544,21 +455,10 @@ SMODS.Enhancement {
     key = 'blackjack',
     name = "Mega Blackjack Card",
     atlas = 'enhance',
-    no_rank = true,
-    no_suit = true,
-    replace_base_card = true,
-    config = {chips = 21},
+    config = {},
     pos = {x = 0, y = 0},
     in_pool = function(self)
         return false
-    end,
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.chips or 21}}
-    end,
-    calculate = function(self, card, context)
-        if context.cardarea == G.play and context.main_scoring then
-            return {chips = card and card.ability.chips or 21}
-        end
     end,
 }
 
@@ -977,16 +877,16 @@ SMODS.Untarot {
         delay(0.2)
         for i=1, #G.hand.highlighted do
             G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                G.hand.highlighted[i].ability.shuffle_bottom = true
+                G.hand.highlighted[i].ability.shuffle_bottom = card.ability.rounds
                 return true 
             end }))
         end
         G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
         delay(0.5)
     end,
-    config = {max_highlighted = 6},
+    config = {max_highlighted = 6, rounds = 4},
     loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 6}}
+        return {vars = {card and card.ability.max_highlighted or 6, card and card.ability.rounds or 4}}
     end,
     can_use = function(self, card)
         if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.highlighted >= 1) and (#G.hand.highlighted <= (card and card.ability.max_highlighted or 6)) then
@@ -999,9 +899,6 @@ SMODS.Enhancement {
     key = 'nope',
     name = "Nope Card",
     atlas = 'enhance',
-    no_rank = true,
-    no_suit = true,
-    replace_base_card = true,
     config = {},
     pos = {x = 1, y = 0},
     in_pool = function(self)
@@ -1322,16 +1219,16 @@ SMODS.Untarot {
         delay(0.2)
         for i=1, #G.hand.highlighted do
             G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                G.hand.highlighted[i].ability.shuffle_top = true
+                G.hand.highlighted[i].ability.shuffle_top = card.ability.rounds
                 return true 
             end }))
         end
         G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
         delay(0.5)
     end,
-    config = {max_highlighted = 3},
+    config = {max_highlighted = 3, rounds = 4},
     loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 3}}
+        return {vars = {card and card.ability.max_highlighted or 3, card and card.ability.rounds or 4}}
     end,
 }
 
@@ -1669,91 +1566,109 @@ end
 function check_total_over_21()
     if G.GAME.modifiers.dungeon and not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
         G.GAME.hit_hand_sum_total = get_hand_sum()
-        local total = 0
-        local bust_limit = G.GAME.hit_bust_limit or 21
-        for i = 1, #G.hand.cards do
-            local id = G.hand.cards[i]:get_id()
-            if id > 0 then
-                local rank = get_smods_rank_from_id(G.hand.cards[i])
-                local nominal = rank.nominal
-                if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_value then
-                    total = total + G.hand.cards[i].ability.trading.config.hit_hand_value
-                elseif rank.key == 'Ace' then
-                    total = total + 1
-                else
-                    total = total + nominal
-                end
-            elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
-                total = total + 21
-            elseif G.hand.cards[i].ability.name == 'Nope Card' then
-                total = total + 22
-            elseif G.hand.cards[i].ability.name == 'Crazy Card' then
-                total = total - 3
-            end
-        end
-        if (total > bust_limit) and not G.GAME.hit_busted then
+        local data = get_card_total(G.hand.cards, false)
+        if (data.total > data.bust_limit) and not G.GAME.hit_busted then
             G.E_MANAGER:add_event(Event({
                 trigger = 'immediate',
                 func = function()
                     if hide_sum() then
                         play_area_status_text("Bust (??)")
                     else
-                        play_area_status_text("Bust (" .. tostring(total) .. ")")
+                        play_area_status_text("Bust (" .. tostring(data.total) .. ")")
                     end
                     return true
                 end
             }))
             G.GAME.hit_busted = true
-        elseif (total <= bust_limit) then
+        elseif (data.total <= data.bust_limit) then
             G.GAME.hit_busted = nil
         end
     end
 end
 
 function get_hand_sum()
-    local total = 0
+    local data = get_card_total(G.hand.cards)
+    if hide_sum() then
+        return localize("b_stand") .. ' ??'
+    elseif data.soft then
+        return localize("b_stand") .. ' S' .. tostring(data.total)
+    elseif data.total > data.bust_limit then
+        return localize("b_stand") .. ' ' .. tostring(data.total) .. 'B'
+    else
+        return localize("b_stand") .. ' ' .. tostring(data.total)
+    end
+end
+
+function get_card_total(cards, do_soft, bonus_total)
+    if do_soft == nil then
+        do_soft = true
+    end
+    local suits = SMODS.Suit.obj_buffer
+    local map = {}
+    local total = bonus_total or 0
     local aces = 0
+    local variance = 0
     local bust_limit = G.GAME.hit_bust_limit or 21
+    local req_count = 0
     local soft = false
-    for i = 1, #G.hand.cards do
-        local id = G.hand.cards[i]:get_id()
+    for i = 1, #cards do
+        local id = cards[i]:get_id()
+        local valid = true
         if id > 0 then
-            local rank = get_smods_rank_from_id(G.hand.cards[i])
+            local rank = get_smods_rank_from_id(cards[i])
             local nominal = rank.nominal
-            if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_value then
-                total = total + G.hand.cards[i].ability.trading.config.hit_hand_value
+            if not cards[i].debuff and cards[i].ability.trading and cards[i].ability.trading.config.hit_hand_value then
+                total = total + cards[i].ability.trading.config.hit_hand_value
             elseif rank.key == 'Ace' then
                 total = total + 1
                 aces = aces + 1
             else
                 total = total + nominal
             end
-            if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_aces then
-                aces = aces + G.hand.cards[i].ability.trading.config.hit_hand_aces
+            if not cards[i].debuff and cards[i].ability.trading and cards[i].ability.trading.config.hit_hand_aces then
+                aces = aces + cards[i].ability.trading.config.hit_hand_aces
             end
-        elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
-            total = total + 21
-        elseif G.hand.cards[i].ability.name == 'Nope Card' then
-            total = total + 22
-        elseif G.hand.cards[i].ability.name == 'Crazy Card' then
+        elseif cards[i].ability.name == 'Crazy Card' then
             total = total - 3
-            aces = aces + 1
+        else
+            valid = false
+        end
+        if cards[i].ability.name == 'Mega Blackjack Card' then
+            total = total + 1
+            variance = variance + 3
+            valid = true
+        elseif cards[i].ability.name == 'Nope Card' then
+            total = total + 13
+        end
+        if valid then
+            req_count = req_count + 1
+            for j = 1, #suits do
+                if cards[i]:is_suit(suits[j], nil, true) then
+                    map[suits[j]] = map[suits[j]] or {}
+                    map[suits[j]][#map[suits[j]]+1] = cards[i] 
+                end
+            end
         end
     end
-    while (total <= bust_limit - 10) and (aces >= 1) do
-        total = total + 10
-        aces = aces - 1
-        soft = true
+    if do_soft then
+        while (total <= bust_limit - 10) and (aces >= 1) do
+            aces = aces - 1
+            total = total + 10
+            soft = true
+        end
+        while (total <= bust_limit - 1) and (variance >= 1) do
+            variance = variance - 1
+            total = total + 1
+            soft = true
+        end
     end
-    if hide_sum() then
-        return localize("b_stand") .. ' ??'
-    elseif soft then
-        return localize("b_stand") .. ' S' .. tostring(total)
-    elseif total > bust_limit then
-        return localize("b_stand") .. ' ' .. tostring(total) .. 'B'
-    else
-        return localize("b_stand") .. ' ' .. tostring(total)
-    end
+    return {
+        total = total,
+        bust_limit = bust_limit,
+        suit_map = map,
+        card_count = req_count,
+        soft = soft
+    }
 end
 
 function hide_sum()
@@ -1825,6 +1740,14 @@ G.FUNCS.can_stand = function(e)
 end
 
 G.FUNCS.stand = function(e)
+    G.E_MANAGER:add_event(Event({
+        trigger = 'immediate',
+        func = function()
+            G.STATE = G.STATES.HAND_PLAYED
+            G.STATE_COMPLETE = true
+            return true
+        end
+    }))
     local add_total = 0
     for i = 1, #G.hand.cards do
         if G.hand.cards[i].ability.name == 'Osmium Card' then
@@ -1834,108 +1757,41 @@ G.FUNCS.stand = function(e)
             G.hand.cards[i]:calculate_exotic({stand = true, cardarea = G.hand})
         end
     end
-    local total = 0
-    local aces = 0
+    local y_data = get_card_total(G.hand.cards, nil, add_total)
+    local total = y_data.total
     G.GAME.hit_busted = nil
     G.GAME.stood = true
-    local bust_limit = G.GAME.hit_bust_limit or 21
     G.GAME.hit_stood_ranks = G.GAME.hit_stood_ranks or {}
     G.GAME.hit_stood_suits = G.GAME.hit_stood_suits or {}
-    for i = 1, #G.hand.cards do
-        local id = G.hand.cards[i]:get_id()
-        if id > 0 then
-            local rank = get_smods_rank_from_id(G.hand.cards[i])
-            local nominal = rank.nominal
-            if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_value then
-                total = total + G.hand.cards[i].ability.trading.config.hit_hand_value
-            elseif rank.key == 'Ace' then
-                total = total + 1
-                aces = aces + 1
-            else
-                total = total + nominal
-            end
-            if not G.hand.cards[i].debuff and G.hand.cards[i].ability.trading and G.hand.cards[i].ability.trading.config.hit_hand_aces then
-                aces = aces + G.hand.cards[i].ability.trading.config.hit_hand_aces
-            end
-        elseif G.hand.cards[i].ability.name == 'Mega Blackjack Card' then
-            total = total + 21
-        elseif G.hand.cards[i].ability.name == 'Nope Card' then
-            total = total + 22
-        elseif G.hand.cards[i].ability.name == 'Crazy Card' then
-            total = total - 3
-            aces = aces + 1
-        end
-    end
     local bl_total = 0
-    local bl_aces = 0
-    local bl_cards = 0
+    local bl_cards = {}
     local total_list = {}
-    while bl_total <= bust_limit do
-        local index = #G.enemy_deck.cards - bl_cards
+    while true do
+        local index = #G.enemy_deck.cards - #bl_cards
         if index <= 0 then
             break
         else
             local id = G.enemy_deck.cards[index]:get_id()
-            if id > 0 then
-                if G.enemy_deck.cards[index].ability.name == 'Osmium Card' then
-                    add_total = add_total + 2
-                end
-                local rank = get_smods_rank_from_id(G.enemy_deck.cards[index])
-                local nominal = rank.nominal
-                if not G.enemy_deck.cards[index].debuff and G.enemy_deck.cards[index].ability.trading and G.enemy_deck.cards[index].ability.trading.config.hit_hand_value then
-                    total = total + G.enemy_deck.cards[index].ability.trading.config.hit_hand_value
-                elseif rank.key == 'Ace' then
-                    bl_total = bl_total + 11
-                    bl_aces = bl_aces + 1
-                else
-                    bl_total = bl_total + nominal
-                end
-                if not G.enemy_deck.cards[index].debuff and G.enemy_deck.cards[index].ability.trading and G.enemy_deck.cards[index].ability.trading.config.hit_hand_aces then
-                    bl_aces = bl_aces + G.enemy_deck.cards[index].ability.trading.config.hit_hand_aces
-                end
-            elseif G.enemy_deck.cards[index].ability.name == 'Mega Blackjack Card' then
-                bl_total = bl_total + 21
-            elseif G.enemy_deck.cards[index].ability.name == 'Nope Card' then
-                bl_total = bl_total + 22
-            elseif G.enemy_deck.cards[index].ability.name == 'Crazy Card' then
-                bl_total = bl_total - 3
-                bl_aces = bl_aces + 1
-            end
-            if bl_total > bust_limit then
-                while (bl_total > bust_limit) and (bl_aces > 0) do
-                    bl_total = bl_total - 10
-                    bl_aces = bl_aces - 1
-                end
-            end
+            table.insert(bl_cards, G.enemy_deck.cards[index])
+            local bl_data = get_card_total(bl_cards)
+            bl_total = bl_data.total
             table.insert(total_list, bl_total)
-            if (bl_total >= bust_limit - 4) and (bl_total <= bust_limit) then
-                bl_cards = bl_cards + 1
+            if (bl_total >= bl_data.bust_limit - 4) then
                 break
             end
         end
-        bl_cards = bl_cards + 1
     end
-    total = total + add_total
-    while (total <= bust_limit - 10) and (aces >= 1) do
-        total = total + 10
-        aces = aces - 1
-    end
-    if total > bust_limit then
+    if total > y_data.bust_limit then
         total = -1e15
     end
-    bl_total = bl_total + add_total
-    if bl_total > bust_limit then
-        while (bl_total > bust_limit) and (bl_aces > 0) do
-            bl_total = bl_total - 10
-            bl_aces = bl_aces - 1
-        end
-    end
-    if bl_total > bust_limit then
+    local bl_data = get_card_total(bl_cards, nil, add_total)
+    bl_total = bl_data.total
+    if bl_total > bl_data.bust_limit then
         bl_total = -1e15
     end
     local force_push = nil
-    for i = 0, bl_cards - 1 do
-        if not G.enemy_deck.cards[#G.enemy_deck.cards - i].debuff and G.enemy_deck.cards[#G.enemy_deck.cards - i].ability.trading and (G.enemy_deck.cards[#G.enemy_deck.cards - i].ability.trading.name == 'Sun Two') then
+    for i = 1, #bl_cards  do
+        if not bl_cards[i].debuff and bl_cards[i].ability.trading and (bl_cards[i].ability.trading.name == 'Sun Two') then
             force_push = true
             break
         end
@@ -1957,17 +1813,17 @@ G.FUNCS.stand = function(e)
     G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
-            if bl_cards > 0 then
-                for i = 1, bl_cards do
+            if #bl_cards > 0 then
+                for i = 1, #bl_cards do
                     draw_card(G.enemy_deck, G.play, i*100/5, 'up')
                     force_up_status_text = true
                     local color = G.C.FILTER
-                    if total_list[i] > (bust_limit) then
+                    if total_list[i] > (bl_data.bust_limit) then
                         color = G.C.RED
-                    elseif total_list[i] >= (bust_limit - 4) then
+                    elseif total_list[i] >= (bl_data.bust_limit - 4) then
                         color = G.C.GREEN
                     end
-                    card_eval_status_text(G.enemy_deck.cards[#G.enemy_deck.cards - i + 1], 'extra', nil, nil, nil, {message = tostring(total_list[i]), colour = color})
+                    card_eval_status_text(bl_cards[i], 'extra', nil, nil, nil, {message = tostring(total_list[i]), colour = color})
                     force_up_status_text = nil
                 end
             end
@@ -2047,6 +1903,13 @@ G.FUNCS.stand = function(e)
                         G.E_MANAGER:add_event(Event({
                             trigger = 'immediate',
                             func = function()
+                                G.STATE_COMPLETE = false
+                                return true
+                            end
+                        }))
+                        G.E_MANAGER:add_event(Event({
+                            trigger = 'immediate',
+                            func = function()
                                 G.GAME.stood = nil
                                 return true
                             end
@@ -2082,14 +1945,6 @@ G.FUNCS.stand = function(e)
                                     end
                                 end
                                 G.GAME.negate_hand = true
-                                G.E_MANAGER:add_event(Event({
-                                    trigger = 'immediate',
-                                    func = function()
-                                        G.STATE = G.STATES.HAND_PLAYED
-                                        G.STATE_COMPLETE = true
-                                        return true
-                                    end
-                                }))
                                 G.E_MANAGER:add_event(Event({
                                     trigger = 'immediate',
                                     func = function()
@@ -2142,7 +1997,7 @@ G.FUNCS.stand = function(e)
                     end
                 }))
             end
-            if #G.enemy_deck.cards - bl_cards <= 0 then
+            if #G.enemy_deck.cards - #bl_cards <= 0 then
                 G.E_MANAGER:add_event(Event({
                     trigger = 'immediate',
                     func = function()
@@ -2679,7 +2534,6 @@ end
 
 bj_ban_list = {
     banned_cards = {
-        {id = 'j_burglar'},
         -- effective useless
         {id = 'j_jolly'},
         {id = 'j_zany'},
@@ -2751,7 +2605,6 @@ bj_ban_list = {
         {id = 'bl_serpent', type = 'blind'},
         {id = 'bl_final_bell', type = 'blind'},
         {id = 'bl_mouth', type = 'blind'},
-        {id = 'bl_ox', type = 'blind'},
         {id = 'bl_fish', type = 'blind'},
     }
 }
