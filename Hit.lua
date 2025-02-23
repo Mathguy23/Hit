@@ -930,7 +930,7 @@ SMODS.Untarot {
             })) 
         end
     end,
-    config = {dollars = 5, odds = 2},
+    config = {dollars = 10, odds = 2},
     loc_vars = function(self, info_queue, card)
         info_queue[#info_queue+1] = G.P_CENTERS['m_hit_nope']
         return {vars = {card and card.ability.dollars or 5, G.GAME.probabilities.normal, card and card.ability.odds or 2, localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_nope'}}}
