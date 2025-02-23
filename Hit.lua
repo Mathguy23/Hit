@@ -1633,12 +1633,13 @@ function get_card_total(cards, do_soft, bonus_total)
         else
             valid = false
         end
-        if cards[i].ability.name == 'Mega Blackjack Card' then
+        if not cards[i].debuff and (cards[i].ability.name == 'Mega Blackjack Card') then
             total = total + 1
             variance = variance + 3
             valid = true
-        elseif cards[i].ability.name == 'Nope Card' then
+        elseif not cards[i].debuff and (cards[i].ability.name == 'Nope Card') then
             total = total + 13
+            valid = true
         end
         if valid then
             req_count = req_count + 1
