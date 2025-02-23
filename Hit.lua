@@ -324,8 +324,8 @@ SMODS.PokerHand {
     l_mult = 3,
     example = {
         { 'D_Q', true },
-        { 'H_6', true },
-        { 'D_J', false },
+        { 'H_6', false },
+        { 'D_J', true },
         { 'D_2', true },
         { 'D_4', true } 
     },
@@ -360,11 +360,11 @@ SMODS.PokerHand {
     mult = 9,
     l_mult = 2,
     example = {
-        { 'S_4', true },
+        { 'S_A', true },
+        { 'S_2', true },
+        { 'S_3', true },
         { 'S_5', true },
-        { 'S_6', true },
-        { 'S_7', true },
-        { 'C_5', false } 
+        { 'C_J', false } 
     },
     evaluate = function(parts, hand)
         if not G.GAME.modifiers.dungeon then
