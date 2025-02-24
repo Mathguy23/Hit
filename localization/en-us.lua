@@ -96,8 +96,8 @@ return {
             c_hit_unfool = {
                 name = "The Reversed Fool",
                 text = {
-                    "Create a",
-                    "{C:attention}#1#{}"
+                    "Add a {C:attention}#1#{}",
+                    "to {C:attention}Full Deck{}"
                 },
             },
             c_hit_unmagician = {
@@ -111,9 +111,9 @@ return {
             c_hit_unhigh_priestess = {
                 name = "The Reversed High Priestess",
                 text = {
-                    "Create {C:attention}1{} card of your",
-                    "most played {C:attention}rank{} and {C:attention}1{} of",
-                    "your most played {C:attention}suit{}",
+                    "Add {C:attention}1{} card of your most",
+                    "played {C:attention}rank{} and {C:attention}1{} of your",
+                    "most played {C:attention}suit{} to {C:attention}Full Deck{}",
                     "{C:inactive}({C:attention}#1#{C:inactive}, {C:attention}#2#{C:inactive}){}"
                 }
             },
@@ -177,8 +177,9 @@ return {
             c_hit_unwheel_of_fortune = {
                 name = "The Reversed Wheel of Fortune",
                 text = {
-                    "Earn {C:money}$#1#{}, {C:green}#2# in #3#{} chance",
-                    "to create a {C:attention}#4#",
+                    "Earn {C:money}$#1#{}, {C:green}#2# in #3#{}",
+                    "chance to add a",
+                    "{C:attention}#4#{} to {C:attention}Full Deck{}"
                 }
             },
             c_hit_unstrength = {
@@ -193,8 +194,8 @@ return {
             c_hit_unhanged_man = {
                 name = "The Reversed Hanged Man",
                 text = {
-                    "Create {C:attention}#1#{} Enhanced",
-                    "cards",
+                    "Add {C:attention}#1#{} Enhanced",
+                    "cards to {C:attention}Full Deck{}",
                 }
             },
             c_hit_undeath = {

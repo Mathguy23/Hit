@@ -451,6 +451,27 @@ function get_smods_rank_from_id(card)
     end
 end
 
+function shuffle_card_in_deck(card)
+    if card.facing == 'front' then
+        card:flip()
+    end
+    local index = -1
+    for i = 1, #G.deck.cards do
+        if G.deck.cards[i] == card then
+            index = i
+            break
+        end
+    end
+    if index ~= -1 then
+        local rand_index = 1 + math.floor(#G.deck.cards * pseudorandom('shuffle_index'))
+        if rand_index == #G.deck.cards + 1 then
+            rand_index = #G.deck.cards
+        end
+        G.deck.cards[rand_index], G.deck.cards[index] = G.deck.cards[index], G.deck.cards[rand_index]
+        G.deck:set_ranks()
+    end
+end
+
 SMODS.Enhancement {
     key = 'blackjack',
     name = "Mega Blackjack Card",
@@ -478,7 +499,8 @@ SMODS.Untarot {
                 local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
                 local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
                 local suit = pseudorandom_element(suits, pseudoseed('untarot'))
-                create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = G.P_CENTERS['m_hit_blackjack']}, G.hand, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                local card_ = create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = G.P_CENTERS['m_hit_blackjack']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                shuffle_card_in_deck(card_)
                 return true
             end
         })) 
@@ -489,7 +511,7 @@ SMODS.Untarot {
         return {vars = {localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_blackjack'}}}
     end,
     can_use = function(self, card)
-        if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.cards >= 1) then
+        if G.deck then
             return true
         end
     end
@@ -570,8 +592,10 @@ SMODS.Untarot {
                 end
                 common_rank = SMODS.Ranks[common_rank].card_key
                 common_suit = SMODS.Suits[common_suit].card_key
-                create_playing_card({front = G.P_CARDS[suit..'_'..common_rank], center = G.P_CENTERS['c_base']}, G.hand, nil, nil, {G.C.SECONDARY_SET.Tarot})
-                create_playing_card({front = G.P_CARDS[common_suit..'_'..rank], center = G.P_CENTERS['c_base']}, G.hand, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                local card_1 = create_playing_card({front = G.P_CARDS[suit..'_'..common_rank], center = G.P_CENTERS['c_base']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                local card_2 = create_playing_card({front = G.P_CARDS[common_suit..'_'..rank], center = G.P_CENTERS['c_base']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                shuffle_card_in_deck(card_1)
+                shuffle_card_in_deck(card_2)
                 return true
             end
         })) 
@@ -599,7 +623,7 @@ SMODS.Untarot {
         return {vars = {localize(common_rank, 'ranks'), localize(common_suit, 'suits_plural')}}
     end,
     can_use = function(self, card)
-        if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.cards >= 1) then
+        if G.deck then
             return true
         end
     end
@@ -924,7 +948,8 @@ SMODS.Untarot {
                     local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
                     local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
                     local suit = pseudorandom_element(suits, pseudoseed('untarot'))
-                    create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = G.P_CENTERS['m_hit_nope']}, G.hand, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                    local card_ = create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = G.P_CENTERS['m_hit_nope']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                    shuffle_card_in_deck(card_)
                     return true
                 end
             })) 
@@ -936,7 +961,7 @@ SMODS.Untarot {
         return {vars = {card and card.ability.dollars or 5, G.GAME.probabilities.normal, card and card.ability.odds or 2, localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_nope'}}}
     end,
     can_use = function(self, card)
-        if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.cards >= 1) then
+        if G.deck then
             return true
         end
     end
@@ -1012,7 +1037,8 @@ SMODS.Untarot {
                         end
                     end
                     local enhancement = pseudorandom_element(pool, pseudoseed('untarot'))
-                    create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = enhancement}, G.hand, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                    local card_ = create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = enhancement}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                    shuffle_card_in_deck(card_)
                 end
                 return true
             end
@@ -1023,7 +1049,7 @@ SMODS.Untarot {
         return {vars = {card and card.ability.cards or 2}}
     end,
     can_use = function(self, card)
-        if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.cards >= 1) then
+        if G.deck then
             return true
         end
     end
@@ -1630,6 +1656,7 @@ function get_card_total(cards, do_soft, bonus_total)
             end
         elseif cards[i].ability.name == 'Crazy Card' then
             total = total - 3
+            aces = aces + 1
         else
             valid = false
         end
