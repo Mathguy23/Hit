@@ -2062,14 +2062,30 @@ G.FUNCS.draw_from_deck_to_hand = function(e)
     end
 end
 
+function set_blackjack_mode()
+    G.GAME.modifiers = G.GAME.modifiers or {}
+    G.GAME.modifiers.dungeon = true
+    for hand, j in pairs(G.GAME.hands) do
+        G.GAME.hands[hand].visible = false
+        if G.GAME.hands[hand].bj_mode then
+            G.GAME.hands[hand].visible = true
+        end
+    end
+    for _, list in pairs(bj_ban_list) do
+        for k, v in ipairs(list) do
+            G.GAME.banned_keys[v.id] = true
+        end
+    end
+    G.GAME.untarot_rate = 4
+end
+
 SMODS.Back {
     key = 'aced',
     name = "Aced Deck",
     pos = { x = 0, y = 0 },
     atlas = 'decks',
     apply = function(self)
-        G.GAME.modifiers = G.GAME.modifiers or {}
-        G.GAME.modifiers.dungeon = true
+        set_blackjack_mode()
         G.E_MANAGER:add_event(Event({
             func = function()
                 for i, j in ipairs({'H', 'S', 'D', 'C'}) do
@@ -2080,21 +2096,6 @@ SMODS.Back {
             return true
             end
         }))
-        for hand, j in pairs(G.GAME.hands) do
-            -- G.GAME.hands[hand].level = math.max(0, G.GAME.hands[hand].level + 2)
-            -- G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].s_mult + G.GAME.hands[hand].l_mult*(G.GAME.hands[hand].level - 1), 1)
-            -- G.GAME.hands[hand].chips = math.max(G.GAME.hands[hand].s_chips + G.GAME.hands[hand].l_chips*(G.GAME.hands[hand].level - 1), 0)
-            G.GAME.hands[hand].visible = false
-            if G.GAME.hands[hand].bj_mode then
-                G.GAME.hands[hand].visible = true
-            end
-        end
-        for _, list in pairs(bj_ban_list) do
-            for k, v in ipairs(list) do
-                G.GAME.banned_keys[v.id] = true
-            end
-        end
-        G.GAME.untarot_rate = 4
     end,
 }
 
@@ -2104,20 +2105,8 @@ SMODS.Back {
     pos = { x = 1, y = 0 },
     atlas = 'decks',
     apply = function(self)
-        G.GAME.modifiers = G.GAME.modifiers or {}
-        G.GAME.modifiers.dungeon = true
-        for hand, j in pairs(G.GAME.hands) do
-            G.GAME.hands[hand].level = math.max(0, G.GAME.hands[hand].level + 2)
-            G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].s_mult + G.GAME.hands[hand].l_mult*(G.GAME.hands[hand].level - 1), 1)
-            G.GAME.hands[hand].chips = math.max(G.GAME.hands[hand].s_chips + G.GAME.hands[hand].l_chips*(G.GAME.hands[hand].level - 1), 0)
-        end
-        for _, list in pairs(bj_ban_list) do
-            for k, v in ipairs(list) do
-                G.GAME.banned_keys[v.id] = true
-            end
-        end
+        set_blackjack_mode()
         G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) + 3
-        G.GAME.untarot_rate = 4
     end,
 }
 
@@ -2139,40 +2128,18 @@ if CardSleeves and CardSleeves.Sleeve then
 		end,
 		apply = function(self)
 			if self.get_current_deck_key() ~= "b_hit_aced" and self.get_current_deck_key() ~= "b_hit_overload" then
-				G.GAME.modifiers = G.GAME.modifiers or {}
-				G.GAME.modifiers.dungeon = true
-				G.E_MANAGER:add_event(Event({
-					func = function()
-						for i, j in ipairs({'H', 'S', 'D', 'C'}) do
-							local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[j .. '_A'], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
-							G.deck:emplace(_card)
-							table.insert(G.playing_cards, _card)
-						end
-					return true
-					end
-				}))
-				for hand, j in pairs(G.GAME.hands) do
-					G.GAME.hands[hand].level = math.max(0, G.GAME.hands[hand].level + 2)
-					G.GAME.hands[hand].mult = math.max(G.GAME.hands[hand].s_mult + G.GAME.hands[hand].l_mult*(G.GAME.hands[hand].level - 1), 1)
-					G.GAME.hands[hand].chips = math.max(G.GAME.hands[hand].s_chips + G.GAME.hands[hand].l_chips*(G.GAME.hands[hand].level - 1), 0)
-				end
-				for _, list in pairs(bj_ban_list) do
-					for k, v in ipairs(list) do
-						G.GAME.banned_keys[v.id] = true
-					end
-				end
-			else
-				G.E_MANAGER:add_event(Event({
-					func = function()
-						for i, j in ipairs({'H', 'S', 'D', 'C'}) do
-							local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[j .. '_A'], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
-							G.deck:emplace(_card)
-							table.insert(G.playing_cards, _card)
-						end
-					return true
-					end
-				}))
+                set_blackjack_mode()
 			end
+            G.E_MANAGER:add_event(Event({
+                func = function()
+                    for i, j in ipairs({'H', 'S', 'D', 'C'}) do
+                        local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[j .. '_A'], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+                        G.deck:emplace(_card)
+                        table.insert(G.playing_cards, _card)
+                    end
+                return true
+                end
+            }))
 		end
 	}
 end
