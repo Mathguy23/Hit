@@ -1559,7 +1559,7 @@ end
     SMODS.Joker {
         key = 'friends',
         name = "The Friends",
-        rarity = 1,
+        rarity = 3,
         atlas = 'jokers',
         pos = {x = 1, y = 1},
         cost = 8,
@@ -1575,7 +1575,7 @@ end
     SMODS.Joker {
         key = 'pair',
         name = "The Pair",
-        rarity = 1,
+        rarity = 3,
         atlas = 'jokers',
         pos = {x = 2, y = 1},
         cost = 8,
@@ -1591,7 +1591,7 @@ end
     SMODS.Joker {
         key = 'bundle',
         name = "The Bundle",
-        rarity = 1,
+        rarity = 3,
         atlas = 'jokers',
         pos = {x = 3, y = 1},
         cost = 8,
