@@ -175,9 +175,7 @@ payload = '''if _tag and _tag.config.ref_table then
                     if G.GAME.tags[i]:apply_to_run({type = 'new_blind_choice'}) then break end
                 end
             end
-            if _tag.config.ref_table.key == 'tag_hit_blackjack' then
-                dunegon_selection('bl_hit_dealer')
-            elseif _tag.config.ref_table.key == 'tag_hit_memory' then
+            if _tag.config.ref_table.key == 'tag_hit_memory' then
                 if G.blind_select then 
                     G.blind_prompt_box:get_UIE_by_ID('prompt_dynatext1').config.object.pop_delay = 0
                     G.blind_prompt_box:get_UIE_by_ID('prompt_dynatext1').config.object:pop_out(5)

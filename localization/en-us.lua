@@ -346,6 +346,80 @@ return {
                     "copy of this card",
                 }
             },
+        },
+        Joker = {
+            j_hit_social = {
+                name = "Social Joker",
+                text = {
+                    "{C:red}+#1#{} Mult if played",
+                    "hand contains",
+                    "a {C:attention}#2#"
+                }
+            },
+            j_hit_manipulative = {
+                name = "Manipulative Joker",
+                text = {
+                    "{C:red}+#1#{} Mult if played",
+                    "hand contains",
+                    "a {C:attention}#2#"
+                }
+            },
+            j_hit_creative = {
+                name = "Creative Joker",
+                text = {
+                    "{C:red}+#1#{} Mult if played",
+                    "hand contains",
+                    "a {C:attention}#2#"
+                }
+            },
+            j_hit_merry = {
+                name = "Merry Joker",
+                text = {
+                    "{C:blue}+#1#{} Chips if played",
+                    "hand contains",
+                    "a {C:attention}#2#"
+                }
+            },
+            j_hit_secretive = {
+                name = "Secretive Joker",
+                text = {
+                    "{C:blue}+#1#{} Chips if played",
+                    "hand contains",
+                    "a {C:attention}#2#"
+                }
+            },
+            j_hit_hoarding = {
+                name = "Hoarding Joker",
+                text = {
+                    "{C:blue}+#1#{} Chips if played",
+                    "hand contains",
+                    "a {C:attention}#2#"
+                }
+            },
+            j_hit_friends = {
+                name = "The Friends",
+                text = {
+                    "{X:mult,C:white} X#1# {} Mult if played",
+                    "hand contains",
+                    "a {C:attention}#2#"
+                }
+            },
+            j_hit_pair = {
+                name = "The Pair",
+                text = {
+                    "{X:mult,C:white} X#1# {} Mult if played",
+                    "hand contains",
+                    "a {C:attention}#2#"
+                }
+            },
+            j_hit_bundle = {
+                name = "The Bundle",
+                text = {
+                    "{X:mult,C:white} X#1# {} Mult if played",
+                    "hand contains",
+                    "a {C:attention}#2#"
+                }
+            },
         }
     },
     misc = {

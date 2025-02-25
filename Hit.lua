@@ -37,406 +37,7 @@ SMODS.Atlas({ key = "pc_cards", atlas_table = "ASSET_ATLAS", path = "pc_cards.pn
 
 SMODS.Atlas({ key = "planets", atlas_table = "ASSET_ATLAS", path = "Planets.png", px = 71, py = 95})
 
-SMODS.ConsumableType {
-    key = 'Untarot',
-    collection_rows = { 5, 6 },
-    primary_colour = HEX('424e54'),
-    secondary_colour = HEX('a58547'),
-}
-
-SMODS.UndiscoveredSprite {
-    key = 'Untarot',
-    atlas = 'reversed_tarots',
-    pos = {x = 2, y = 4}
-}
-
-SMODS.PokerHand {
-    key = 'High Card0',
-    chips = 30,
-    l_chips = 10,
-    mult = 3,
-    l_mult = 1,
-    example = {
-        { 'C_5', false },
-        { 'H_K', false },
-        { 'D_4', false },
-        { 'H_7', false },
-        { 'C_A', true } 
-    },
-    evaluate = function(parts, hand)
-        if not G.GAME.modifiers.dungeon then
-            return {}
-        end
-        if #hand == 0 then
-            return {}
-        end
-        return parts._highest
-    end,
-    visible = false,
-    order_offset = 3000,
-    bj_mode = true
-}
-
-SMODS.PokerHand {
-    key = 'Court',
-    chips = 40,
-    l_chips = 10,
-    mult = 4,
-    l_mult = 1,
-    example = {
-        { 'D_K', true },
-        { 'H_J', true },
-        { 'C_6', false },
-        { 'H_9', false },
-        { 'S_2', false } 
-    },
-    evaluate = function(parts, hand)
-        if not G.GAME.modifiers.dungeon then
-            return {}
-        end
-        local faces = {}
-        for i, j in ipairs(hand) do
-            if j:is_face() then
-                table.insert(faces, j)
-            end
-        end
-        if #faces >= 2 then
-            local highest = nil
-            local highest2 = nil
-            for i = 1, #faces do
-                if not highest then
-                    highest = i
-                elseif not highest2 then
-                    if (faces[i]:get_nominal() > faces[highest]:get_nominal()) then
-                        highest2 = highest
-                        highest = i
-                    else
-                        highest2 = i
-                    end
-                elseif (faces[i]:get_nominal() > faces[highest]:get_nominal()) then
-                    highest2 = highest
-                    highest = i
-                elseif (faces[i]:get_nominal() > faces[highest2]:get_nominal()) then
-                    highest2 = i
-                end
-            end
-            return { {faces[highest], faces[highest2]} }
-        end
-        return {}
-    end,
-    visible = false,
-    order_offset = 3000,
-    bj_mode = true
-}
-
-SMODS.PokerHand {
-    key = 'Duo',
-    chips = 50,
-    l_chips = 15,
-    mult = 4,
-    l_mult = 2,
-    example = {
-        { 'D_A', true },
-        { 'S_Q', false },
-        { 'C_8', true },
-        { 'D_8', true },
-        { 'C_4', false } 
-    },
-    evaluate = function(parts, hand)
-        if not G.GAME.modifiers.dungeon then
-            return {}
-        end
-        local pair = get_X_same(2, hand)
-        if next(pair) then
-            best_pair = pair[1]
-            best_card = nil
-            for i, j in ipairs(hand) do
-                if (j ~= best_pair[1]) and (j ~= best_pair[2]) then
-                    if not best_card then
-                        best_card = j
-                    elseif j:get_nominal() > best_card:get_nominal() then
-                        best_card = j
-                    end
-                end
-            end
-            if best_card then
-                return { {best_pair[1], best_pair[2], best_card} }
-            end
-        end
-        return {}
-    end,
-    visible = false,
-    order_offset = 3000,
-    bj_mode = true
-}
-
-SMODS.PokerHand {
-    key = 'Batch',
-    chips = 60,
-    l_chips = 20,
-    mult = 6,
-    l_mult = 2,
-    example = {
-        { 'C_9', true },
-        { 'H_6', false },
-        { 'C_A', true },
-        { 'D_7', false },
-        { 'C_5', true } 
-    },
-    evaluate = function(parts, hand)
-        if not G.GAME.modifiers.dungeon then
-            return {}
-        end
-        local suits = SMODS.Suit.obj_buffer
-        local map = {}
-        for i=1, #hand do
-            for j = 1, #suits do
-                if hand[i]:is_suit(suits[j], nil, true) then
-                    map[suits[j]] = map[suits[j]] or {}
-                    map[suits[j]][#map[suits[j]]+1] = hand[i] 
-                    if #map[suits[j]] >= 3 then
-                        return { map[suits[j]] }
-                    end
-                end
-            end
-        end
-        return {}
-    end,
-    visible = false,
-    order_offset = 3000,
-    bj_mode = true
-}
-
-SMODS.PokerHand {
-    key = 'Blackjack',
-    chips = 70,
-    l_chips = 20,
-    mult = 6,
-    l_mult = 1,
-    example = {
-        { 'C_4', true },
-        { 'H_7', true },
-        { 'H_J', true },
-    },
-    evaluate = function(parts, hand)
-        if not G.GAME.modifiers.dungeon then
-            return {}
-        end
-        local data = get_card_total(hand)
-        if data.total == data.bust_limit then
-            return { hand }
-        end
-        return {}
-    end,
-    visible = false,
-    order_offset = 3000,
-    bj_mode = true
-}
-
-SMODS.PokerHand {
-    key = 'Duo+',
-    chips = 80,
-    l_chips = 20,
-    mult = 7,
-    l_mult = 2,
-    example = {
-        { 'S_A', true },
-        { 'D_3', true },
-        { 'H_3', true },
-        { 'C_3', true },
-        { 'C_K', false } 
-    },
-    evaluate = function(parts, hand)
-        if not G.GAME.modifiers.dungeon then
-            return {}
-        end
-        local oaK = get_X_same(3, hand, true)
-        if next(oaK) then
-            best_oaK = oaK[1]
-            best_card = nil
-            for i, j in ipairs(hand) do
-                local valid = true
-                for i2, j2 in ipairs(best_oaK) do
-                    if j2 == j then
-                        valid = false
-                        break
-                    end
-                end
-                if valid then
-                    if not best_card then
-                        best_card = j
-                    elseif j:get_nominal() > best_card:get_nominal() then
-                        best_card = j
-                    end
-                end
-            end
-            if best_card then
-                local result = {}
-                for i, j in ipairs(best_oaK) do
-                    table.insert(result, j)
-                end
-                table.insert(result, best_card)
-                return { result }
-            end
-        end
-        return {}
-    end,
-    visible = false,
-    order_offset = 3000,
-    bj_mode = true
-}
-
-SMODS.PokerHand {
-    key = 'Batch+',
-    chips = 80,
-    l_chips = 25,
-    mult = 8,
-    l_mult = 3,
-    example = {
-        { 'D_Q', true },
-        { 'H_6', false },
-        { 'D_J', true },
-        { 'D_2', true },
-        { 'D_4', true } 
-    },
-    evaluate = function(parts, hand)
-        if not G.GAME.modifiers.dungeon then
-            return {}
-        end
-        local suits = SMODS.Suit.obj_buffer
-        local map = {}
-        for i=1, #hand do
-            for j = 1, #suits do
-                if hand[i]:is_suit(suits[j], nil, true) then
-                    map[suits[j]] = map[suits[j]] or {}
-                    map[suits[j]][#map[suits[j]]+1] = hand[i] 
-                    if #map[suits[j]] >= 4 then
-                        return { map[suits[j]] }
-                    end
-                end
-            end
-        end
-        return {}
-    end,
-    visible = false,
-    order_offset = 3000,
-    bj_mode = true
-}
-
-SMODS.PokerHand {
-    key = 'Blackjack Batch',
-    chips = 90,
-    l_chips = 25,
-    mult = 9,
-    l_mult = 2,
-    example = {
-        { 'S_A', true },
-        { 'S_2', true },
-        { 'S_3', true },
-        { 'S_5', true },
-        { 'C_J', false } 
-    },
-    evaluate = function(parts, hand)
-        if not G.GAME.modifiers.dungeon then
-            return {}
-        end
-        local data = get_card_total(hand)
-        if (data.total == data.bust_limit) then
-            if data.card_count < 3 then
-                return {}
-            end
-            for i, j in pairs(data.suit_map) do
-                if #j >= data.card_count then
-                    return { j }
-                end
-            end
-        end
-        return {}
-    end,
-    visible = false,
-    order_offset = 3000,
-    bj_mode = true
-}
-
-SMODS.PokerHand {
-    key = 'Supreme',
-    chips = 100,
-    l_chips = 15,
-    mult = 10,
-    l_mult = 2,
-    example = {
-        { 'S_7', true },
-        { 'H_A', true },
-        { 'D_2', true },
-        { 'C_K', true },
-        { 'S_2', true },
-        { 'D_8', true } 
-    },
-    evaluate = function(parts, hand)
-        if not G.GAME.modifiers.dungeon then
-            return {}
-        end
-        cards = {}
-        for i=1, #hand do
-            local id = hand[i]:get_id()
-            if (id >= 0) then
-                table.insert(cards, hand[i])
-            end
-        end
-        if #cards >= 6 then
-            return { cards }
-        end
-        return {}
-    end,
-    visible = false,
-    order_offset = 3000,
-    bj_mode = true
-}
-
-local bj_hands = {
-    {hand = 'hit_High Card0', x = 0, y = 0, key = 'pluto'},
-    {hand = 'hit_Court', x = 1, y = 0, key = 'mercury'},
-    {hand = 'hit_Duo', x = 2, y = 0, key = 'uranus'},
-    {hand = 'hit_Batch', x = 3, y = 0, key = 'venus'},
-    {hand = 'hit_Blackjack', x = 0, y = 1, key = 'saturn'},
-    {hand = 'hit_Duo+', x = 1, y = 1, key = 'jupiter'},
-    {hand = 'hit_Batch+', x = 2, y = 1, key = 'earth'},
-    {hand = 'hit_Blackjack Batch', x = 3, y = 1, key = 'mars'},
-    {hand = 'hit_Supreme', x = 0, y = 2, key = 'neptune'},
-}
-
-for i, j in ipairs(bj_hands) do
-    SMODS.Planet {
-        key = j.key,
-        name = string.upper(string.sub(j.key, 1, 1)) .. string.sub(j.key, 2, -1),
-        loc_txt = {
-            name = string.upper(string.sub(j.key, 1, 1)) .. string.sub(j.key, 2, -1),
-            text = {
-                "{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up",
-                "{C:attention}#2#",
-                "{C:mult}+#3#{} Mult and",
-                "{C:chips}+#4#{} chips"
-            }
-        },
-        config = {hand_type = j.hand},
-        atlas = "planets",
-        pos = {x = j.x, y = j.y},
-        loc_vars = function(self, info_queue, card)
-            local hand = self.config.hand_type
-            return { vars = {G.GAME.hands[hand].level,localize(hand, 'poker_hands'), G.GAME.hands[hand].l_mult, G.GAME.hands[hand].l_chips, colours = {(G.GAME.hands[hand].level==1 and G.C.UI.TEXT_DARK or G.C.HAND_LEVELS[math.min(7, G.GAME.hands[hand].level)])}} }
-        end,
-        in_pool = function(self)
-            return G.GAME.modifiers.dungeon
-        end
-    }
-end
-
-SMODS.Untarot = SMODS.Consumable:extend {
-    set = 'Untarot',
-    in_pool = function(self)
-        return G.GAME.modifiers.dungeon, {allow_duplicates = false}
-    end,
-}
+SMODS.Atlas({ key = "jokers", atlas_table = "ASSET_ATLAS", path = "Jokers.png", px = 71, py = 95})
 
 function get_smods_rank_from_id(card)
     local id = card:get_id()
@@ -472,471 +73,429 @@ function shuffle_card_in_deck(card)
     end
 end
 
-SMODS.Enhancement {
-    key = 'blackjack',
-    name = "Mega Blackjack Card",
-    atlas = 'enhance',
-    config = {},
-    pos = {x = 0, y = 0},
-    in_pool = function(self)
-        return false
-    end,
-}
+----Poker Hands-------
 
-SMODS.Untarot {
-    key = 'unfool',
-    atlas = 'reversed_tarots',
-    pos = {x = 0, y = 0},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        G.E_MANAGER:add_event(Event({
-            func = function()
-                local suits = {'H', 'S', 'D', 'C'}
-                local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
-                local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
-                local suit = pseudorandom_element(suits, pseudoseed('untarot'))
-                local card_ = create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = G.P_CENTERS['m_hit_blackjack']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
-                shuffle_card_in_deck(card_)
-                return true
+    SMODS.PokerHand {
+        key = 'High Card0',
+        chips = 30,
+        l_chips = 10,
+        mult = 3,
+        l_mult = 1,
+        example = {
+            { 'C_5', false },
+            { 'H_K', false },
+            { 'D_4', false },
+            { 'H_7', false },
+            { 'C_A', true } 
+        },
+        evaluate = function(parts, hand)
+            if not G.GAME.modifiers.dungeon then
+                return {}
             end
-        })) 
-    end,
-    config = {},
-    loc_vars = function(self, info_queue, card)
-        info_queue[#info_queue+1] = G.P_CENTERS['m_hit_blackjack']
-        return {vars = {localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_blackjack'}}}
-    end,
-    can_use = function(self, card)
-        if G.deck then
-            return true
-        end
-    end
-}
+            if #hand == 0 then
+                return {}
+            end
+            return parts._highest
+        end,
+        visible = false,
+        order_offset = 3000,
+        bj_mode = true
+    }
 
-SMODS.Untarot {
-    key = 'unmagician',
-    atlas = 'reversed_tarots',
-    pos = {x = 1, y = 0},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
-                local og_base = G.hand.highlighted[i].config.card
-                G.hand.highlighted[i].ability.revert_base = og_base
-            
-                G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_A'])
-                G.GAME.blind:debuff_card(G.hand.highlighted[i])
-                return true 
-            end }))
-        end
-        for i=1, #G.hand.highlighted do
-            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {max_highlighted = 3},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 3, localize('Ace', 'ranks')}}
-    end
-}
-
-SMODS.Untarot {
-    key = 'unhigh_priestess',
-    atlas = 'reversed_tarots',
-    pos = {x = 2, y = 0},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        G.E_MANAGER:add_event(Event({
-            func = function()
-                local suits = {'H', 'S', 'D', 'C'}
-                local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
-                local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
-                local suit = pseudorandom_element(suits, pseudoseed('untarot'))
-                local common_rank = 'Ace'
-                local rank_c = 0
-                local common_suit = 'Hearts'
-                local suit_c = 0
-                G.GAME.hit_stood_ranks = G.GAME.hit_stood_ranks or {}
-                G.GAME.hit_stood_suits = G.GAME.hit_stood_suits or {}
-                for i, j in pairs(G.GAME.hit_stood_ranks) do
-                    if j > rank_c then
-                        rank_c = j
-                        common_rank = i
+    SMODS.PokerHand {
+        key = 'Court',
+        chips = 40,
+        l_chips = 10,
+        mult = 4,
+        l_mult = 1,
+        example = {
+            { 'D_K', true },
+            { 'H_J', true },
+            { 'C_6', false },
+            { 'H_9', false },
+            { 'S_2', false } 
+        },
+        evaluate = function(parts, hand)
+            if not G.GAME.modifiers.dungeon then
+                return {}
+            end
+            local faces = {}
+            for i, j in ipairs(hand) do
+                if j:is_face() then
+                    table.insert(faces, j)
+                end
+            end
+            if #faces >= 2 then
+                local highest = nil
+                local highest2 = nil
+                for i = 1, #faces do
+                    if not highest then
+                        highest = i
+                    elseif not highest2 then
+                        if (faces[i]:get_nominal() > faces[highest]:get_nominal()) then
+                            highest2 = highest
+                            highest = i
+                        else
+                            highest2 = i
+                        end
+                    elseif (faces[i]:get_nominal() > faces[highest]:get_nominal()) then
+                        highest2 = highest
+                        highest = i
+                    elseif (faces[i]:get_nominal() > faces[highest2]:get_nominal()) then
+                        highest2 = i
                     end
                 end
-                for i, j in pairs(G.GAME.hit_stood_suits) do
-                    if j > suit_c then
-                        suit_c = j
-                        common_suit = i
+                return { {faces[highest], faces[highest2]} }
+            end
+            return {}
+        end,
+        visible = false,
+        order_offset = 3000,
+        bj_mode = true
+    }
+
+    SMODS.PokerHand {
+        key = 'Duo',
+        chips = 50,
+        l_chips = 15,
+        mult = 4,
+        l_mult = 2,
+        example = {
+            { 'D_A', true },
+            { 'S_Q', false },
+            { 'C_8', true },
+            { 'D_8', true },
+            { 'C_4', false } 
+        },
+        evaluate = function(parts, hand)
+            if not G.GAME.modifiers.dungeon then
+                return {}
+            end
+            local pair = get_X_same(2, hand)
+            if next(pair) then
+                best_pair = pair[1]
+                best_card = nil
+                for i, j in ipairs(hand) do
+                    if (j ~= best_pair[1]) and (j ~= best_pair[2]) then
+                        if not best_card then
+                            best_card = j
+                        elseif j:get_nominal() > best_card:get_nominal() then
+                            best_card = j
+                        end
                     end
                 end
-                common_rank = SMODS.Ranks[common_rank].card_key
-                common_suit = SMODS.Suits[common_suit].card_key
-                local card_1 = create_playing_card({front = G.P_CARDS[suit..'_'..common_rank], center = G.P_CENTERS['c_base']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
-                local card_2 = create_playing_card({front = G.P_CARDS[common_suit..'_'..rank], center = G.P_CENTERS['c_base']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
-                shuffle_card_in_deck(card_1)
-                shuffle_card_in_deck(card_2)
-                return true
-            end
-        })) 
-    end,
-    config = {},
-    loc_vars = function(self, info_queue, card)
-        local common_rank = 'Ace'
-        local rank_c = 0
-        local common_suit = 'Hearts'
-        local suit_c = 0
-        G.GAME.hit_stood_ranks = G.GAME.hit_stood_ranks or {}
-        G.GAME.hit_stood_suits = G.GAME.hit_stood_suits or {}
-        for i, j in pairs(G.GAME.hit_stood_ranks) do
-            if j > rank_c then
-                rank_c = j
-                common_rank = i
-            end
-        end
-        for i, j in pairs(G.GAME.hit_stood_suits) do
-            if j > suit_c then
-                suit_c = j
-                common_suit = i
-            end
-        end
-        return {vars = {localize(common_rank, 'ranks'), localize(common_suit, 'suits_plural')}}
-    end,
-    can_use = function(self, card)
-        if G.deck then
-            return true
-        end
-    end
-}
-
-SMODS.Untarot {
-    key = 'unempress',
-    atlas = 'reversed_tarots',
-    pos = {x = 3, y = 0},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        for i = 1, card.ability.cards do
-            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-                if G.consumeables.config.card_limit > #G.consumeables.cards then
-                    play_sound('timpani')
-                    local new_card = SMODS.create_card {set = 'Untarot'}
-                    new_card:add_to_deck()
-                    G.consumeables:emplace(new_card)
-                    used_tarot:juice_up(0.3, 0.5)
-                end
-                return true end }))
-        end
-        delay(0.6)
-    end,
-    config = {cards = 2},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.cards or 2}}
-    end,
-    can_use = function(self, card)
-        if #G.consumeables.cards < G.consumeables.config.card_limit or card.area == G.consumeables then
-            return true
-        end
-    end
-}
-
-SMODS.Untarot {
-    key = 'unemperor',
-    atlas = 'reversed_tarots',
-    pos = {x = 4, y = 0},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
-            
-                G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_K'])
-                G.GAME.blind:debuff_card(G.hand.highlighted[i])
-                return true 
-            end }))
-        end
-        for i=1, #G.hand.highlighted do
-            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {max_highlighted = 2},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 2, localize('King', 'ranks')}}
-    end
-}
-
-SMODS.Untarot {
-    key = 'unheirophant',
-    atlas = 'reversed_tarots',
-    pos = {x = 0, y = 1},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        local common_suit = "H"
-        local suit_count = 0
-        for i, j in pairs(SMODS.Suits) do
-            local count = 0
-            for i=1, #G.hand.highlighted do
-                if G.hand.highlighted[i]:is_suit(j.key) then
-                    count = count + 1
+                if best_card then
+                    return { {best_pair[1], best_pair[2], best_card} }
                 end
             end
-            if count > suit_count then
-                common_suit = j.card_key
-                suit_count = count
+            return {}
+        end,
+        visible = false,
+        order_offset = 3000,
+        bj_mode = true
+    }
+
+    SMODS.PokerHand {
+        key = 'Batch',
+        chips = 60,
+        l_chips = 20,
+        mult = 6,
+        l_mult = 2,
+        example = {
+            { 'C_9', true },
+            { 'H_6', false },
+            { 'C_A', true },
+            { 'D_7', false },
+            { 'C_5', true } 
+        },
+        evaluate = function(parts, hand)
+            if not G.GAME.modifiers.dungeon then
+                return {}
             end
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                local rank = SMODS.Ranks[G.hand.highlighted[i].base.value].card_key
-            
-                G.hand.highlighted[i]:set_base(G.P_CARDS[common_suit..'_'..rank])
-                G.GAME.blind:debuff_card(G.hand.highlighted[i])
-                return true 
-            end }))
-        end
-        for i=1, #G.hand.highlighted do
-            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {max_highlighted = 200},
-    can_use = function(self, card)
-        if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.highlighted >= 1) then
-            return true
-        end
-    end
-}
-
-SMODS.Rank {
-    key = '0',
-    card_key = 'Z',
-    pos = { x = 0 },
-    lc_atlas = 'ranks',
-    hc_atlas = 'ranks',
-    nominal = 0,
-    next = { 'Ace' },
-    in_pool = function(self, args)
-        return false
-    end
-}
-
-SMODS.Untarot {
-    key = 'unlovers',
-    atlas = 'reversed_tarots',
-    pos = {x = 1, y = 1},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
-            
-                G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_hit_Z'])
-                G.GAME.blind:debuff_card(G.hand.highlighted[i])
-                return true 
-            end }))
-        end
-        for i=1, #G.hand.highlighted do
-            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {max_highlighted = 1},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 1, '0'}}
-    end
-}
-
-SMODS.Untarot {
-    key = 'unchariot',
-    atlas = 'reversed_tarots',
-    pos = {x = 2, y = 1},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
-                local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
-                local rank = pseudorandom_element(ranks, pseudoseed('untarot2'))
-            
-                G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_'..rank])
-                G.GAME.blind:debuff_card(G.hand.highlighted[i])
-                return true 
-            end }))
-        end
-        for i=1, #G.hand.highlighted do
-            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {max_highlighted = 4},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 4}}
-    end
-}
-
-SMODS.Untarot {
-    key = 'unjustice',
-    atlas = 'reversed_tarots',
-    pos = {x = 3, y = 1},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        ease_dollars(-card.ability.dollars)
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
-                local rank_data = SMODS.Ranks[G.hand.highlighted[i].base.value]
-                local up_rank = pseudorandom_element(rank_data.next, pseudoseed('untarot'))
-                up_rank = SMODS.Ranks[up_rank]
-                if up_rank then
-                    rank_data = up_rank
-                    up_rank = pseudorandom_element(rank_data.next, pseudoseed('untarot'))
-                    up_rank = SMODS.Ranks[up_rank].card_key
-            
-                    G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_'..up_rank])
-                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+            local suits = SMODS.Suit.obj_buffer
+            local map = {}
+            for i=1, #hand do
+                for j = 1, #suits do
+                    if hand[i]:is_suit(suits[j], nil, true) then
+                        map[suits[j]] = map[suits[j]] or {}
+                        map[suits[j]][#map[suits[j]]+1] = hand[i] 
+                        if #map[suits[j]] >= 3 then
+                            return { map[suits[j]] }
+                        end
+                    end
                 end
-                return true 
-            end }))
-        end
-        for i=1, #G.hand.highlighted do
-            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {dollars = 2, max_highlighted = 3},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.dollars or 2, card and card.ability.max_highlighted or 3}}
+            end
+            return {}
+        end,
+        visible = false,
+        order_offset = 3000,
+        bj_mode = true
+    }
+
+    SMODS.PokerHand {
+        key = 'Blackjack',
+        chips = 70,
+        l_chips = 20,
+        mult = 6,
+        l_mult = 1,
+        example = {
+            { 'C_4', true },
+            { 'H_7', true },
+            { 'H_J', true },
+        },
+        evaluate = function(parts, hand)
+            if not G.GAME.modifiers.dungeon then
+                return {}
+            end
+            local data = get_card_total(hand)
+            if data.total == data.bust_limit then
+                return { hand }
+            end
+            return {}
+        end,
+        visible = false,
+        order_offset = 3000,
+        bj_mode = true
+    }
+
+    SMODS.PokerHand {
+        key = 'Duo+',
+        chips = 80,
+        l_chips = 20,
+        mult = 7,
+        l_mult = 2,
+        example = {
+            { 'S_A', true },
+            { 'D_3', true },
+            { 'H_3', true },
+            { 'C_3', true },
+            { 'C_K', false } 
+        },
+        evaluate = function(parts, hand)
+            if not G.GAME.modifiers.dungeon then
+                return {}
+            end
+            local oaK = get_X_same(3, hand, true)
+            if next(oaK) then
+                best_oaK = oaK[1]
+                best_card = nil
+                for i, j in ipairs(hand) do
+                    local valid = true
+                    for i2, j2 in ipairs(best_oaK) do
+                        if j2 == j then
+                            valid = false
+                            break
+                        end
+                    end
+                    if valid then
+                        if not best_card then
+                            best_card = j
+                        elseif j:get_nominal() > best_card:get_nominal() then
+                            best_card = j
+                        end
+                    end
+                end
+                if best_card then
+                    local result = {}
+                    for i, j in ipairs(best_oaK) do
+                        table.insert(result, j)
+                    end
+                    table.insert(result, best_card)
+                    return { result }
+                end
+            end
+            return {}
+        end,
+        visible = false,
+        order_offset = 3000,
+        bj_mode = true
+    }
+
+    SMODS.PokerHand {
+        key = 'Batch+',
+        chips = 80,
+        l_chips = 25,
+        mult = 8,
+        l_mult = 3,
+        example = {
+            { 'D_Q', true },
+            { 'H_6', false },
+            { 'D_J', true },
+            { 'D_2', true },
+            { 'D_4', true } 
+        },
+        evaluate = function(parts, hand)
+            if not G.GAME.modifiers.dungeon then
+                return {}
+            end
+            local suits = SMODS.Suit.obj_buffer
+            local map = {}
+            for i=1, #hand do
+                for j = 1, #suits do
+                    if hand[i]:is_suit(suits[j], nil, true) then
+                        map[suits[j]] = map[suits[j]] or {}
+                        map[suits[j]][#map[suits[j]]+1] = hand[i] 
+                        if #map[suits[j]] >= 4 then
+                            return { map[suits[j]] }
+                        end
+                    end
+                end
+            end
+            return {}
+        end,
+        visible = false,
+        order_offset = 3000,
+        bj_mode = true
+    }
+
+    SMODS.PokerHand {
+        key = 'Blackjack Batch',
+        chips = 90,
+        l_chips = 25,
+        mult = 9,
+        l_mult = 2,
+        example = {
+            { 'S_A', true },
+            { 'S_2', true },
+            { 'S_3', true },
+            { 'S_5', true },
+            { 'C_J', false } 
+        },
+        evaluate = function(parts, hand)
+            if not G.GAME.modifiers.dungeon then
+                return {}
+            end
+            local data = get_card_total(hand)
+            if (data.total == data.bust_limit) then
+                if data.card_count < 3 then
+                    return {}
+                end
+                for i, j in pairs(data.suit_map) do
+                    if #j >= data.card_count then
+                        return { j }
+                    end
+                end
+            end
+            return {}
+        end,
+        visible = false,
+        order_offset = 3000,
+        bj_mode = true
+    }
+
+    SMODS.PokerHand {
+        key = 'Supreme',
+        chips = 100,
+        l_chips = 15,
+        mult = 10,
+        l_mult = 2,
+        example = {
+            { 'S_7', true },
+            { 'H_A', true },
+            { 'D_2', true },
+            { 'C_K', true },
+            { 'S_2', true },
+            { 'D_8', true } 
+        },
+        evaluate = function(parts, hand)
+            if not G.GAME.modifiers.dungeon then
+                return {}
+            end
+            cards = {}
+            for i=1, #hand do
+                local id = hand[i]:get_id()
+                if (id >= 0) then
+                    table.insert(cards, hand[i])
+                end
+            end
+            if #cards >= 6 then
+                return { cards }
+            end
+            return {}
+        end,
+        visible = false,
+        order_offset = 3000,
+        bj_mode = true
+    }
+
+    local bj_hands = {
+        {hand = 'hit_High Card0', x = 0, y = 0, key = 'pluto'},
+        {hand = 'hit_Court', x = 1, y = 0, key = 'mercury'},
+        {hand = 'hit_Duo', x = 2, y = 0, key = 'uranus'},
+        {hand = 'hit_Batch', x = 3, y = 0, key = 'venus'},
+        {hand = 'hit_Blackjack', x = 0, y = 1, key = 'saturn'},
+        {hand = 'hit_Duo+', x = 1, y = 1, key = 'jupiter'},
+        {hand = 'hit_Batch+', x = 2, y = 1, key = 'earth'},
+        {hand = 'hit_Blackjack Batch', x = 3, y = 1, key = 'mars'},
+        {hand = 'hit_Supreme', x = 0, y = 2, key = 'neptune'},
+    }
+
+    for i, j in ipairs(bj_hands) do
+        SMODS.Planet {
+            key = j.key,
+            name = string.upper(string.sub(j.key, 1, 1)) .. string.sub(j.key, 2, -1),
+            loc_txt = {
+                name = string.upper(string.sub(j.key, 1, 1)) .. string.sub(j.key, 2, -1),
+                text = {
+                    "{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up",
+                    "{C:attention}#2#",
+                    "{C:mult}+#3#{} Mult and",
+                    "{C:chips}+#4#{} chips"
+                }
+            },
+            config = {hand_type = j.hand},
+            atlas = "planets",
+            pos = {x = j.x, y = j.y},
+            loc_vars = function(self, info_queue, card)
+                local hand = self.config.hand_type
+                return { vars = {G.GAME.hands[hand].level,localize(hand, 'poker_hands'), G.GAME.hands[hand].l_mult, G.GAME.hands[hand].l_chips, colours = {(G.GAME.hands[hand].level==1 and G.C.UI.TEXT_DARK or G.C.HAND_LEVELS[math.min(7, G.GAME.hands[hand].level)])}} }
+            end,
+            in_pool = function(self)
+                return G.GAME.modifiers.dungeon
+            end
+        }
     end
-}
 
-SMODS.Untarot {
-    key = 'unhermit',
-    atlas = 'reversed_tarots',
-    pos = {x = 4, y = 1},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                G.hand.highlighted[i].ability.shuffle_bottom = card.ability.rounds
-                return true 
-            end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {max_highlighted = 6, rounds = 4},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 6, card and card.ability.rounds or 4}}
-    end,
-    can_use = function(self, card)
-        if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.highlighted >= 1) and (#G.hand.highlighted <= (card and card.ability.max_highlighted or 6)) then
-            return true
-        end
-    end
-}
+----------------------
 
-SMODS.Enhancement {
-    key = 'nope',
-    name = "Nope Card",
-    atlas = 'enhance',
-    config = {},
-    pos = {x = 1, y = 0},
-    in_pool = function(self)
-        return false
-    end,
-}
+----Untarots-----
 
-SMODS.Untarot {
-    key = 'unwheel_of_fortune',
-    atlas = 'reversed_tarots',
-    pos = {x = 0, y = 2},
-    use = function(self, card, area, copier)
-        ease_dollars(card.ability.dollars)
-        if (pseudorandom('untarot_debuff') < G.GAME.probabilities.normal/card.ability.odds) then
+    SMODS.ConsumableType {
+        key = 'Untarot',
+        collection_rows = { 5, 6 },
+        primary_colour = HEX('424e54'),
+        secondary_colour = HEX('a58547'),
+    }
+
+    SMODS.UndiscoveredSprite {
+        key = 'Untarot',
+        atlas = 'reversed_tarots',
+        pos = {x = 2, y = 4}
+    }
+
+    SMODS.Untarot = SMODS.Consumable:extend {
+        set = 'Untarot',
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+    }
+
+    SMODS.Enhancement {
+        key = 'blackjack',
+        name = "Mega Blackjack Card",
+        atlas = 'enhance',
+        config = {},
+        pos = {x = 0, y = 0},
+        in_pool = function(self)
+            return false
+        end,
+    }
+
+    SMODS.Untarot {
+        key = 'unfool',
+        atlas = 'reversed_tarots',
+        pos = {x = 0, y = 0},
+        use = function(self, card, area, copier)
             local used_tarot = copier or card
             G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
                 play_sound('tarot1')
@@ -948,88 +507,492 @@ SMODS.Untarot {
                     local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
                     local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
                     local suit = pseudorandom_element(suits, pseudoseed('untarot'))
-                    local card_ = create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = G.P_CENTERS['m_hit_nope']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                    local card_ = create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = G.P_CENTERS['m_hit_blackjack']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
                     shuffle_card_in_deck(card_)
                     return true
                 end
             })) 
+        end,
+        config = {},
+        loc_vars = function(self, info_queue, card)
+            info_queue[#info_queue+1] = G.P_CENTERS['m_hit_blackjack']
+            return {vars = {localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_blackjack'}}}
+        end,
+        can_use = function(self, card)
+            if G.deck then
+                return true
+            end
         end
-    end,
-    config = {dollars = 10, odds = 2},
-    loc_vars = function(self, info_queue, card)
-        info_queue[#info_queue+1] = G.P_CENTERS['m_hit_nope']
-        return {vars = {card and card.ability.dollars or 5, G.GAME.probabilities.normal, card and card.ability.odds or 2, localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_nope'}}}
-    end,
-    can_use = function(self, card)
-        if G.deck then
-            return true
-        end
-    end
-}
+    }
 
-SMODS.Untarot {
-    key = 'unstrength',
-    atlas = 'reversed_tarots',
-    pos = {x = 1, y = 2},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+    SMODS.Untarot {
+        key = 'unmagician',
+        atlas = 'reversed_tarots',
+        pos = {x = 1, y = 0},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
+                    local og_base = G.hand.highlighted[i].config.card
+                    G.hand.highlighted[i].ability.revert_base = og_base
+                
+                    G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_A'])
+                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    return true 
+                end }))
+            end
+            for i=1, #G.hand.highlighted do
+                local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {max_highlighted = 3},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.max_highlighted or 3, localize('Ace', 'ranks')}}
         end
-        delay(0.2)
-        local did_debuff = (pseudorandom('untarot_debuff') < G.GAME.probabilities.normal/card.ability.odds)
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                local pool = {}
-                for j, k in pairs(G.P_CENTER_POOLS['Enhanced']) do
-                    if not k.in_pool or (type(k.in_pool) ~= 'function') or k:in_pool() then
-                        table.insert(pool, k)
-                    end
-                end
-                local enhancement = pseudorandom_element(pool, pseudoseed('untarot'))
-                G.hand.highlighted[i]:set_ability(enhancement)
-                if did_debuff then
-                    G.hand.highlighted[i].ability.perma_debuff = true
-                end
-                G.GAME.blind:debuff_card(G.hand.highlighted[i])
-                return true 
-            end }))
-        end
-        for i=1, #G.hand.highlighted do
-            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {odds = 5, max_highlighted = 4},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 4, G.GAME.probabilities and G.GAME.probabilities.normal or 1, card and card.ability.odds or 5}}
-    end
-}
+    }
 
-SMODS.Untarot {
-    key = 'unhanged_man',
-    atlas = 'reversed_tarots',
-    pos = {x = 2, y = 2},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        G.E_MANAGER:add_event(Event({
-            func = function()
-                for i = 1, card.ability.cards do
+    SMODS.Untarot {
+        key = 'unhigh_priestess',
+        atlas = 'reversed_tarots',
+        pos = {x = 2, y = 0},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            G.E_MANAGER:add_event(Event({
+                func = function()
                     local suits = {'H', 'S', 'D', 'C'}
                     local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
                     local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
                     local suit = pseudorandom_element(suits, pseudoseed('untarot'))
+                    local common_rank = 'Ace'
+                    local rank_c = 0
+                    local common_suit = 'Hearts'
+                    local suit_c = 0
+                    G.GAME.hit_stood_ranks = G.GAME.hit_stood_ranks or {}
+                    G.GAME.hit_stood_suits = G.GAME.hit_stood_suits or {}
+                    for i, j in pairs(G.GAME.hit_stood_ranks) do
+                        if j > rank_c then
+                            rank_c = j
+                            common_rank = i
+                        end
+                    end
+                    for i, j in pairs(G.GAME.hit_stood_suits) do
+                        if j > suit_c then
+                            suit_c = j
+                            common_suit = i
+                        end
+                    end
+                    common_rank = SMODS.Ranks[common_rank].card_key
+                    common_suit = SMODS.Suits[common_suit].card_key
+                    local card_1 = create_playing_card({front = G.P_CARDS[suit..'_'..common_rank], center = G.P_CENTERS['c_base']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                    local card_2 = create_playing_card({front = G.P_CARDS[common_suit..'_'..rank], center = G.P_CENTERS['c_base']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                    shuffle_card_in_deck(card_1)
+                    shuffle_card_in_deck(card_2)
+                    return true
+                end
+            })) 
+        end,
+        config = {},
+        loc_vars = function(self, info_queue, card)
+            local common_rank = 'Ace'
+            local rank_c = 0
+            local common_suit = 'Hearts'
+            local suit_c = 0
+            G.GAME.hit_stood_ranks = G.GAME.hit_stood_ranks or {}
+            G.GAME.hit_stood_suits = G.GAME.hit_stood_suits or {}
+            for i, j in pairs(G.GAME.hit_stood_ranks) do
+                if j > rank_c then
+                    rank_c = j
+                    common_rank = i
+                end
+            end
+            for i, j in pairs(G.GAME.hit_stood_suits) do
+                if j > suit_c then
+                    suit_c = j
+                    common_suit = i
+                end
+            end
+            return {vars = {localize(common_rank, 'ranks'), localize(common_suit, 'suits_plural')}}
+        end,
+        can_use = function(self, card)
+            if G.deck then
+                return true
+            end
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'unempress',
+        atlas = 'reversed_tarots',
+        pos = {x = 3, y = 0},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            for i = 1, card.ability.cards do
+                G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                    if G.consumeables.config.card_limit > #G.consumeables.cards then
+                        play_sound('timpani')
+                        local new_card = SMODS.create_card {set = 'Untarot'}
+                        new_card:add_to_deck()
+                        G.consumeables:emplace(new_card)
+                        used_tarot:juice_up(0.3, 0.5)
+                    end
+                    return true end }))
+            end
+            delay(0.6)
+        end,
+        config = {cards = 2},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.cards or 2}}
+        end,
+        can_use = function(self, card)
+            if #G.consumeables.cards < G.consumeables.config.card_limit or card.area == G.consumeables then
+                return true
+            end
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'unemperor',
+        atlas = 'reversed_tarots',
+        pos = {x = 4, y = 0},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
+                
+                    G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_K'])
+                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    return true 
+                end }))
+            end
+            for i=1, #G.hand.highlighted do
+                local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {max_highlighted = 2},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.max_highlighted or 2, localize('King', 'ranks')}}
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'unheirophant',
+        atlas = 'reversed_tarots',
+        pos = {x = 0, y = 1},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            local common_suit = "H"
+            local suit_count = 0
+            for i, j in pairs(SMODS.Suits) do
+                local count = 0
+                for i=1, #G.hand.highlighted do
+                    if G.hand.highlighted[i]:is_suit(j.key) then
+                        count = count + 1
+                    end
+                end
+                if count > suit_count then
+                    common_suit = j.card_key
+                    suit_count = count
+                end
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    local rank = SMODS.Ranks[G.hand.highlighted[i].base.value].card_key
+                
+                    G.hand.highlighted[i]:set_base(G.P_CARDS[common_suit..'_'..rank])
+                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    return true 
+                end }))
+            end
+            for i=1, #G.hand.highlighted do
+                local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {max_highlighted = 200},
+        can_use = function(self, card)
+            if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.highlighted >= 1) then
+                return true
+            end
+        end
+    }
+
+    SMODS.Rank {
+        key = '0',
+        card_key = 'Z',
+        pos = { x = 0 },
+        lc_atlas = 'ranks',
+        hc_atlas = 'ranks',
+        nominal = 0,
+        next = { 'Ace' },
+        in_pool = function(self, args)
+            return false
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'unlovers',
+        atlas = 'reversed_tarots',
+        pos = {x = 1, y = 1},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
+                
+                    G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_hit_Z'])
+                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    return true 
+                end }))
+            end
+            for i=1, #G.hand.highlighted do
+                local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {max_highlighted = 1},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.max_highlighted or 1, '0'}}
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'unchariot',
+        atlas = 'reversed_tarots',
+        pos = {x = 2, y = 1},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
+                    local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
+                    local rank = pseudorandom_element(ranks, pseudoseed('untarot2'))
+                
+                    G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_'..rank])
+                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    return true 
+                end }))
+            end
+            for i=1, #G.hand.highlighted do
+                local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {max_highlighted = 4},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.max_highlighted or 4}}
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'unjustice',
+        atlas = 'reversed_tarots',
+        pos = {x = 3, y = 1},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            ease_dollars(-card.ability.dollars)
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
+                    local rank_data = SMODS.Ranks[G.hand.highlighted[i].base.value]
+                    local up_rank = pseudorandom_element(rank_data.next, pseudoseed('untarot'))
+                    up_rank = SMODS.Ranks[up_rank]
+                    if up_rank then
+                        rank_data = up_rank
+                        up_rank = pseudorandom_element(rank_data.next, pseudoseed('untarot'))
+                        up_rank = SMODS.Ranks[up_rank].card_key
+                
+                        G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_'..up_rank])
+                        G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    end
+                    return true 
+                end }))
+            end
+            for i=1, #G.hand.highlighted do
+                local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {dollars = 2, max_highlighted = 3},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.dollars or 2, card and card.ability.max_highlighted or 3}}
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'unhermit',
+        atlas = 'reversed_tarots',
+        pos = {x = 4, y = 1},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    G.hand.highlighted[i].ability.shuffle_bottom = card.ability.rounds
+                    return true 
+                end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {max_highlighted = 6, rounds = 4},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.max_highlighted or 6, card and card.ability.rounds or 4}}
+        end,
+        can_use = function(self, card)
+            if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.highlighted >= 1) and (#G.hand.highlighted <= (card and card.ability.max_highlighted or 6)) then
+                return true
+            end
+        end
+    }
+
+    SMODS.Enhancement {
+        key = 'nope',
+        name = "Nope Card",
+        atlas = 'enhance',
+        config = {},
+        pos = {x = 1, y = 0},
+        in_pool = function(self)
+            return false
+        end,
+    }
+
+    SMODS.Untarot {
+        key = 'unwheel_of_fortune',
+        atlas = 'reversed_tarots',
+        pos = {x = 0, y = 2},
+        use = function(self, card, area, copier)
+            ease_dollars(card.ability.dollars)
+            if (pseudorandom('untarot_debuff') < G.GAME.probabilities.normal/card.ability.odds) then
+                local used_tarot = copier or card
+                G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                    play_sound('tarot1')
+                    used_tarot:juice_up(0.3, 0.5)
+                    return true end }))
+                G.E_MANAGER:add_event(Event({
+                    func = function()
+                        local suits = {'H', 'S', 'D', 'C'}
+                        local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
+                        local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
+                        local suit = pseudorandom_element(suits, pseudoseed('untarot'))
+                        local card_ = create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = G.P_CENTERS['m_hit_nope']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                        shuffle_card_in_deck(card_)
+                        return true
+                    end
+                })) 
+            end
+        end,
+        config = {dollars = 10, odds = 2},
+        loc_vars = function(self, info_queue, card)
+            info_queue[#info_queue+1] = G.P_CENTERS['m_hit_nope']
+            return {vars = {card and card.ability.dollars or 5, G.GAME.probabilities.normal, card and card.ability.odds or 2, localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_nope'}}}
+        end,
+        can_use = function(self, card)
+            if G.deck then
+                return true
+            end
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'unstrength',
+        atlas = 'reversed_tarots',
+        pos = {x = 1, y = 2},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            local did_debuff = (pseudorandom('untarot_debuff') < G.GAME.probabilities.normal/card.ability.odds)
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
                     local pool = {}
                     for j, k in pairs(G.P_CENTER_POOLS['Enhanced']) do
                         if not k.in_pool or (type(k.in_pool) ~= 'function') or k:in_pool() then
@@ -1037,524 +1000,611 @@ SMODS.Untarot {
                         end
                     end
                     local enhancement = pseudorandom_element(pool, pseudoseed('untarot'))
-                    local card_ = create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = enhancement}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
-                    shuffle_card_in_deck(card_)
-                end
-                return true
+                    G.hand.highlighted[i]:set_ability(enhancement)
+                    if did_debuff then
+                        G.hand.highlighted[i].ability.perma_debuff = true
+                    end
+                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    return true 
+                end }))
             end
-        })) 
-    end,
-    config = {cards = 2},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.cards or 2}}
-    end,
-    can_use = function(self, card)
-        if G.deck then
-            return true
-        end
-    end
-}
-
-SMODS.Enhancement {
-    key = 'garnet',
-    name = "Garnet Card",
-    atlas = 'enhance',
-    config = {},
-    pos = {x = 2, y = 0},
-    in_pool = function(self)
-        return false
-    end,
-}
-
-SMODS.Untarot {
-    key = 'undeath',
-    atlas = 'reversed_tarots',
-    pos = {x = 3, y = 2},
-    config = {max_highlighted = 2, mod_conv = 'm_hit_garnet'},
-    loc_vars = function(self, info_queue, card)
-        info_queue[#info_queue+1] = G.P_CENTERS['m_hit_garnet']
-        return {vars = {card and card.ability.max_highlighted or 2, localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_garnet'}}}
-    end
-}
-
-SMODS.Untarot {
-    key = 'untemperance',
-    atlas = 'reversed_tarots',
-    pos = {x = 4, y = 2},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
-                local ranks = {'7', '7', '7', 'J', 'Q', 'K'}
-                local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
-            
-                G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_'..rank])
-                G.GAME.blind:debuff_card(G.hand.highlighted[i])
-                return true 
-            end }))
-        end
-        for i=1, #G.hand.highlighted do
-            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {max_highlighted = 4},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 4, localize('7', 'ranks')}}
-    end
-}
-
-SMODS.Untarot {
-    key = 'undevil',
-    atlas = 'reversed_tarots',
-    pos = {x = 0, y = 3},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
-            
-                G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_A'])
-                G.hand.highlighted[i].ability.perma_debuff = true
-                G.GAME.blind:debuff_card(G.hand.highlighted[i])
-                return true 
-            end }))
-        end
-        for i=1, #G.hand.highlighted do
-            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {max_highlighted = 2},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 2, localize('Ace', 'ranks')}}
-    end
-}
-
-SMODS.Enhancement {
-    key = 'crazy',
-    name = "Crazy Card",
-    atlas = 'enhance',
-    no_rank = true,
-    no_suit = true,
-    replace_base_card = true,
-    config = {chips = 7},
-    pos = {x = 0, y = 1},
-    in_pool = function(self)
-        return false
-    end,
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.chips or 7}}
-    end,
-    calculate = function(self, card, context)
-        if context.cardarea == G.play and context.main_scoring then
-            return {chips = card and card.ability.chips or 7}
-        end
-    end
-}
-
-SMODS.Untarot {
-    key = 'untower',
-    atlas = 'reversed_tarots',
-    pos = {x = 1, y = 3},
-    config = {max_highlighted = 1, mod_conv = 'm_hit_crazy'},
-    loc_vars = function(self, info_queue, card)
-        info_queue[#info_queue+1] = G.P_CENTERS['m_hit_crazy']
-        return {vars = {card and card.ability.max_highlighted or 1, localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_crazy'}}}
-    end
-}
-
-SMODS.Untarot {
-    key = 'unstar',
-    atlas = 'reversed_tarots',
-    pos = {x = 2, y = 3},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        delay(0.2)
-        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-            local pool = {}
-            for i = 1, #G.hand.cards do
-                table.insert(pool, G.hand.cards[i])
+            for i=1, #G.hand.highlighted do
+                local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
             end
-            local destroy = {}
-            for i = 1, (card and card.ability.cards or 3) do
-                local card2, index = pseudorandom_element(pool, pseudoseed('untarot'))
-                table.remove(pool, index)
-                table.insert(destroy, card2)
-            end
-            for i = 1, #destroy do
-                destroy[i]:start_dissolve()
-            end
-            return true 
-        end }))
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {cards = 3},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.cards or 3}}
-    end,
-    can_use = function(self, card)
-        if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.cards >= (card and card.ability.cards or 3)) then
-            return true
-        end
-    end
-}
-
-SMODS.Untarot {
-    key = 'unmoon',
-    atlas = 'reversed_tarots',
-    pos = {x = 3, y = 3},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                G.hand.highlighted[i].ability.shuffle_top = card.ability.rounds
-                return true 
-            end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {max_highlighted = 3, rounds = 4},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 3, card and card.ability.rounds or 4}}
-    end,
-}
-
-SMODS.Untarot {
-    key = 'unsun',
-    atlas = 'reversed_tarots',
-    pos = {x = 4, y = 3},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-        local ranks = {}
-        for i=1, #G.hand.highlighted do
-            table.insert(ranks, SMODS.Ranks[G.hand.highlighted[i].base.value].card_key)
-        end
-        pseudoshuffle(ranks, pseudoseed('untarot'))
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
-                local rank = ranks[i] or 'A'
-            
-                G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_' .. rank])
-                G.GAME.blind:debuff_card(G.hand.highlighted[i])
-                return true 
-            end }))
-        end
-        for i=1, #G.hand.highlighted do
-            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {},
-    can_use = function(self, card)
-        if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.highlighted >= 1) then
-            return true
-        end
-    end
-}
-
-SMODS.Untarot {
-    key = 'unjudgement',
-    atlas = 'reversed_tarots',
-    pos = {x = 0, y = 4},
-    use = function(self, card, area, copier)
-        local used_tarot = copier or card
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
-            play_sound('tarot1')
-            used_tarot:juice_up(0.3, 0.5)
-            return true end }))
-        for i=1, #G.hand.highlighted do
-            local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        delay(0.2)
-
-        local rank = get_smods_rank_from_id(G.hand.cards[1]).card_key
-        for i=1, #G.hand.highlighted do
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
-                local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
-            
-                G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_'..rank])
-                G.GAME.blind:debuff_card(G.hand.highlighted[i])
-                return true 
-            end }))
-        end
-        for i=1, #G.hand.highlighted do
-            local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
-            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
-        end
-        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
-        delay(0.5)
-    end,
-    config = {max_highlighted = 2},
-    loc_vars = function(self, info_queue, card)
-        return {vars = {card and card.ability.max_highlighted or 2}}
-    end
-}
-
-SMODS.Enhancement {
-    key = 'osmium',
-    name = "Osmium Card",
-    atlas = 'enhance',
-    config = {},
-    pos = {x = 1, y = 1},
-    in_pool = function(self)
-        return false
-    end,
-}
-
-SMODS.Untarot {
-    key = 'unworld',
-    atlas = 'reversed_tarots',
-    pos = {x = 1, y = 4},
-    config = {max_highlighted = 2, mod_conv = 'm_hit_osmium'},
-    loc_vars = function(self, info_queue, card)
-        info_queue[#info_queue+1] = G.P_CENTERS['m_hit_osmium']
-        return {vars = {card and card.ability.max_highlighted or 2, localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_osmium'}}}
-    end
-}
-
-for i = 1, 4 do
-    SMODS.Booster {
-        key = 'unarcana_normal_' .. tostring(i),
-        group_key = 'k_unarcana_pack',
-        weight = 1,
-        cost = 4,
-        name = "Unarcana Pack",
-        atlas = "boosters",
-        pos = {x = i - 1, y = 0},
-        config = {extra = 3, choose = 1, name = "Unarcana Pack"},
-        create_card = function(self, card)
-            return {set = "Untarot", skip_materialize = true}
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
         end,
-        loc_txt = {
-            name = "Unarcana Pack",
-            text = {
-                "Choose {C:attention}#1#{} of up to",
-                "{C:attention}#2#{C:attention} Untarot{} cards to",
-                "be used immediately"
-            }
-        },
-        draw_hand = true,
-        in_pool = function(self)
-            return G.GAME.modifiers.dungeon
-        end,
+        config = {odds = 5, max_highlighted = 4},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.max_highlighted or 4, G.GAME.probabilities and G.GAME.probabilities.normal or 1, card and card.ability.odds or 5}}
+        end
     }
-end
 
-for i = 1, 2 do
-    SMODS.Booster {
-        key = 'unarcana_jumbo_' .. tostring(i),
-        group_key = 'k_unarcana_pack',
-        weight = 1,
-        cost = 6,
-        name = "Unarcana Pack",
-        atlas = "boosters",
-        pos = {x = i - 1, y = 1},
-        config = {extra = 5, choose = 1, name = "Unarcana Pack"},
-        create_card = function(self, card)
-            return {set = "Untarot", skip_materialize = true}
-        end,
-        loc_txt = {
-            name = "Jumbo Unarcana Pack",
-            text = {
-                "Choose {C:attention}#1#{} of up to",
-                "{C:attention}#2#{C:attention} Untarot{} cards to",
-                "be used immediately"
-            }
-        },
-        draw_hand = true,
-        in_pool = function(self)
-            return G.GAME.modifiers.dungeon
-        end,
-    }
-    SMODS.Booster {
-        key = 'unarcana_mega_' .. tostring(i),
-        group_key = 'k_unarcana_pack',
-        weight = 1,
-        cost = 8,
-        name = "Unarcana Pack",
-        atlas = "boosters",
-        pos = {x = i + 1, y = 1},
-        config = {extra = 5, choose = 2, name = "Unarcana Pack"},
-        create_card = function(self, card)
-            return {set = "Untarot", skip_materialize = true}
-        end,
-        loc_txt = {
-            name = "Mega Unarcana Pack",
-            text = {
-                "Choose {C:attention}#1#{} of up to",
-                "{C:attention}#2#{C:attention} Untarot{} cards to",
-                "be used immediately"
-            }
-        },
-        draw_hand = true,
-        in_pool = function(self)
-            return G.GAME.modifiers.dungeon
-        end,
-    }
-end
-
-function dunegon_selection(theBlind)
-    stop_use()
-    if G.blind_select then 
-        G.GAME.facing_blind = true
-        G.blind_prompt_box:get_UIE_by_ID('prompt_dynatext1').config.object.pop_delay = 0
-        G.blind_prompt_box:get_UIE_by_ID('prompt_dynatext1').config.object:pop_out(5)
-        G.blind_prompt_box:get_UIE_by_ID('prompt_dynatext2').config.object.pop_delay = 0
-        G.blind_prompt_box:get_UIE_by_ID('prompt_dynatext2').config.object:pop_out(5) 
-
-        G.E_MANAGER:add_event(Event({
-        trigger = 'before', delay = 0.2,
-        func = function()
-            G.blind_prompt_box.alignment.offset.y = -10
-            G.blind_select.alignment.offset.y = 40
-            G.blind_select.alignment.offset.x = 0
-            return true
-        end}))
-        G.E_MANAGER:add_event(Event({
-        trigger = 'immediate',
-        func = function()
-            ease_round(1)
-            inc_career_stat('c_rounds', 1)
-            if _DEMO then
-            G.SETTINGS.DEMO_ROUNDS = (G.SETTINGS.DEMO_ROUNDS or 0) + 1
-            inc_steam_stat('demo_rounds')
-            G:save_settings()
-            end
-            -- G.GAME.round_resets.blind = e.config.ref_table
-            -- G.GAME.round_resets.blind_states[G.GAME.blind_on_deck] = 'Current'
-            G.blind_select:remove()
-            G.blind_prompt_box:remove()
-            G.blind_select = nil
-            delay(0.2)
-            return true
-        end}))
-        G.E_MANAGER:add_event(Event({
-        trigger = 'immediate',
-        func = function()
-            dungeon_new_round(theBlind)
-            return true
-        end
-        }))
-    end
-end
-
-function dungeon_new_round(theBlind)
-    G.RESET_JIGGLES = nil
-    delay(0.4)
-    G.E_MANAGER:add_event(Event({
-      trigger = 'immediate',
-      func = function()
-            G.GAME.current_round.discards_left = math.max(0, G.GAME.round_resets.discards + G.GAME.round_bonus.discards)
-            G.GAME.current_round.hands_left = (math.max(1, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands))
-            G.GAME.current_round.hands_played = 0
-            G.GAME.current_round.discards_used = 0
-            G.GAME.current_round.reroll_cost_increase = 0
-            G.GAME.current_round.used_packs = {}
-
-            for k, v in pairs(G.GAME.hands) do 
-                v.played_this_round = 0
-            end
-
-            for k, v in pairs(G.playing_cards) do
-                v.ability.wheel_flipped = nil
-            end
-
-            local chaos = find_joker('Chaos the Clown')
-            G.GAME.current_round.free_rerolls = #chaos
-            calculate_reroll_cost(true)
-
-            G.GAME.round_bonus.next_hands = 0
-            G.GAME.round_bonus.discards = 0
-
-            local blhash = 'S'
-            -- if G.GAME.round_resets.blind == G.P_BLINDS.bl_small then
-            --     G.GAME.round_resets.blind_states.Small = 'Current'
-            --     G.GAME.current_boss_streak = 0
-            --     blhash = 'S'
-            -- elseif G.GAME.round_resets.blind == G.P_BLINDS.bl_big then
-            --     G.GAME.round_resets.blind_states.Big = 'Current'
-            --     G.GAME.current_boss_streak = 0
-            --     blhash = 'B'
-            -- else
-            --     G.GAME.round_resets.blind_states.Boss = 'Current'
-            --     blhash = 'L'
-            -- end
-            G.GAME.subhash = (G.GAME.round_resets.ante)..(blhash)
-
-            -- local customBlind = {name = 'The Ox', defeated = false, order = 4, dollars = 5, mult = 2,  vars = {localize('ph_most_played')}, debuff = {}, pos = {x=0, y=2}, boss = {min = 6, max = 10, bonus = true}, boss_colour = HEX('b95b08')}
-            G.GAME.blind_on_deck = 'Dungeon'
-            G.GAME.last_blind.boss = nil
-            G.HUD_blind.alignment.offset.y = -10
-            G.HUD_blind:recalculate(false)
-            
-            delay(0.4)
-
+    SMODS.Untarot {
+        key = 'unhanged_man',
+        atlas = 'reversed_tarots',
+        pos = {x = 2, y = 2},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
             G.E_MANAGER:add_event(Event({
-                trigger = 'immediate',
                 func = function()
-                    G.STATE = G.STATES.DRAW_TO_HAND
-                    G.deck:shuffle('nr'..G.GAME.round_resets.ante)
-                    G.deck:hard_set_T()
-                    G.STATE_COMPLETE = false
+                    for i = 1, card.ability.cards do
+                        local suits = {'H', 'S', 'D', 'C'}
+                        local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
+                        local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
+                        local suit = pseudorandom_element(suits, pseudoseed('untarot'))
+                        local pool = {}
+                        for j, k in pairs(G.P_CENTER_POOLS['Enhanced']) do
+                            if not k.in_pool or (type(k.in_pool) ~= 'function') or k:in_pool() then
+                                table.insert(pool, k)
+                            end
+                        end
+                        local enhancement = pseudorandom_element(pool, pseudoseed('untarot'))
+                        local card_ = create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = enhancement}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                        shuffle_card_in_deck(card_)
+                    end
                     return true
                 end
-            }))
-            return true
+            })) 
+        end,
+        config = {cards = 2},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.cards or 2}}
+        end,
+        can_use = function(self, card)
+            if G.deck then
+                return true
             end
-        }))
-end
+        end
+    }
+
+    SMODS.Enhancement {
+        key = 'garnet',
+        name = "Garnet Card",
+        atlas = 'enhance',
+        config = {},
+        pos = {x = 2, y = 0},
+        in_pool = function(self)
+            return false
+        end,
+    }
+
+    SMODS.Untarot {
+        key = 'undeath',
+        atlas = 'reversed_tarots',
+        pos = {x = 3, y = 2},
+        config = {max_highlighted = 2, mod_conv = 'm_hit_garnet'},
+        loc_vars = function(self, info_queue, card)
+            info_queue[#info_queue+1] = G.P_CENTERS['m_hit_garnet']
+            return {vars = {card and card.ability.max_highlighted or 2, localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_garnet'}}}
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'untemperance',
+        atlas = 'reversed_tarots',
+        pos = {x = 4, y = 2},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
+                    local ranks = {'7', '7', '7', 'J', 'Q', 'K'}
+                    local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
+                
+                    G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_'..rank])
+                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    return true 
+                end }))
+            end
+            for i=1, #G.hand.highlighted do
+                local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {max_highlighted = 4},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.max_highlighted or 4, localize('7', 'ranks')}}
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'undevil',
+        atlas = 'reversed_tarots',
+        pos = {x = 0, y = 3},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
+                
+                    G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_A'])
+                    G.hand.highlighted[i].ability.perma_debuff = true
+                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    return true 
+                end }))
+            end
+            for i=1, #G.hand.highlighted do
+                local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {max_highlighted = 2},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.max_highlighted or 2, localize('Ace', 'ranks')}}
+        end
+    }
+
+    SMODS.Enhancement {
+        key = 'crazy',
+        name = "Crazy Card",
+        atlas = 'enhance',
+        no_rank = true,
+        no_suit = true,
+        replace_base_card = true,
+        config = {chips = 7},
+        pos = {x = 0, y = 1},
+        in_pool = function(self)
+            return false
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.chips or 7}}
+        end,
+        calculate = function(self, card, context)
+            if context.cardarea == G.play and context.main_scoring then
+                return {chips = card and card.ability.chips or 7}
+            end
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'untower',
+        atlas = 'reversed_tarots',
+        pos = {x = 1, y = 3},
+        config = {max_highlighted = 1, mod_conv = 'm_hit_crazy'},
+        loc_vars = function(self, info_queue, card)
+            info_queue[#info_queue+1] = G.P_CENTERS['m_hit_crazy']
+            return {vars = {card and card.ability.max_highlighted or 1, localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_crazy'}}}
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'unstar',
+        atlas = 'reversed_tarots',
+        pos = {x = 2, y = 3},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            delay(0.2)
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                local pool = {}
+                for i = 1, #G.hand.cards do
+                    table.insert(pool, G.hand.cards[i])
+                end
+                local destroy = {}
+                for i = 1, (card and card.ability.cards or 3) do
+                    local card2, index = pseudorandom_element(pool, pseudoseed('untarot'))
+                    table.remove(pool, index)
+                    table.insert(destroy, card2)
+                end
+                for i = 1, #destroy do
+                    destroy[i]:start_dissolve()
+                end
+                return true 
+            end }))
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {cards = 3},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.cards or 3}}
+        end,
+        can_use = function(self, card)
+            if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.cards >= (card and card.ability.cards or 3)) then
+                return true
+            end
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'unmoon',
+        atlas = 'reversed_tarots',
+        pos = {x = 3, y = 3},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    G.hand.highlighted[i].ability.shuffle_top = card.ability.rounds
+                    return true 
+                end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {max_highlighted = 3, rounds = 4},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.max_highlighted or 3, card and card.ability.rounds or 4}}
+        end,
+    }
+
+    SMODS.Untarot {
+        key = 'unsun',
+        atlas = 'reversed_tarots',
+        pos = {x = 4, y = 3},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+            local ranks = {}
+            for i=1, #G.hand.highlighted do
+                table.insert(ranks, SMODS.Ranks[G.hand.highlighted[i].base.value].card_key)
+            end
+            pseudoshuffle(ranks, pseudoseed('untarot'))
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
+                    local rank = ranks[i] or 'A'
+                
+                    G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_' .. rank])
+                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    return true 
+                end }))
+            end
+            for i=1, #G.hand.highlighted do
+                local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {},
+        can_use = function(self, card)
+            if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.highlighted >= 1) then
+                return true
+            end
+        end
+    }
+
+    SMODS.Untarot {
+        key = 'unjudgement',
+        atlas = 'reversed_tarots',
+        pos = {x = 0, y = 4},
+        use = function(self, card, area, copier)
+            local used_tarot = copier or card
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
+                play_sound('tarot1')
+                used_tarot:juice_up(0.3, 0.5)
+                return true end }))
+            for i=1, #G.hand.highlighted do
+                local percent = 1.15 - (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            delay(0.2)
+
+            local rank = get_smods_rank_from_id(G.hand.cards[1]).card_key
+            for i=1, #G.hand.highlighted do
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
+                    local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
+                
+                    G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_'..rank])
+                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    return true 
+                end }))
+            end
+            for i=1, #G.hand.highlighted do
+                local percent = 0.85 + (i-0.999)/(#G.hand.highlighted-0.998)*0.3
+                G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('tarot2', percent, 0.6);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
+            end
+            G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+            delay(0.5)
+        end,
+        config = {max_highlighted = 2},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.max_highlighted or 2}}
+        end
+    }
+
+    SMODS.Enhancement {
+        key = 'osmium',
+        name = "Osmium Card",
+        atlas = 'enhance',
+        config = {},
+        pos = {x = 1, y = 1},
+        in_pool = function(self)
+            return false
+        end,
+    }
+
+    SMODS.Untarot {
+        key = 'unworld',
+        atlas = 'reversed_tarots',
+        pos = {x = 1, y = 4},
+        config = {max_highlighted = 2, mod_conv = 'm_hit_osmium'},
+        loc_vars = function(self, info_queue, card)
+            info_queue[#info_queue+1] = G.P_CENTERS['m_hit_osmium']
+            return {vars = {card and card.ability.max_highlighted or 2, localize{type = 'name_text', set = 'Enhanced', key = 'm_hit_osmium'}}}
+        end
+    }
+
+    for i = 1, 4 do
+        SMODS.Booster {
+            key = 'unarcana_normal_' .. tostring(i),
+            group_key = 'k_unarcana_pack',
+            weight = 1,
+            cost = 4,
+            name = "Unarcana Pack",
+            atlas = "boosters",
+            pos = {x = i - 1, y = 0},
+            config = {extra = 3, choose = 1, name = "Unarcana Pack"},
+            create_card = function(self, card)
+                return {set = "Untarot", skip_materialize = true}
+            end,
+            loc_txt = {
+                name = "Unarcana Pack",
+                text = {
+                    "Choose {C:attention}#1#{} of up to",
+                    "{C:attention}#2#{C:attention} Untarot{} cards to",
+                    "be used immediately"
+                }
+            },
+            draw_hand = true,
+            in_pool = function(self)
+                return G.GAME.modifiers.dungeon
+            end,
+        }
+    end
+
+    for i = 1, 2 do
+        SMODS.Booster {
+            key = 'unarcana_jumbo_' .. tostring(i),
+            group_key = 'k_unarcana_pack',
+            weight = 1,
+            cost = 6,
+            name = "Unarcana Pack",
+            atlas = "boosters",
+            pos = {x = i - 1, y = 1},
+            config = {extra = 5, choose = 1, name = "Unarcana Pack"},
+            create_card = function(self, card)
+                return {set = "Untarot", skip_materialize = true}
+            end,
+            loc_txt = {
+                name = "Jumbo Unarcana Pack",
+                text = {
+                    "Choose {C:attention}#1#{} of up to",
+                    "{C:attention}#2#{C:attention} Untarot{} cards to",
+                    "be used immediately"
+                }
+            },
+            draw_hand = true,
+            in_pool = function(self)
+                return G.GAME.modifiers.dungeon
+            end,
+        }
+        SMODS.Booster {
+            key = 'unarcana_mega_' .. tostring(i),
+            group_key = 'k_unarcana_pack',
+            weight = 1,
+            cost = 8,
+            name = "Unarcana Pack",
+            atlas = "boosters",
+            pos = {x = i + 1, y = 1},
+            config = {extra = 5, choose = 2, name = "Unarcana Pack"},
+            create_card = function(self, card)
+                return {set = "Untarot", skip_materialize = true}
+            end,
+            loc_txt = {
+                name = "Mega Unarcana Pack",
+                text = {
+                    "Choose {C:attention}#1#{} of up to",
+                    "{C:attention}#2#{C:attention} Untarot{} cards to",
+                    "be used immediately"
+                }
+            },
+            draw_hand = true,
+            in_pool = function(self)
+                return G.GAME.modifiers.dungeon
+            end,
+        }
+    end
+
+-----------------
+
+-----Jokers-------------
+
+    SMODS.Joker {
+        key = 'social',
+        name = "Social Joker",
+        rarity = 1,
+        atlas = 'jokers',
+        pos = {x = 0, y = 0},
+        cost = 4,
+        config = {t_mult = 8, type = 'hit_Court'},
+        effect = "Type Mult",
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability and card.ability.t_mult or 8, localize(card and card.ability and card.ability.type or 'hit_Court', 'poker_hands')}}
+        end,
+    }
+
+    SMODS.Joker {
+        key = 'manipulative',
+        name = "Maniplulative Joker",
+        rarity = 1,
+        atlas = 'jokers',
+        pos = {x = 1, y = 0},
+        cost = 4,
+        config = {t_mult = 12, type = 'hit_Duo'},
+        effect = "Type Mult",
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability and card.ability.t_mult or 12, localize(card and card.ability and card.ability.type or 'hit_Duo', 'poker_hands')}}
+        end,
+    }
+
+    SMODS.Joker {
+        key = 'creative',
+        name = "Creative Joker",
+        rarity = 1,
+        atlas = 'jokers',
+        pos = {x = 2, y = 0},
+        cost = 4,
+        config = {t_mult = 12, type = 'hit_Batch'},
+        effect = "Type Mult",
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability and card.ability.t_mult or 12, localize(card and card.ability and card.ability.type or 'hit_Batch', 'poker_hands')}}
+        end,
+    }
+
+    SMODS.Joker {
+        key = 'merry',
+        name = "Merry Joker",
+        rarity = 1,
+        atlas = 'jokers',
+        pos = {x = 3, y = 0},
+        cost = 4,
+        config = {t_chips = 50, type = 'hit_Court'},
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability and card.ability.t_chips or 50, localize(card and card.ability and card.ability.type or 'hit_Court', 'poker_hands')}}
+        end,
+    }
+
+    SMODS.Joker {
+        key = 'secretive',
+        name = "Secretive Joker",
+        rarity = 1,
+        atlas = 'jokers',
+        pos = {x = 4, y = 0},
+        cost = 4,
+        config = {t_chips = 80, type = 'hit_Duo'},
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability and card.ability.t_chips or 80, localize(card and card.ability and card.ability.type or 'hit_Duo', 'poker_hands')}}
+        end,
+    }
+
+    SMODS.Joker {
+        key = 'hoarding',
+        name = "Hoarding Joker",
+        rarity = 1,
+        atlas = 'jokers',
+        pos = {x = 0, y = 1},
+        cost = 4,
+        config = {t_chips = 100, type = 'hit_Batch'},
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability and card.ability.t_chips or 100, localize(card and card.ability and card.ability.type or 'hit_Batch', 'poker_hands')}}
+        end,
+    }
+
+    SMODS.Joker {
+        key = 'friends',
+        name = "The Friends",
+        rarity = 1,
+        atlas = 'jokers',
+        pos = {x = 1, y = 1},
+        cost = 8,
+        config = {Xmult = 2, type = 'hit_Court'},
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability and card.ability.Xmult or 2, localize(card and card.ability and card.ability.type or 'hit_Court', 'poker_hands')}}
+        end,
+    }
+
+    SMODS.Joker {
+        key = 'pair',
+        name = "The Pair",
+        rarity = 1,
+        atlas = 'jokers',
+        pos = {x = 2, y = 1},
+        cost = 8,
+        config = {Xmult = 3, type = 'hit_Duo'},
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability and card.ability.Xmult or 3, localize(card and card.ability and card.ability.type or 'hit_Duo', 'poker_hands')}}
+        end,
+    }
+
+    SMODS.Joker {
+        key = 'bundle',
+        name = "The Bundle",
+        rarity = 1,
+        atlas = 'jokers',
+        pos = {x = 3, y = 1},
+        cost = 8,
+        config = {Xmult = 3, type = 'hit_Batch'},
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability and card.ability.Xmult or 3, localize(card and card.ability and card.ability.type or 'hit_Batch', 'poker_hands')}}
+        end,
+    }
+
+------------------------
 
 local old_buttons = create_UIBox_buttons
 function create_UIBox_buttons()
