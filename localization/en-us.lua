@@ -447,6 +447,7 @@ return {
             ch_c_dungeon = {"{C:attention}Blackjack Mode{}"},
         },
         v_dictionary = {
+            stands_on = "Stands on #1#"
         },
         challenge_names = {
             c_blackjack = "Blackjack"

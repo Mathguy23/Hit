@@ -364,7 +364,11 @@ payload = '''if G.GAME.modifiers.dungeon then
         ranks = {'3', '3', '7', '7', '7', 'K', 'K', 'K', 'K', 'K', 'K', 'K', 'A'}
         suits = {'H', 'H', 'H', 'H'}
     elseif (blind and blind.name or '') == "Verdant Leaf" then
-        ranks = {'7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '8', '8', '8'}
+        if G.GAME.hit_bust_limit and (G.GAME.hit_bust_limit >= 24) then
+            ranks = {'8', '8', '8', '8', '8', '8', '8', '8', '8', '8', '9', '9', '9'}
+        else
+            ranks = {'7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '8', '8', '8'}
+        end
     elseif (blind and blind.name or '') == "Amber Acorn" then
         ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         for i = 1, 52 do
@@ -679,5 +683,29 @@ position = 'before'
 payload = '''if card.area == G.enemy_deck then
     y_off = -0.05*G.CARD_H
     card_aligned = 'tm'
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''local run_info_colour = run_info and (blind_state == 'Defeated' and G.C.GREY or blind_state == 'Skipped' and G.C.BLUE or blind_state == 'Upcoming' and G.C.ORANGE or blind_state == 'Current' and G.C.RED or G.C.GOLD)'''
+position = 'after'
+payload = '''local extra_dollars_mod = nil
+if G.GAME.modifiers and G.GAME.modifiers.dungeon then
+    blind_desc_nodes[#blind_desc_nodes+1] = {n=G.UIT.R, config={align = "cm", maxw = 2.8}, nodes={
+        {n=G.UIT.T, config={text = localize {type = 'variable', key = 'stands_on', vars = {(G.GAME.hit_bust_limit or 21) - 4}}, scale = 0.32, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.UI.TEXT_LIGHT, shadow = not disabled}}
+    }}
+    text_table[1] = true
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''if loc_target then'''
+position = 'before'
+payload = '''if G.GAME.modifiers and G.GAME.modifiers.dungeon then
+    table.insert(loc_target, localize {type = 'variable', key = 'stands_on', vars = {(G.GAME.hit_bust_limit or 21) - 4}})
 end'''
 match_indent = true
