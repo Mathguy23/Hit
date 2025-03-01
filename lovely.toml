@@ -709,3 +709,13 @@ payload = '''if G.GAME.modifiers and G.GAME.modifiers.dungeon then
     table.insert(loc_target, localize {type = 'variable', key = 'stands_on', vars = {(G.GAME.hit_bust_limit or 21) - 4}})
 end'''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if self.ability.set == "Joker" and not self.debuff then'''
+position = 'before'
+payload = '''if ((self.ability.name == 'Ride the Bus') or (self.ability.name == 'Obelisk')) and context.before and (context.cardarea == G.jokers) and G.GAME.negate_hand then
+    return nil 
+end'''
+match_indent = true

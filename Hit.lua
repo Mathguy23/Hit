@@ -2601,6 +2601,7 @@ bj_ban_list = {
         {id = 'j_family'},
         {id = 'j_order'},
         {id = 'j_tribe'},
+        {id = 'j_trousers'},
         -- really useless
         {id = 'j_mime'},
         {id = 'j_raised_fist'},
