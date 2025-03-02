@@ -39,6 +39,8 @@ SMODS.Atlas({ key = "planets", atlas_table = "ASSET_ATLAS", path = "Planets.png"
 
 SMODS.Atlas({ key = "jokers", atlas_table = "ASSET_ATLAS", path = "Jokers.png", px = 71, py = 95})
 
+SMODS.Atlas({ key = "blinds", atlas_table = "ANIMATION_ATLAS", path = "blinds.png", px = 34, py = 34, frames = 21 })
+
 function get_smods_rank_from_id(card)
     local id = card:get_id()
     if id > 0 then
@@ -73,7 +75,7 @@ function shuffle_card_in_deck(card)
     end
 end
 
-----Poker Hands-------
+----Poker Hands--------
 
     SMODS.PokerHand {
         key = 'High Card0',
@@ -456,9 +458,9 @@ end
         }
     end
 
-----------------------
+------------------------
 
-----Untarots-----
+----Untarots------------
 
     SMODS.ConsumableType {
         key = 'Untarot',
@@ -1453,7 +1455,7 @@ end
         }
     end
 
------------------
+------------------------
 
 -----Jokers-------------
 
@@ -1601,6 +1603,76 @@ end
         end,
         loc_vars = function(self, info_queue, card)
             return {vars = {card and card.ability and card.ability.Xmult or 3, localize(card and card.ability and card.ability.type or 'hit_Batch', 'poker_hands')}}
+        end,
+    }
+
+------------------------
+
+--------Blinds----------
+
+    SMODS.Blind	{
+        loc_txt = {
+            name = 'The Steel',
+            text = { 'Every 3rd hit stands', '#1# / 3' }
+        },
+        key = 'steel',
+        name = "The Steel",
+        config = {},
+        boss = {min = 1, max = 10}, 
+        showdown = true,
+        boss_colour = HEX("682feb"),
+        vars = {"0"},
+        dollars = 5,
+        mult = 2,
+        atlas = "blinds",
+        pos = {x = 0, y = 0},
+        loc_vars = function(self)
+            return {vars = {G.GAME.blind and G.GAME.blind.hits and tostring(G.GAME.blind.hits) or '0'}}
+        end,
+        set_blind = function(self, reset, silent)
+            if not reset then
+                G.GAME.blind.hits = 0
+            end
+        end,
+    }
+
+    SMODS.Blind	{
+        loc_txt = {
+            name = 'The Bind',
+            text = { '-2 Bust Limit' }
+        },
+        key = 'bind',
+        name = "The Bind",
+        config = {},
+        boss = {min = 1, max = 10}, 
+        showdown = true,
+        boss_colour = HEX("8ac8bb"),
+        vars = {},
+        dollars = 5,
+        mult = 2,
+        atlas = "blinds",
+        pos = {x = 0, y = 1},
+        set_blind = function(self, reset, silent)
+            if not reset then
+                G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) - 2
+                G.GAME.blind:set_text()
+            end
+        end,
+        disable = function(self)
+            G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) + 2
+            G.GAME.blind:set_text()
+        end,
+        defeat = function(self)
+            if not G.GAME.blind.disabled then
+                G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) + 2
+            end
+        end,
+        get_stand_val = function(self)
+            if G.GAME.blind and (G.GAME.blind.name == "The Bind") then
+                return (G.GAME.hit_bust_limit or 21) - 4
+            else
+                return (G.GAME.hit_bust_limit or 21) - 6
+            end
         end,
     }
 
@@ -1797,6 +1869,10 @@ G.FUNCS.hit = function(e)
             G.hand.cards[i]:calculate_exotic({hit = true, cardarea = G.hand})
         end
     end
+    if G.GAME.blind.hits then
+        G.GAME.blind.hits = G.GAME.blind.hits + 1
+        G.GAME.blind:set_text()
+    end
     G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
@@ -1844,6 +1920,13 @@ G.FUNCS.stand = function(e)
     local bl_total = 0
     local bl_cards = {}
     local total_list = {}
+    local obj = G.GAME.blind.config.blind
+    local stand_val = (G.GAME.hit_bust_limit or 21) - 4
+    if obj.get_stand_val then
+        stand_val = obj:get_stand_val()
+    elseif obj.name == "Small Blind" then
+        stand_val = (G.GAME.hit_bust_limit or 21) - 6
+    end
     while true do
         local index = #G.enemy_deck.cards - #bl_cards
         if index <= 0 then
@@ -1854,7 +1937,7 @@ G.FUNCS.stand = function(e)
             local bl_data = get_card_total(bl_cards)
             bl_total = bl_data.total
             table.insert(total_list, bl_total)
-            if (bl_total >= bl_data.bust_limit - 4) then
+            if (bl_total >= stand_val) then
                 break
             end
         end
@@ -1898,7 +1981,7 @@ G.FUNCS.stand = function(e)
                     local color = G.C.FILTER
                     if total_list[i] > (bl_data.bust_limit) then
                         color = G.C.RED
-                    elseif total_list[i] >= (bl_data.bust_limit - 4) then
+                    elseif total_list[i] >= stand_val then
                         color = G.C.GREEN
                     end
                     card_eval_status_text(bl_cards[i], 'extra', nil, nil, nil, {message = tostring(total_list[i]), colour = color})

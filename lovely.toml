@@ -434,6 +434,15 @@ payload = '''   if G.GAME.modifiers.dungeon then
         check_total_over_21()
         if ((#G.deck.cards == 0) and (#G.hand.cards == 0)) then
             G.STATE = G.STATES.NEW_ROUND
+        else
+            if G.GAME.blind.hits and (G.GAME.blind.hits >= 3) then
+                G.GAME.blind.hits = 0
+                G.GAME.blind:set_text()
+                G.GAME.blind:wiggle()
+                G.FUNCS.stand()
+                G.STATE = G.STATES.HAND_PLAYED
+                G.STATE_COMPLETE = true
+            end
         end
         G.GAME.last_round_drawn = G.GAME.round
     end'''
@@ -693,8 +702,14 @@ pattern = '''local run_info_colour = run_info and (blind_state == 'Defeated' and
 position = 'after'
 payload = '''local extra_dollars_mod = nil
 if G.GAME.modifiers and G.GAME.modifiers.dungeon then
+    local stand_val = (G.GAME.hit_bust_limit or 21) - 4
+    if obj.get_stand_val then
+        stand_val = obj:get_stand_val()
+    elseif obj.name == "Small Blind" then
+        stand_val = (G.GAME.hit_bust_limit or 21) - 6
+    end
     blind_desc_nodes[#blind_desc_nodes+1] = {n=G.UIT.R, config={align = "cm", maxw = 2.8}, nodes={
-        {n=G.UIT.T, config={text = localize {type = 'variable', key = 'stands_on', vars = {(G.GAME.hit_bust_limit or 21) - 4}}, scale = 0.32, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.UI.TEXT_LIGHT, shadow = not disabled}}
+        {n=G.UIT.T, config={text = localize {type = 'variable', key = 'stands_on', vars = {stand_val}}, scale = 0.32, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.UI.TEXT_LIGHT, shadow = not disabled}}
     }}
     text_table[1] = true
 end'''
@@ -706,7 +721,14 @@ target = 'blind.lua'
 pattern = '''if loc_target then'''
 position = 'before'
 payload = '''if G.GAME.modifiers and G.GAME.modifiers.dungeon then
-    table.insert(loc_target, localize {type = 'variable', key = 'stands_on', vars = {(G.GAME.hit_bust_limit or 21) - 4}})
+    local obj = self.config.blind
+    local stand_val = (G.GAME.hit_bust_limit or 21) - 4
+    if obj.get_stand_val then
+        stand_val = obj:get_stand_val()
+    elseif obj.name == "Small Blind" then
+        stand_val = (G.GAME.hit_bust_limit or 21) - 6
+    end
+    table.insert(loc_target, localize {type = 'variable', key = 'stands_on', vars = {stand_val}})
 end'''
 match_indent = true
 
@@ -718,4 +740,20 @@ position = 'before'
 payload = '''if ((self.ability.name == 'Ride the Bus') or (self.ability.name == 'Obelisk')) and context.before and (context.cardarea == G.jokers) and G.GAME.negate_hand then
     return nil 
 end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''self.triggered = blindTable.triggered'''
+position = 'after'
+payload = '''self.hits = blindTable.hits'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''hands = self.hands,'''
+position = 'after'
+payload = '''hits = self.hits,'''
 match_indent = true
