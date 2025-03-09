@@ -16,6 +16,15 @@ return {
                     "{C:attention}+3{} Bust Limit",
                 }
             },
+            b_hit_arcane = {
+                name = "Arcane Deck",
+                text = {
+                    "{C:attention}Blackjack Mode{}",
+                    "{C:attention}Untarot Cards{} show up",
+                    "{C:attention}X2{} times more often",
+                    "{C:red}-1{} Bust Limit",
+                }
+            },
         },
         Sleeve = {
             sleeve_hit_aced_sl = {

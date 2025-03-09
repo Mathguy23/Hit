@@ -366,6 +366,8 @@ payload = '''if G.GAME.modifiers.dungeon then
     elseif (blind and blind.name or '') == "Verdant Leaf" then
         if G.GAME.hit_bust_limit and (G.GAME.hit_bust_limit >= 24) then
             ranks = {'8', '8', '8', '8', '8', '8', '8', '8', '8', '8', '9', '9', '9'}
+        elseif G.GAME.hit_bust_limit and (G.GAME.hit_bust_limit == 20) then
+            ranks = {'7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '6', '6', '6'}
         else
             ranks = {'7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '8', '8', '8'}
         end

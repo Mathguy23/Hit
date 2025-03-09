@@ -1634,6 +1634,12 @@ end
                 G.GAME.blind.hits = 0
             end
         end,
+        defeat = function(self, reset, silent)
+            G.GAME.blind.hits = nil
+        end,
+        disable = function(self, reset, silent)
+            G.GAME.blind.hits = nil
+        end,
     }
 
     SMODS.Blind	{
@@ -1894,6 +1900,7 @@ G.FUNCS.can_stand = function(e)
 end
 
 G.FUNCS.stand = function(e)
+    -- Remove buttons 
     G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
@@ -1902,6 +1909,7 @@ G.FUNCS.stand = function(e)
             return true
         end
     }))
+    -- Osmium Cards
     local add_total = 0
     for i = 1, #G.hand.cards do
         if G.hand.cards[i].ability.name == 'Osmium Card' then
@@ -1917,28 +1925,38 @@ G.FUNCS.stand = function(e)
     G.GAME.stood = true
     G.GAME.hit_stood_ranks = G.GAME.hit_stood_ranks or {}
     G.GAME.hit_stood_suits = G.GAME.hit_stood_suits or {}
+    -- Blind Actions
+    local obj = G.GAME.blind.config.blind
     local bl_total = 0
     local bl_cards = {}
     local total_list = {}
-    local obj = G.GAME.blind.config.blind
     local stand_val = (G.GAME.hit_bust_limit or 21) - 4
     if obj.get_stand_val then
-        stand_val = obj:get_stand_val()
+        if type(obj.get_stand_val) == 'function' then
+            stand_val = obj:get_stand_val()
+        elseif type(obj.get_stand_val) == 'number' then
+            stand_val = obj.get_stand_val
+        end
     elseif obj.name == "Small Blind" then
         stand_val = (G.GAME.hit_bust_limit or 21) - 6
     end
     while true do
-        local index = #G.enemy_deck.cards - #bl_cards
-        if index <= 0 then
+        local next_action = 'hit'
+        if (bl_total >= stand_val) then
+            next_action = 'stand'
+        end
+        if next_action == 'stand' then
             break
-        else
-            local id = G.enemy_deck.cards[index]:get_id()
-            table.insert(bl_cards, G.enemy_deck.cards[index])
-            local bl_data = get_card_total(bl_cards)
-            bl_total = bl_data.total
-            table.insert(total_list, bl_total)
-            if (bl_total >= stand_val) then
+        elseif next_action == 'hit' then
+            local index = #G.enemy_deck.cards - #bl_cards
+            if index <= 0 then
                 break
+            else
+                local id = G.enemy_deck.cards[index]:get_id()
+                table.insert(bl_cards, G.enemy_deck.cards[index])
+                local bl_data = get_card_total(bl_cards)
+                bl_total = bl_data.total
+                table.insert(total_list, bl_total)
             end
         end
     end
@@ -2240,6 +2258,18 @@ SMODS.Back {
     apply = function(self)
         set_blackjack_mode()
         G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) + 3
+    end,
+}
+
+SMODS.Back {
+    key = 'arcane',
+    name = "Arcane Deck",
+    pos = { x = 2, y = 0 },
+    atlas = 'decks',
+    apply = function(self)
+        set_blackjack_mode()
+        G.GAME.untarot_rate = 8
+        G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) - 1
     end,
 }
 
