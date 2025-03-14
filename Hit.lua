@@ -2617,6 +2617,7 @@ end
 
 G.FUNCS.hit_use_minor_arcana = function(e)
     hit_minor_arcana_use(e.config.ref_table)
+    check_total_over_21()
 end
 
 if CardSleeves and CardSleeves.Sleeve then
