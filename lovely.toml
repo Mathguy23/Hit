@@ -437,8 +437,8 @@ payload = '''   if G.GAME.modifiers.dungeon then
         if ((#G.deck.cards == 0) and (#G.hand.cards == 0)) then
             G.STATE = G.STATES.NEW_ROUND
         else
-            if G.GAME.blind.hits and (G.GAME.blind.hits >= 3) then
-                G.GAME.blind.hits = 0
+            if G.GAME.forced_stand then
+                G.GAME.forced_stand = nil
                 G.GAME.blind:set_text()
                 G.GAME.blind:wiggle()
                 G.FUNCS.stand()
@@ -456,7 +456,7 @@ target = 'functions/state_events.lua'
 pattern = '''for i=1, #cards_destroyed do'''
 position = 'before'
 payload = '''if G.GAME.negate_hand then
-    mult = -0.5 * mult
+    mult = G.GAME.negate_hand * mult
     G.GAME.negate_hand = nil
     G.E_MANAGER:add_event(Event({
         trigger = 'before',
@@ -739,7 +739,7 @@ match_indent = true
 target = 'card.lua'
 pattern = '''if self.ability.set == "Joker" and not self.debuff then'''
 position = 'before'
-payload = '''if ((self.ability.name == 'Ride the Bus') or (self.ability.name == 'Obelisk')) and context.before and (context.cardarea == G.jokers) and G.GAME.negate_hand then
+payload = '''if ((self.ability.name == 'Ride the Bus') or (self.ability.name == 'Obelisk')) and context.before and (context.cardarea == G.jokers) and ((G.GAME.negate_hand or 1) < 0) then
     return nil 
 end'''
 match_indent = true
@@ -758,4 +758,121 @@ target = 'blind.lua'
 pattern = '''hands = self.hands,'''
 position = 'after'
 payload = '''hits = self.hits,'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''self.highlighted = is_higlighted'''
+position = 'after'
+payload = '''if self.playing_card and not self.children.use_button then
+        if self.highlighted and self.area and self.area == G.consumeables then
+        local x_off = (self.ability.consumeable and -0.1 or 0)
+        self.children.use_button = UIBox{
+            definition = G.UIDEF.use_and_sell_buttons(self), 
+            config = {align=
+                    ((self.area == G.jokers) or (self.area == G.consumeables)) and "cr" or
+                    "bmi"
+                , offset = 
+                    ((self.area == G.jokers) or (self.area == G.consumeables)) and {x=x_off - 0.4,y=0} or
+                    {x=0,y=0.65},
+                parent =self}
+        }
+    elseif self.children.use_button then
+        self.children.use_button:remove()
+        self.children.use_button = nil
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/UI_definitions.lua'
+pattern = '''if card.area and card.area.config.type == 'joker' then'''
+position = 'before'
+payload = '''if card.area and (card.area == G.consumeables) and card.playing_card then
+    use = 
+    {n=G.UIT.C, config={align = "cr"}, nodes={
+      {n=G.UIT.C, config={ref_table = card, align = "cr",maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = 1, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'hit_use_minor_arcana', func = 'hit_can_use_minor_arcana'}, nodes={
+        {n=G.UIT.B, config = {w=0.1,h=0.6}},
+        {n=G.UIT.T, config={text = localize('b_use'),colour = G.C.UI.TEXT_LIGHT, scale = 0.55, shadow = true}}
+      }}
+    }}
+    local t = {
+      n=G.UIT.ROOT, config = {padding = 0, colour = G.C.CLEAR}, nodes={
+        {n=G.UIT.C, config={padding = 0.15, align = 'cl'}, nodes={
+          {n=G.UIT.R, config={align = 'cl'}, nodes={
+            sell
+          }},
+          {n=G.UIT.R, config={align = 'cl'}, nodes={
+            use
+          }},
+        }},
+    }}
+    return t
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''G.RESET_BLIND_STATES = true'''
+position = 'after'
+payload = '''local delete_these = {}
+for i = 1, #G.playing_cards do
+    if G.playing_cards[i].ability.fleeting then
+        table.insert(delete_these, G.playing_cards[i])
+    end
+end
+for i = 1, #delete_these do
+    delete_these[i]:remove()
+end
+local pool = {}
+for i = 1, #G.consumeables.cards do
+    table.insert(pool, G.consumeables.cards[i])
+end
+for i = 1, #pool do
+    if pool[i].config.card and hit_minor_arcana_suits[pool[i].config.card.suit] then
+        draw_card(G.consumeables,G.deck, 90,'down', nil, pool[i])
+    end
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''--Fill all remaining info if this is the main desc'''
+position = 'before'
+payload = '''if card and card.ability and card.ability.fleeting then info_queue[#info_queue+1] = {key = 'fleeting', set = 'Other'} end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''function copy_card(other, new_card, card_scale, playing_card, strip_edition)'''
+position = 'after'
+payload = '''   local old_fleeting_hit = other.ability and other.ability.fleeting or nil
+    if new_card and new_card.ability then
+        old_fleeting_hit = new_card.ability.fleeting
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''new_card:set_sprites(new_card.config.center)'''
+position = 'before'
+payload = '''new_card.ability.fleeting = old_fleeting_hit'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/common_events.lua'
+pattern = '''if main_start then 
+    desc_nodes[#desc_nodes+1] = main_start 
+end'''
+position = 'after'
+payload = '''if card and card.config.card and hit_minor_arcana_suits[card.config.card.suit] then
+    localize{type = 'descriptions', key = card.config.card.name, set = 'MinorArcana', nodes = desc_nodes}
+end'''
 match_indent = true

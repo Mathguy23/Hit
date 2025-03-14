@@ -25,6 +25,13 @@ return {
                     "{C:red}-1{} Bust Limit",
                 }
             },
+            b_hit_temporary = {
+                name = "[DECK] ==",
+                text = {
+                    "{C:attention}Blackjack Mode{}",
+                    "[{C:attention}MINOR ARCANA{}] = 4"
+                }
+            },
         },
         Sleeve = {
             sleeve_hit_aced_sl = {
@@ -99,6 +106,13 @@ return {
                 text = {
                    "Hydra",
                 }
+            },
+            fleeting = {
+                name = "Fleeting",
+                text = {
+                    "{C:red}Deleted{} at end",
+                    "of {C:attention}round{}",
+                },
             },
         },
         Untarot = {
@@ -429,6 +443,40 @@ return {
                     "a {C:attention}#2#"
                 }
             },
+        },
+        MinorArcana = {
+            ["Ace of hit_pentacles"] = {
+                name = '',
+                text = {
+                    "Add an {C:attention}Ace of {C:attention}Diamonds",
+                    "to hand, then {C:red}Discard{}"
+                }
+            },
+            ["Ace of hit_cups"] = {
+                name = '',
+                text = {
+                    "Move to top of {C:attention}Remaining{}",
+                    "{C:attention}Deck{}, then move all cards",
+                    "of a random suit to top",
+                    "of {C:attention}Remaining Deck{}"
+                }
+            },
+            ["Ace of hit_swords"] = {
+                name = '',
+                text = {
+                    "Shuffle {C:attention}4 Fleeting Mega{}",
+                    "{C:attention}Blackjack 0s{} into {C:attention}Remaining{}",
+                    "{C:attention}Deck{}, then {C:red}Discard{}"
+                }
+            },
+            ["Ace of hit_wands"] = {
+                name = '',
+                text = {
+                    "{C:attention}Hit{}, {C:green}Stand{}, then {X:mult,C:white} X2 {}",
+                    "Mult at end of either",
+                    "{C:attention}scoring{}"
+                }
+            },
         }
     },
     misc = {
@@ -465,6 +513,18 @@ return {
         },
         ranks = {
             hit_0 = '0'
+        },
+        suits_singular = {
+            hit_pentacles = "Pentacle",
+            hit_cups = "Cup",
+            hit_swords = "Sword",
+            hit_wands = "Wand",
+        },
+        suits_plural = {
+            hit_pentacles = "Pentacles",
+            hit_cups = "Cups",
+            hit_swords = "Swords",
+            hit_wands = "Wands",
         },
         poker_hands = {
             ["hit_High Card0"] = "High Card",

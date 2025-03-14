@@ -41,6 +41,10 @@ SMODS.Atlas({ key = "jokers", atlas_table = "ASSET_ATLAS", path = "Jokers.png", 
 
 SMODS.Atlas({ key = "blinds", atlas_table = "ANIMATION_ATLAS", path = "blinds.png", px = 34, py = 34, frames = 21 })
 
+SMODS.Atlas({ key = "minor", atlas_table = "ASSET_ATLAS", path = "Minor.png", px = 71, py = 95})
+
+SMODS.Atlas({ key = "mini_suits", atlas_table = "ASSET_ATLAS", path = "mini_suits.png", px = 18, py = 18})
+
 function get_smods_rank_from_id(card)
     local id = card:get_id()
     if id > 0 then
@@ -1869,14 +1873,21 @@ G.FUNCS.can_hit = function(e)
 end
 
 G.FUNCS.hit = function(e)
-    G.GAME.hit_limit = (G.hand and G.hand.cards and #G.hand.cards or 2) + 1
+    local valid = true
     for i = 1, #G.hand.cards do
         if G.hand.cards[i].calculate_exotic then
             G.hand.cards[i]:calculate_exotic({hit = true, cardarea = G.hand})
         end
     end
+    if valid then
+        G.GAME.hit_limit = (G.hand and G.hand.cards and #G.hand.cards or 2) + 1
+    end
     if G.GAME.blind.hits then
         G.GAME.blind.hits = G.GAME.blind.hits + 1
+        if G.GAME.blind.hits == 3 then
+            G.GAME.forced_stand = true
+            G.GAME.blind.hits = 0
+        end
         G.GAME.blind:set_text()
     end
     G.E_MANAGER:add_event(Event({
@@ -1901,6 +1912,10 @@ end
 
 G.FUNCS.stand = function(e)
     -- Remove buttons 
+    if G.GAME.double_mult then
+        G.GAME.negate_hand = (G.GAME.negate_hand or 1) * 2
+        G.GAME.double_mult = nil
+    end
     G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
@@ -1929,6 +1944,7 @@ G.FUNCS.stand = function(e)
     local obj = G.GAME.blind.config.blind
     local bl_total = 0
     local bl_cards = {}
+    local bl_actions = {}
     local total_list = {}
     local stand_val = (G.GAME.hit_bust_limit or 21) - 4
     if obj.get_stand_val then
@@ -1957,6 +1973,7 @@ G.FUNCS.stand = function(e)
                 local bl_data = get_card_total(bl_cards)
                 bl_total = bl_data.total
                 table.insert(total_list, bl_total)
+                table.insert(bl_actions, {'hit', G.enemy_deck.cards[index], bl_total})
             end
         end
     end
@@ -1992,18 +2009,20 @@ G.FUNCS.stand = function(e)
     G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
-            if #bl_cards > 0 then
-                for i = 1, #bl_cards do
-                    draw_card(G.enemy_deck, G.play, i*100/5, 'up')
-                    force_up_status_text = true
-                    local color = G.C.FILTER
-                    if total_list[i] > (bl_data.bust_limit) then
-                        color = G.C.RED
-                    elseif total_list[i] >= stand_val then
-                        color = G.C.GREEN
+            if #bl_actions > 0 then
+                for i = 1, #bl_actions do
+                    if bl_actions[i][1] == 'hit' then
+                        draw_card(G.enemy_deck, G.play, i*100/5, 'up', nil, bl_actions[i][2])
+                        force_up_status_text = true
+                        local color = G.C.FILTER
+                        if bl_actions[i][3] > (bl_data.bust_limit) then
+                            color = G.C.RED
+                        elseif bl_actions[i][3] >= stand_val then
+                            color = G.C.GREEN
+                        end
+                        card_eval_status_text(bl_actions[i][2], 'extra', nil, nil, nil, {message = tostring(bl_actions[i][3]), colour = color})
+                        force_up_status_text = nil
                     end
-                    card_eval_status_text(bl_cards[i], 'extra', nil, nil, nil, {message = tostring(total_list[i]), colour = color})
-                    force_up_status_text = nil
                 end
             end
             delay(0.5)
@@ -2123,7 +2142,7 @@ G.FUNCS.stand = function(e)
                                         draw_card(G.hand, G.discard, i*100/5, 'up', nil, G.hand.cards[i])
                                     end
                                 end
-                                G.GAME.negate_hand = true
+                                G.GAME.negate_hand = (G.GAME.negate_hand or 1) * -0.5
                                 G.E_MANAGER:add_event(Event({
                                     trigger = 'immediate',
                                     func = function()
@@ -2204,8 +2223,17 @@ G.FUNCS.draw_from_deck_to_hand = function(e)
     if G and G.GAME and G.GAME.modifiers and G.GAME.modifiers.dungeon and not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
         local hand_space =  math.max(0, (G.GAME.hit_limit or 2) - #G.hand.cards)
         if hand_space >= 1 then
-            for i = 1, hand_space do
-                draw_card(G.deck,G.hand, i*100/hand_space,'up', true)
+            local i = 1
+            local j = 0
+            while i + j <= hand_space do
+                if G.deck.cards[#G.deck.cards - i - j + 1] and G.deck.cards[#G.deck.cards - i - j + 1].config.card and hit_minor_arcana_suits[G.deck.cards[#G.deck.cards - i - j + 1].config.card.suit] and (#G.consumeables.cards < G.consumeables.config.card_limit) then
+                    draw_card(G.deck,G.consumeables, 90,'up', nil, G.deck.cards[#G.deck.cards - i - j + 1])
+                    j = j + 1
+                else
+                    draw_card(G.deck,G.hand, i*100/hand_space,'up', true)
+                    i = i + 1
+                end
+                G.deck.cards[#G.deck.cards - i - j + 1]:set_sprites()
             end
         end
     else
@@ -2272,6 +2300,324 @@ SMODS.Back {
         G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) - 1
     end,
 }
+
+SMODS.Back {
+    key = 'temporary',
+    pos = {x = 0, y = 0},
+    name = "Temporary Deck",
+    apply = function(self)
+        set_blackjack_mode()
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                for i = 1, 4 do
+                    local card = pseudorandom_element(G.playing_cards, pseudoseed('collect'))
+                    card:remove()
+                end
+                bases = {'hit_P_A', 'hit_CP_A', 'hit_SW_A', 'hit_W_A'}
+                for i = 1, 4 do
+                    local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[bases[i]], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+                    _card:set_sprites(_card.config.center)
+                    G.deck:emplace(_card)
+                    table.insert(G.playing_cards, _card)
+                end
+            return true
+            end
+        }))
+    end
+}
+
+old_inject = SMODS.inject_p_card
+function SMODS.inject_p_card(suit, rank)
+    if suit.rank_map and suit.rank_map[rank.key] then
+        G.P_CARDS[suit.card_key .. '_' .. rank.card_key] = {
+            name = rank.key .. ' of ' .. suit.key,
+            value = rank.key,
+            suit = suit.key,
+            pos = { x = suit.rank_map[rank.key] or rank.pos.x, y = suit.pos.y },
+            lc_atlas = suit.rank_map[rank.key] and suit.lc_atlas or rank.lc_atlas,
+            hc_atlas = suit.rank_map[rank.key] and suit.hc_atlas or rank.hc_atlas,
+        }
+    else
+        old_inject(suit, rank)
+    end
+end
+
+hit_minor_arcana_suits = {
+    hit_pentacles = true,
+    hit_cups = true,
+    hit_swords = true,
+    hit_wands = true,
+}
+
+function hit_minor_arcana_use(card)
+    local name = card.config.card.name
+    local prev_state = G.STATE
+    G.TAROT_INTERRUPT = G.STATE
+    G.STATE = (G.STATE == G.STATES.TAROT_PACK and G.STATES.TAROT_PACK) or
+    (G.STATE == G.STATES.PLANET_PACK and G.STATES.PLANET_PACK) or
+    (G.STATE == G.STATES.SPECTRAL_PACK and G.STATES.SPECTRAL_PACK) or
+    (G.STATE == G.STATES.STANDARD_PACK and G.STATES.STANDARD_PACK) or
+    (G.STATE == G.STATES.SMODS_BOOSTER_OPENED and G.STATES.SMODS_BOOSTER_OPENED) or
+    (G.STATE == G.STATES.BUFFOON_PACK and G.STATES.BUFFOON_PACK) or
+    G.STATES.PLAY_TAROT
+    G.CONTROLLER.locks.use = true
+    if card.children.use_button then card.children.use_button:remove(); card.children.use_button = nil end
+    if card.children.sell_button then card.children.sell_button:remove(); card.children.sell_button = nil end
+    if card.children.price then card.children.price:remove(); card.children.price = nil end
+    if card.area then card.area:remove_from_highlighted(card) end
+    if name == "Ace of hit_pentacles" then
+        G.E_MANAGER:add_event(Event({trigger = 'after',
+        func = function()
+            create_playing_card({front = G.P_CARDS['D_A'], center = G.P_CENTERS['c_base']}, G.hand, nil, nil, {G.C.SECONDARY_SET.Tarot})
+            draw_card(card.area, G.discard, 100/5, 'down', nil, card)
+            return true
+        end}))
+    elseif name == "Ace of hit_cups" then
+        card.area:remove_card(card)
+        G.deck:emplace(card)
+        local index = -1
+        local pool = {}
+        for i = 1, #G.deck.cards do
+            if G.deck.cards[i] == card then
+                index = i
+            end
+            table.insert(pool, G.deck.cards[i])
+        end
+        pseudoshuffle(pool, pseudoseed('cups'))
+        if index ~= -1 then
+            table.remove(G.deck.cards, index)
+            table.insert(G.deck.cards, card)
+        end
+        local rand_index = 1 + math.floor(#G.deck.cards * pseudorandom('shuffle_index'))
+        if rand_index == #G.deck.cards + 1 then
+            rand_index = #G.deck.cards
+        end
+        local rand_suit = 'Hearts'
+        for i=1,#pool do
+            for i2, j2 in pairs(SMODS.Suits) do
+                if pool[i]:is_suit(j2.key) then
+                    rand_suit = j2.key
+                    break
+                end
+            end
+        end
+        local j = #G.deck.cards + 1
+        local i = 1
+        while i < j do
+            if G.deck.cards[i]:is_suit(rand_suit) then
+                local card_ = G.deck.cards[i]
+                table.remove(G.deck.cards, i)
+                table.insert(G.deck.cards, card_)
+                j = j - 1
+            else
+                i = i + 1
+            end
+        end
+        G.deck:set_ranks()
+    elseif name == "Ace of hit_swords" then
+        G.E_MANAGER:add_event(Event({trigger = 'after',
+        func = function()
+            for i = 1, 4 do
+                local suits = {'H', 'S', 'D', 'C'}
+                local suit = pseudorandom_element(suits, pseudoseed('swords'))
+                local card_ = create_playing_card({front = G.P_CARDS[suit..'_hit_Z'], center = G.P_CENTERS['m_hit_blackjack']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                card_.ability.fleeting = true
+                shuffle_card_in_deck(card_)
+            end
+            draw_card(card.area, G.discard, 100/5, 'down', nil, card)
+            return true
+        end}))
+    elseif name == "Ace of hit_wands" then
+        G.GAME.double_mult = true
+        G.GAME.forced_stand = true
+        G.FUNCS.hit()
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.2,
+        func = function()
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,
+            func = function()
+                G.TAROT_INTERRUPT=nil
+                G.CONTROLLER.locks.use = false
+                if area and area.cards[1] then 
+                    G.E_MANAGER:add_event(Event({func = function()
+                        G.E_MANAGER:add_event(Event({func = function()
+                            G.CONTROLLER.interrupt.focus = nil
+                            G.CONTROLLER:recall_cardarea_focus(area)
+                            return true 
+                        end }))
+                        return true 
+                    end }))
+                end
+                return true
+            end}))
+            return true
+            end
+        }))
+        return
+    end
+    G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.2,
+        func = function()
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,
+            func = function()
+                G.STATE = prev_state
+                G.TAROT_INTERRUPT=nil
+                G.CONTROLLER.locks.use = false
+                if (prev_state == G.STATES.TAROT_PACK or prev_state == G.STATES.PLANET_PACK or
+                    prev_state == G.STATES.SPECTRAL_PACK or prev_state == G.STATES.STANDARD_PACK or
+                    prev_state == G.STATES.SMODS_BOOSTER_OPENED or
+                    prev_state == G.STATES.BUFFOON_PACK) and G.booster_pack then
+                    G.CONTROLLER.interrupt.focus = true
+                    G.FUNCS.end_consumeable(nil, delay_fac)
+                else
+                    if area and area.cards[1] then 
+                        G.E_MANAGER:add_event(Event({func = function()
+                            G.E_MANAGER:add_event(Event({func = function()
+                                G.CONTROLLER.interrupt.focus = nil
+                                G.CONTROLLER:recall_cardarea_focus(area)
+                                return true 
+                            end }))
+                            return true 
+                        end }))
+                    end
+                end
+                return true
+            end}))
+            return true
+        end
+    }))
+end
+
+function hit_minor_arcana_can_use(card)
+    local name = card.config.card.name
+    if not G.GAME.facing_blind then
+        return false
+    end
+    if ((G.play and #G.play.cards > 0) or (G.CONTROLLER.locked) or (G.GAME.STOP_USE and G.GAME.STOP_USE > 0)) then  
+        return false 
+    end
+    if (G.STATE == G.STATES.HAND_PLAYED) and (G.STATE == G.STATES.DRAW_TO_HAND) and (G.STATE == G.STATES.PLAY_TAROT) then
+        return false
+    end
+    if name == "Ace of hit_pentacles" then
+        if G.hand and (#G.hand.cards >= 1) then
+            return true
+        end
+    elseif name == "Ace of hit_cups" then
+        return true
+    elseif name == "Ace of hit_swords" then
+        return true
+    elseif name == "Ace of hit_wands" then
+        if not (G.GAME.stood or G.GAME.hit_busted or (#G.deck.cards == 0)) then
+            return true
+        end
+    end
+    return false
+end
+
+SMODS.Suit {
+    key = 'pentacles',
+    card_key = 'P',
+    pos = { y = 0 },
+    lc_atlas = 'minor',
+    hc_atlas = 'minor',
+    lc_colour = HEX('cbb137'),
+    hc_colour = HEX('cbb137'),
+    lc_ui_atlas = 'mini_suits',
+    hc_ui_atlas = 'mini_suits',
+    ui_pos = { x = 0 , y = 0 },
+    in_pool = function(self, args)
+        return false
+    end,
+    rank_map = {
+        Ace = 0,
+        ['2'] = 1,
+        ['3'] = 2,
+        hit_0 = 13,
+    },
+    hidden = true,
+}
+
+SMODS.Suit {
+    key = 'cups',
+    card_key = 'CP',
+    pos = { y = 1 },
+    lc_atlas = 'minor',
+    hc_atlas = 'minor',
+    lc_colour = HEX('ffff49'),
+    hc_colour = HEX('ffff49'),
+    lc_ui_atlas = 'mini_suits',
+    hc_ui_atlas = 'mini_suits',
+    ui_pos = { x = 1 , y = 0 },
+    in_pool = function(self, args)
+        return false
+    end,
+    rank_map = {
+        Ace = 0,
+        ['2'] = 1,
+        ['3'] = 2,
+        hit_0 = 13,
+    },
+    hidden = true,
+}
+
+SMODS.Suit {
+    key = 'swords',
+    card_key = 'SW',
+    pos = { y = 2 },
+    lc_atlas = 'minor',
+    hc_atlas = 'minor',
+    lc_colour = HEX('51949d'),
+    hc_colour = HEX('51949d'),
+    lc_ui_atlas = 'mini_suits',
+    hc_ui_atlas = 'mini_suits',
+    ui_pos = { x = 0 , y = 1 },
+    in_pool = function(self, args)
+        return false
+    end,
+    rank_map = {
+        Ace = 0,
+        ['2'] = 1,
+        ['3'] = 2,
+        hit_0 = 13,
+    },
+    hidden = true,
+}
+
+SMODS.Suit {
+    key = 'wands',
+    card_key = 'W',
+    pos = { y = 3 },
+    lc_atlas = 'minor',
+    hc_atlas = 'minor',
+    lc_colour = HEX('93713e'),
+    hc_colour = HEX('93713e'),
+    lc_ui_atlas = 'mini_suits',
+    hc_ui_atlas = 'mini_suits',
+    ui_pos = { x = 1 , y = 1 },
+    in_pool = function(self, args)
+        return false
+    end,
+    rank_map = {
+        Ace = 0,
+        ['2'] = 1,
+        ['3'] = 2,
+        hit_0 = 13,
+    },
+    hidden = true,
+}
+
+G.FUNCS.hit_can_use_minor_arcana = function(e)
+    if not hit_minor_arcana_can_use(e.config.ref_table) then
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    else
+        e.config.colour = G.C.RED
+        e.config.button = 'hit_use_minor_arcana'
+    end
+end
+
+G.FUNCS.hit_use_minor_arcana = function(e)
+    hit_minor_arcana_use(e.config.ref_table)
+end
 
 if CardSleeves and CardSleeves.Sleeve then
     CardSleeves.Sleeve {
@@ -3014,6 +3360,17 @@ function G.UIDEF.view_enemy_deck(unplayed_only)
 					}},}}
 			or nil,}}}}
 	return t
+end
+
+local old_set_sprites = Card.set_sprites
+function Card:set_sprites(_center, _front)
+    if self.children.center and _front and (self.children.center.sprite_pos.x == 999) then
+        self.children.center:set_sprite_pos({x = 1, y = 0})
+    end
+    old_set_sprites(self, _center, _front)
+    if _front and hit_minor_arcana_suits[_front.suit] then 
+        self.children.center:set_sprite_pos({x = 999, y = 999})
+    end
 end
 
 ----------------------------------------------
