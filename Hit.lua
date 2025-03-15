@@ -2094,7 +2094,7 @@ G.FUNCS.stand = function(e)
                             draw_card(G.play, G.enemy_discard, i*100/5, 'up')
                         end
                         for i = #G.hand.cards, 1, -1 do
-                            if G.hand.cards[i].ability.name ~= 'Garnet Card' then
+                            if (G.hand.cards[i].ability.name ~= 'Garnet Card') or G.hand.cards[i].debuff then
                                 draw_card(G.hand, G.discard, i*100/5, 'up', nil, G.hand.cards[i])
                             end
                         end
@@ -2138,7 +2138,7 @@ G.FUNCS.stand = function(e)
                             trigger = 'immediate',
                             func = function()
                                 for i = #G.hand.cards, 1, -1 do
-                                    if G.hand.cards[i].ability.name ~= 'Garnet Card' then
+                                    if (G.hand.cards[i].ability.name ~= 'Garnet Card') or G.hand.cards[i].debuff then
                                         draw_card(G.hand, G.discard, i*100/5, 'up', nil, G.hand.cards[i])
                                     end
                                 end
@@ -2488,7 +2488,7 @@ end
 
 function hit_minor_arcana_can_use(card)
     local name = card.config.card.name
-    if not G.GAME.facing_blind then
+    if not G.GAME.facing_blind or card.debuff then
         return false
     end
     if ((G.play and #G.play.cards > 0) or (G.CONTROLLER.locked) or (G.GAME.STOP_USE and G.GAME.STOP_USE > 0)) then  
@@ -2531,6 +2531,7 @@ SMODS.Suit {
         Ace = 0,
         ['2'] = 1,
         ['3'] = 2,
+        ['4'] = 3,
         hit_0 = 13,
     },
     hidden = true,
@@ -2554,6 +2555,7 @@ SMODS.Suit {
         Ace = 0,
         ['2'] = 1,
         ['3'] = 2,
+        ['4'] = 3,
         hit_0 = 13,
     },
     hidden = true,
@@ -2577,6 +2579,7 @@ SMODS.Suit {
         Ace = 0,
         ['2'] = 1,
         ['3'] = 2,
+        ['4'] = 3,
         hit_0 = 13,
     },
     hidden = true,
@@ -2600,6 +2603,7 @@ SMODS.Suit {
         Ace = 0,
         ['2'] = 1,
         ['3'] = 2,
+        ['4'] = 3,
         hit_0 = 13,
     },
     hidden = true,
