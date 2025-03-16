@@ -2233,7 +2233,9 @@ G.FUNCS.draw_from_deck_to_hand = function(e)
                     draw_card(G.deck,G.hand, i*100/hand_space,'up', true)
                     i = i + 1
                 end
-                G.deck.cards[#G.deck.cards - i - j + 1]:set_sprites()
+                if G.deck.cards[#G.deck.cards - i - j + 1] then
+                    G.deck.cards[#G.deck.cards - i - j + 1]:set_sprites()
+                end
             end
         end
     else
