@@ -443,6 +443,21 @@ return {
                     "a {C:attention}#2#"
                 }
             },
+            j_hit_constructing_primes = {
+                name = "Constructing Primes",
+                text = {
+                    "Each played {C:attention}2{}, {C:attention}3{},",
+                    "{C:attention}5{}, {C:attention}7{}, or {C:attention}Ace{} gives",
+                    "{X:mult,C:white} X#1# {} Mult when scored",
+                }
+            },
+            j_hit_tiebreaker = {
+                name = "Tiebreaker",
+                text = {
+                    "On {C:attention}Push{},",
+                    "{C:attention}Player{} wins",
+                }
+            }
         },
         MinorArcana = {
             ["Ace of hit_pentacles"] = {

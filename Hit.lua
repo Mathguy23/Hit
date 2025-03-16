@@ -33,6 +33,8 @@ SMODS.Atlas({ key = "boosters", atlas_table = "ASSET_ATLAS", path = "boosters.pn
 
 SMODS.Atlas({ key = "ranks", atlas_table = "ASSET_ATLAS", path = "ranks.png", px = 71, py = 95})
 
+SMODS.Atlas({ key = "hc_ranks", atlas_table = "ASSET_ATLAS", path = "hc_ranks.png", px = 71, py = 95})
+
 SMODS.Atlas({ key = "pc_cards", atlas_table = "ASSET_ATLAS", path = "pc_cards.png", px = 71, py = 95})
 
 SMODS.Atlas({ key = "planets", atlas_table = "ASSET_ATLAS", path = "Planets.png", px = 71, py = 95})
@@ -471,6 +473,7 @@ end
         collection_rows = { 5, 6 },
         primary_colour = HEX('424e54'),
         secondary_colour = HEX('a58547'),
+        default = 'c_hit_unstrength'
     }
 
     SMODS.UndiscoveredSprite {
@@ -768,7 +771,7 @@ end
         card_key = 'Z',
         pos = { x = 0 },
         lc_atlas = 'ranks',
-        hc_atlas = 'ranks',
+        hc_atlas = 'hc_ranks',
         nominal = 0,
         next = { 'Ace' },
         in_pool = function(self, args)
@@ -1610,6 +1613,42 @@ end
         end,
     }
 
+    SMODS.Joker {
+        key = 'constructing_primes',
+        name = "Constructing Primes",
+        rarity = 2,
+        atlas = 'jokers',
+        pos = {x = 4, y = 1},
+        cost = 6,
+        config = {hit_x_mult = 1.3},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability and card.ability.hit_x_mult or 1.3}}
+        end,
+        calculate = function(self, card, context)
+            if (context.cardarea == G.play) and context.individual and not context.repetition and not context.end_of_round then
+                if (context.other_card:get_id() == 2) or (context.other_card:get_id() == 3) or (context.other_card:get_id() == 5) or (context.other_card:get_id() == 7) or (context.other_card:get_id() == 14) then
+                    return {
+                        x_mult = card.ability.hit_x_mult,
+                        card = card
+                    }
+                end
+            end
+        end,
+    }
+
+    SMODS.Joker {
+        key = 'tiebreaker',
+        name = "Tiebreaker",
+        rarity = 1,
+        atlas = 'jokers',
+        pos = {x = 0, y = 2},
+        cost = 4,
+        config = {},
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+    }
+
 ------------------------
 
 --------Blinds----------
@@ -2032,11 +2071,19 @@ G.FUNCS.stand = function(e)
                 end
             end
             delay(0.5)
-            if bl_total < total then
+            if (bl_total < total) or (SMODS.find_card('j_hit_tiebreaker') and (bl_total == total)) then
                 if bl_total == -1e15 then
-                    play_area_status_text("Win (" .. tostring(total) .. " > Bust)")
+                    if (SMODS.find_card('j_hit_tiebreaker') and (bl_total == total)) then
+                        play_area_status_text("Win (Bust = Bust)")
+                    else
+                        play_area_status_text("Win (" .. tostring(total) .. " > Bust)")
+                    end
                 else
-                    play_area_status_text("Win (" .. tostring(total) .. " > " .. tostring(bl_total) .. ")")
+                    if (SMODS.find_card('j_hit_tiebreaker') and (bl_total == total)) then
+                        play_area_status_text("Win (" .. tostring(total) .. " = " .. tostring(bl_total) .. ")")
+                    else
+                        play_area_status_text("Win (" .. tostring(total) .. " > " .. tostring(bl_total) .. ")")
+                    end
                 end
                 G.GAME.hit_limit = 2
                 ease_hands_played(1)
