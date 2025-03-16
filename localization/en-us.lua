@@ -448,25 +448,25 @@ return {
             ["Ace of hit_pentacles"] = {
                 name = '',
                 text = {
-                    "Add an {C:attention}Ace of {C:attention}Diamonds",
+                    "Add an {C:attention}Ace{} of {C:diamonds}Diamonds{}",
                     "to hand, then {C:red}Discard{}"
                 }
             },
             ["Ace of hit_cups"] = {
                 name = '',
                 text = {
-                    "Move to top of {C:attention}Remaining{}",
-                    "{C:attention}Deck{}, then move all cards",
-                    "of a random suit to top",
-                    "of {C:attention}Remaining Deck{}"
+                    "Move to {C:attention}top{} of deck,",
+                    "then move all cards",
+                    "of a {C:attention}random suit{} in deck",
+                    "to {C:attention}top{} of deck"
                 }
             },
             ["Ace of hit_swords"] = {
                 name = '',
                 text = {
                     "Shuffle {C:attention}4 Fleeting Mega{}",
-                    "{C:attention}Blackjack 0s{} into {C:attention}Remaining{}",
-                    "{C:attention}Deck{}, then {C:red}Discard{}"
+                    "{C:attention}Blackjack 0s{} into",
+                    "deck, then {C:red}Discard{}"
                 }
             },
             ["Ace of hit_wands"] = {
@@ -475,6 +475,40 @@ return {
                     "{C:attention}Hit{}, {C:green}Stand{}, then {X:mult,C:white} X2 {}",
                     "Mult at end of either",
                     "{C:attention}scoring{}"
+                }
+            },
+            ["2 of hit_pentacles"] = {
+                name = '',
+                text = {
+                    "Shuffle a {C:attention}Fleeting 2{} of",
+                    "{C:diamonds}Diamonds{} and {C:attention}Fleeting Ace{}",
+                    "of {C:diamonds}Diamonds{} into the",
+                    "deck, then {C:red}Discard{}"
+                }
+            },
+            ["2 of hit_cups"] = {
+                name = '',
+                text = {
+                    "Draw a {C:attention}Queen{} of {C:hearts}Hearts{}",
+                    "or {C:attention}King{} of {C:hearts}Hearts{}",
+                    "from deck",
+                }
+            },
+            ["2 of hit_swords"] = {
+                name = '',
+                text = {
+                    "Add {C:attention}2 Fleeting{} {C:dark_edition}Foil{} {C:attention}Stone{}",
+                    "{C:attention}Cards{} to deck then ",
+                    "{C:attention}Push{}, then {C:red}Discard{}",
+                }
+            },
+            ["2 of hit_wands"] = {
+                name = '',
+                text = {
+                    "The 2 cards atop the deck will",
+                    "be shuffled to the {C:attention}top{} of the",
+                    "deck at the start of the {C:attention}next{}",
+                    "{C:attention}5 rounds{}, then {C:red}Discard{}"
                 }
             },
         }

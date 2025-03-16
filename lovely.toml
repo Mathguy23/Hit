@@ -674,7 +674,9 @@ target = 'functions/common_events.lua'
 pattern = '''--Fill all remaining info if this is the main desc'''
 position = 'before'
 payload = '''if card and card.ability and card.ability.hit_hermit_indicator then info_queue[#info_queue+1] = {key = 'hit_hermit_indicator', set = 'Other', vars = {card.ability.hit_hermit_indicator}} end
+if card and card.ability and card.ability.shuffle_bottom and not card.ability.hit_hermit_indicator then info_queue[#info_queue+1] = {key = 'hit_hermit_indicator', set = 'Other', vars = {card.ability.shuffle_bottom}} end
 if card and card.ability and card.ability.hit_moon_indicator then info_queue[#info_queue+1] = {key = 'hit_moon_indicator', set = 'Other', vars = {card.ability.hit_moon_indicator}} end
+if card and card.ability and card.ability.shuffle_top and not card.ability.hit_moon_indicator then info_queue[#info_queue+1] = {key = 'hit_moon_indicator', set = 'Other', vars = {card.ability.shuffle_top}} end
 if card and card.ability and card.ability.revert_base then info_queue[#info_queue+1] = {key = 'revert_base', set = 'Other', vars = {localize(card.ability.revert_base.value, 'ranks'), localize(card.ability.revert_base.suit, 'suits_plural')}} end'''
 match_indent = true
 
@@ -873,6 +875,7 @@ pattern = '''if main_start then
 end'''
 position = 'after'
 payload = '''if card and card.config.card and hit_minor_arcana_suits[card.config.card.suit] then
-    localize{type = 'descriptions', key = card.config.card.name, set = 'MinorArcana', nodes = desc_nodes}
+    local vars = hit_minor_arcana_loc_vars(card, info_queue)
+    localize{type = 'descriptions', key = card.config.card.name, set = 'MinorArcana', nodes = desc_nodes, vars = vars}
 end'''
 match_indent = true

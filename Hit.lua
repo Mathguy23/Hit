@@ -2309,12 +2309,12 @@ SMODS.Back {
         set_blackjack_mode()
         G.E_MANAGER:add_event(Event({
             func = function()
-                for i = 1, 4 do
+                for i = 1, 8 do
                     local card = pseudorandom_element(G.playing_cards, pseudoseed('collect'))
                     card:remove()
                 end
-                bases = {'hit_P_A', 'hit_CP_A', 'hit_SW_A', 'hit_W_A'}
-                for i = 1, 4 do
+                bases = {'hit_P_A', 'hit_CP_A', 'hit_SW_A', 'hit_W_A', 'hit_P_2', 'hit_CP_2', 'hit_SW_2', 'hit_W_2'}
+                for i = 1, 8 do
                     local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[bases[i]], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
                     _card:set_sprites(_card.config.center)
                     G.deck:emplace(_card)
@@ -2453,6 +2453,109 @@ function hit_minor_arcana_use(card)
             end
         }))
         return
+    elseif name == "2 of hit_pentacles" then
+        G.E_MANAGER:add_event(Event({trigger = 'after',
+        func = function()
+            local card_ = create_playing_card({front = G.P_CARDS['D_A'], center = G.P_CENTERS['c_base']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+            card_.ability.fleeting = true
+            shuffle_card_in_deck(card_)
+            card_ = create_playing_card({front = G.P_CARDS['D_2'], center = G.P_CENTERS['c_base']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+            card_.ability.fleeting = true
+            shuffle_card_in_deck(card_)
+            draw_card(card.area, G.discard, 100/5, 'down', nil, card)
+            return true
+        end}))
+    elseif name == "2 of hit_cups" then
+        local card_ = nil
+        for i = #G.deck.cards, 1, -1 do
+            if G.deck.cards[i].config.card and ((G.deck.cards[i].config.card.name == "Queen of Hearts") or (G.deck.cards[i].config.card.name == "King of Hearts")) then
+                card_ = G.deck.cards[i]
+                break
+            end
+        end
+        if card_ ~= nil then
+            draw_card(G.deck, G.hand, 100/5, 'down', nil, card_)
+        end
+    elseif name == "2 of hit_swords" then
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                for i = 1, 2 do
+                    local suits = {'H', 'S', 'D', 'C'}
+                    local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
+                    local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
+                    local suit = pseudorandom_element(suits, pseudoseed('untarot'))
+                    local card_ = create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = G.P_CENTERS['m_stone']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                    card_.ability.fleeting = true
+                    card_:set_edition({foil = true})
+                    shuffle_card_in_deck(card_)
+                end
+                return true
+            end
+        }))
+        G.E_MANAGER:add_event(Event({trigger = 'immediate',
+            func = function()
+                G.STATE = G.STATES.HAND_PLAYED
+                G.STATE_COMPLETE = true
+                G.TAROT_INTERRUPT = nil
+                G.CONTROLLER.locks.use = false
+                if area and area.cards[1] then 
+                    G.E_MANAGER:add_event(Event({func = function()
+                        G.E_MANAGER:add_event(Event({func = function()
+                            G.CONTROLLER.interrupt.focus = nil
+                            G.CONTROLLER:recall_cardarea_focus(area)
+                            return true 
+                        end }))
+                        return true 
+                    end }))
+                end
+                draw_card(card.area, G.discard, 100/5, 'down', nil, card)
+                return true
+            end
+        }))
+        G.E_MANAGER:add_event(Event({
+            trigger = 'immediate',
+            func = function()
+                play_area_status_text("Push")
+                G.GAME.hit_limit = 2
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'immediate',
+                    func = function()
+                        for i = #G.hand.cards, 1, -1 do
+                            if (G.hand.cards[i].ability.name ~= 'Garnet Card') or G.hand.cards[i].debuff then
+                                draw_card(G.hand, G.discard, i*100/5, 'up', nil, G.hand.cards[i])
+                            end
+                        end
+                        G.E_MANAGER:add_event(Event({
+                            trigger = 'immediate',
+                            func = function()
+                                G.STATE_COMPLETE = false
+                                return true
+                            end
+                        }))
+                        G.E_MANAGER:add_event(Event({
+                            trigger = 'immediate',
+                            func = function()
+                                G.GAME.stood = nil
+                                return true
+                            end
+                        }))
+                        return true
+                    end
+                }))
+                return true
+            end
+        }))
+        return
+    elseif name == "2 of hit_wands" then
+        G.E_MANAGER:add_event(Event({trigger = 'after',
+        func = function()
+            for i = 1, 2 do
+                G.deck.cards[#G.deck.cards + 1 - i].ability.shuffle_top = 5
+                G.deck.cards[#G.deck.cards + 1 - i]:juice_up()
+            end
+            draw_card(card.area, G.discard, 100/5, 'down', nil, card)
+            return true
+        end}))
     end
     G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.2,
         func = function()
@@ -2509,8 +2612,43 @@ function hit_minor_arcana_can_use(card)
         if not (G.GAME.stood or G.GAME.hit_busted or (#G.deck.cards == 0)) then
             return true
         end
+    elseif name == "2 of hit_pentacles" then
+        if G.deck then
+            return true
+        end
+    elseif name == "2 of hit_cups" then
+        local card_ = nil
+        for i = #G.deck.cards, 1, -1 do
+            if G.deck.cards[i].config.card and ((G.deck.cards[i].config.card.name == "Queen of Hearts") or (G.deck.cards[i].config.card.name == "King of Hearts")) then
+                card_ = G.deck.cards[i]
+                break
+            end
+        end
+        if card_ ~= nil then
+            return true
+        end
+    elseif name == "2 of hit_swords" then
+        return true
+    elseif name == "2 of hit_wands" then
+        if G.deck and (#G.deck.cards >= 2) then
+            return true
+        end
     end
     return false
+end
+
+function hit_minor_arcana_loc_vars(card, info_queue)
+    local name = card.config.card.name
+    if name == "Ace of hit_swords" then
+        info_queue[#info_queue + 1] = {key = 'fleeting', set = 'Other'}
+        info_queue[#info_queue + 1] = G.P_CENTERS['m_hit_blackjack']
+    elseif name == "2 of hit_pentacles" then
+        info_queue[#info_queue + 1] = {key = 'fleeting', set = 'Other'}
+    elseif name == "2 of hit_swords" then
+        info_queue[#info_queue + 1] = {key = 'fleeting', set = 'Other'}
+        info_queue[#info_queue + 1] = G.P_CENTERS['e_foil']
+    end
+    return {}
 end
 
 SMODS.Suit {
@@ -2621,7 +2759,20 @@ end
 
 G.FUNCS.hit_use_minor_arcana = function(e)
     hit_minor_arcana_use(e.config.ref_table)
-    check_total_over_21()
+    G.E_MANAGER:add_event(Event({
+        trigger = 'immediate',
+        func = function()
+            check_total_over_21()
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    check_total_over_21()
+                    return true
+                end
+            }))
+            return true
+        end
+    }))
 end
 
 if CardSleeves and CardSleeves.Sleeve then
