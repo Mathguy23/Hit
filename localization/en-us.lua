@@ -29,7 +29,7 @@ return {
                 name = "[DECK] ==",
                 text = {
                     "{C:attention}Blackjack Mode{}",
-                    "[{C:attention}MINOR ARCANA{}] = 4"
+                    "[{C:attention}MINOR ARCANA{}] = 8"
                 }
             },
         },
