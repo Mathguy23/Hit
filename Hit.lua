@@ -1644,6 +1644,9 @@ end
         disable = function(self, reset, silent)
             G.GAME.blind.hits = nil
         end,
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon
+        end,
     }
 
     SMODS.Blind	{
@@ -1684,6 +1687,9 @@ end
                 return (G.GAME.hit_bust_limit or 21) - 6
             end
         end,
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon
+        end
     }
 
 ------------------------
