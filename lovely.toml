@@ -879,3 +879,27 @@ payload = '''if card and card.config.card and hit_minor_arcana_suits[card.config
     localize{type = 'descriptions', key = card.config.card.name, set = 'MinorArcana', nodes = desc_nodes, vars = vars}
 end'''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''elseif self.name == 'The Ox' then'''
+position = 'after'
+payload = '''elseif (self.name == 'The Ox') and ((G.GAME.negate_hand or 1) < 0) then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''elseif self.name == 'The Ox' then'''
+position = 'at'
+payload = '''elseif (self.name == 'The Ox') and ((G.GAME.negate_hand or 1) < 0) then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'blind.lua'
+pattern = '''elseif self.name == 'The Arm' then'''
+position = 'at'
+payload = '''elseif (self.name == 'The Arm') and ((G.GAME.negate_hand or 1) < 0) then'''
+match_indent = true

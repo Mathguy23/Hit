@@ -1639,10 +1639,10 @@ end
     SMODS.Joker {
         key = 'tiebreaker',
         name = "Tiebreaker",
-        rarity = 1,
+        rarity = 2,
         atlas = 'jokers',
         pos = {x = 0, y = 2},
-        cost = 4,
+        cost = 5,
         config = {},
         in_pool = function(self)
             return G.GAME.modifiers.dungeon, {allow_duplicates = false}
@@ -1726,6 +1726,61 @@ end
                 return (G.GAME.hit_bust_limit or 21) - 6
             end
         end,
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon
+        end
+    }
+
+    SMODS.Blind	{
+        loc_txt = {
+            name = 'The House',
+            text = { 'All cards drawn face', 'down until stand' }
+        },
+        key = 'house',
+        name = "hit_The House",
+        config = {},
+        boss = {min = 2, max = 10}, 
+        boss_colour = HEX("5186a8"),
+        vars = {},
+        dollars = 5,
+        mult = 2,
+        pos = {x = 0, y = 3},
+        stay_flipped = function(self, area, card)
+            if area == G.hand then
+                return true
+            end
+        end,
+        disable = function(self)
+            if not G.GAME.blind.do_not_flip then
+                for i = 1, #G.hand.cards do
+                    if G.hand.cards[i].facing == 'back' then
+                        G.hand.cards[i]:flip()
+                    end
+                end
+                for k, v in pairs(G.playing_cards) do
+                    v.ability.wheel_flipped = nil
+                end
+            end
+        end,
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon
+        end
+    }
+
+    SMODS.Blind	{
+        loc_txt = {
+            name = 'The Needle',
+            text = { 'Causes death if first', 'hand hand is \'Loss\'' }
+        },
+        key = 'needle',
+        name = "hit_The Needle",
+        config = {},
+        boss = {min = 2, max = 10}, 
+        boss_colour = HEX("5c6e31"),
+        vars = {},
+        dollars = 5,
+        mult = 2,
+        pos = {x = 0, y = 20},
         in_pool = function(self)
             return G.GAME.modifiers.dungeon
         end
@@ -1961,6 +2016,11 @@ G.FUNCS.stand = function(e)
         G.GAME.negate_hand = (G.GAME.negate_hand or 1) * 2
         G.GAME.double_mult = nil
     end
+    if G.GAME.blind and (G.GAME.blind.name == "hit_The House") and not G.GAME.blind.disabled then
+        G.GAME.blind.do_not_flip = true
+        G.GAME.blind:disable()
+        G.GAME.blind.do_not_flip = nil
+    end
     G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
@@ -2071,19 +2131,28 @@ G.FUNCS.stand = function(e)
                 end
             end
             delay(0.5)
-            if (bl_total < total) or (SMODS.find_card('j_hit_tiebreaker') and (bl_total == total)) then
+            if (bl_total < total) or (next(SMODS.find_card('j_hit_tiebreaker')) and (bl_total == total)) then
                 if bl_total == -1e15 then
-                    if (SMODS.find_card('j_hit_tiebreaker') and (bl_total == total)) then
+                    if (next(SMODS.find_card('j_hit_tiebreaker')) and (bl_total == total)) then
                         play_area_status_text("Win (Bust = Bust)")
                     else
                         play_area_status_text("Win (" .. tostring(total) .. " > Bust)")
                     end
                 else
-                    if (SMODS.find_card('j_hit_tiebreaker') and (bl_total == total)) then
+                    if (next(SMODS.find_card('j_hit_tiebreaker')) and (bl_total == total)) then
                         play_area_status_text("Win (" .. tostring(total) .. " = " .. tostring(bl_total) .. ")")
                     else
                         play_area_status_text("Win (" .. tostring(total) .. " > " .. tostring(bl_total) .. ")")
                     end
+                end
+                if G.GAME.blind and (G.GAME.blind.name == "hit_The Needle") and not G.GAME.blind.disabled then
+                    G.E_MANAGER:add_event(Event({
+                        trigger = 'immediate',
+                        func = function()
+                            G.GAME.blind:disable()
+                            return true
+                        end
+                    }))
                 end
                 G.GAME.hit_limit = 2
                 ease_hands_played(1)
@@ -2139,6 +2208,15 @@ G.FUNCS.stand = function(e)
                         play_area_status_text("Push (" .. tostring(total) .. " = " .. tostring(bl_total) .. ")")
                     end
                 end
+                if G.GAME.blind and (G.GAME.blind.name == "hit_The Needle") and not G.GAME.blind.disabled then
+                    G.E_MANAGER:add_event(Event({
+                        trigger = 'immediate',
+                        func = function()
+                            G.GAME.blind:disable()
+                            return true
+                        end
+                    }))
+                end
                 G.GAME.hit_limit = 2
                 G.E_MANAGER:add_event(Event({
                     trigger = 'immediate',
@@ -2181,6 +2259,17 @@ G.FUNCS.stand = function(e)
                     else
                         play_area_status_text("Loss (" .. tostring(total) .. " < " .. tostring(bl_total) .. ")")
                     end
+                end
+                if G.GAME.blind and (G.GAME.blind.name == "hit_The Needle") and not G.GAME.blind.disabled then
+                    G.E_MANAGER:add_event(Event({
+                        trigger = 'immediate',
+                        func = function()
+                            G.STATE = G.STATES.NEW_ROUND
+                            G.STATE_COMPLETE = false
+                            return true
+                        end
+                    }))
+                    return true
                 end
                 G.GAME.hit_limit = 2
                 ease_hands_played(-1)
@@ -3322,6 +3411,8 @@ bj_ban_list = {
         {id = 'bl_final_bell', type = 'blind'},
         {id = 'bl_mouth', type = 'blind'},
         {id = 'bl_fish', type = 'blind'},
+        {id = 'bl_house', type = 'blind'},
+        {id = 'bl_needle', type = 'blind'},
     }
 }
 
