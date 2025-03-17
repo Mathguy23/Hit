@@ -884,22 +884,14 @@ match_indent = true
 [patches.pattern]
 target = 'blind.lua'
 pattern = '''elseif self.name == 'The Ox' then'''
-position = 'after'
-payload = '''elseif (self.name == 'The Ox') and ((G.GAME.negate_hand or 1) < 0) then'''
+position = 'at'
+payload = '''elseif (self.name == 'The Ox') and ((G.GAME.negate_hand or 1) >= 0) then'''
 match_indent = true
 
 [[patches]]
 [patches.pattern]
 target = 'blind.lua'
-pattern = '''elseif self.name == 'The Ox' then'''
+pattern = '''if self.name == 'The Arm' then'''
 position = 'at'
-payload = '''elseif (self.name == 'The Ox') and ((G.GAME.negate_hand or 1) < 0) then'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'blind.lua'
-pattern = '''elseif self.name == 'The Arm' then'''
-position = 'at'
-payload = '''elseif (self.name == 'The Arm') and ((G.GAME.negate_hand or 1) < 0) then'''
+payload = '''if (self.name == 'The Arm') and ((G.GAME.negate_hand or 1) >= 0) then'''
 match_indent = true
