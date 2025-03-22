@@ -1644,6 +1644,49 @@ end
         pos = {x = 0, y = 2},
         cost = 5,
         config = {},
+        blueprint_compat = false,
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+    }
+
+    SMODS.Joker {
+        key = 'jackpot',
+        name = "Jackpot",
+        rarity = 2,
+        atlas = 'jokers',
+        pos = {x = 1, y = 2},
+        cost = 7,
+        config = {},
+        blueprint_compat = false,
+        loc_vars = function(self, info_queue, card)
+            info_queue[#info_queue + 1] = G.P_CENTERS['m_lucky']
+            return {vars = {}}
+        end,
+        calculate = function(self, card, context)
+            if context.before and not context.blueprint and context.full_hand and (context.cardarea == G.jokers) then
+                sevens = {}
+                for i, j in ipairs(context.full_hand) do
+                    if j:get_id() == 7 then
+                        table.insert(sevens, j)
+                    end
+                end
+                if #sevens >= 3 then
+                    card_eval_status_text(card, 'jokers', nil, nil, nil, {colour = G.C.MONEY, message = localize('k_lucky_ex')})
+                    G.E_MANAGER:add_event(Event({
+                        trigger = 'immediate',
+                        func = function()
+                            play_sound('multhit1')
+                            local suits = {'H', 'S', 'D', 'C'}
+                            local suit = pseudorandom_element(suits, pseudoseed('untarot'))
+                            local card_ = create_playing_card({front = G.P_CARDS[suit..'_7'], center = G.P_CENTERS['m_lucky']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                            shuffle_card_in_deck(card_)
+                            return true
+                        end
+                    }))
+                end
+            end
+        end,
         in_pool = function(self)
             return G.GAME.modifiers.dungeon, {allow_duplicates = false}
         end,
@@ -1787,6 +1830,48 @@ end
     }
 
 ------------------------
+
+SMODS.Seal {
+    key = 'blue',
+    pos = { x = 6, y = 4 },
+    badge_colour = G.C.BLUE,
+    sound = { sound = 'gold_seal', per = 1.2, vol = 0.4 },
+    atlas = 'centers',
+    prefix_config = {
+        atlas = false, 
+    },
+    in_pool = function(self)
+        return G.GAME.modifiers.dungeon
+    end,
+}
+
+SMODS.Spectral {
+    key = 'trance',
+    pos = {x = 3 , y = 5},
+    config = {extra = 'hit_blue', max_highlighted = 1},
+    use = function(self, card, area, copier)
+        local used_tarot = copier or card
+        local conv_card = G.hand.highlighted[1]
+        G.E_MANAGER:add_event(Event({func = function()
+            play_sound('tarot1')
+            used_tarot:juice_up(0.3, 0.5)
+            return true end }))
+        
+        G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function()
+            conv_card:set_seal('hit_blue', nil, true)
+            return true end }))
+        
+        delay(0.5)
+        G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
+    end,
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue + 1] = G.P_SEALS['hit_blue']
+        return {vars = {}}
+    end,
+    in_pool = function(self)
+        return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+    end,
+}
 
 local old_buttons = create_UIBox_buttons
 function create_UIBox_buttons()
@@ -2131,6 +2216,17 @@ G.FUNCS.stand = function(e)
                 end
             end
             delay(0.5)
+            if (bl_total > total) or (not next(SMODS.find_card('j_hit_tiebreaker')) and (bl_total == total)) then
+                local text,disp_text,poker_hands,scoring_hand,non_loc_disp_text = G.FUNCS.get_poker_hand_info(G.hand.cards)
+                for i = 1, #G.hand.cards do
+                    if G.hand.cards[i].seal == 'hit_blue' then
+                        update_hand_text({sound = G.GAME.current_round.current_hand.handname ~= disp_text and 'button' or nil, volume = 0.4, nopulse = nil, delay = G.GAME.current_round.current_hand.handname ~= disp_text and 0.4 or 0}, {handname=disp_text, level=G.GAME.hands[text].level, mult = G.GAME.hands[text].mult, chips = G.GAME.hands[text].chips})
+                        level_up_hand(G.hand.cards[i], text)
+                        update_hand_text({nopulse = true, delay = 0}, {mult = 0, chips = 0, level = '', handname = ''})
+                        delay(0.1)
+                    end
+                end
+            end
             if (bl_total < total) or (next(SMODS.find_card('j_hit_tiebreaker')) and (bl_total == total)) then
                 if bl_total == -1e15 then
                     if (next(SMODS.find_card('j_hit_tiebreaker')) and (bl_total == total)) then
@@ -3383,7 +3479,6 @@ bj_ban_list = {
         -- non jokers
         {id = 'v_paint_brush'},
         {id = 'v_palette'},
-        {id = 'c_trance'},
         {id = 'c_earth'},
         {id = 'c_mars'},
         {id = 'c_jupiter'},
@@ -3398,6 +3493,8 @@ bj_ban_list = {
         {id = 'c_eris'},
         {id = 'c_devil'},
         {id = 'c_chariot'},
+        --- replaced cards
+        {id = 'c_trance'},
     },
     banned_tags = {
         {id = 'tag_juggle'},

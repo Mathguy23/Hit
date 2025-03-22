@@ -114,6 +114,14 @@ return {
                     "of {C:attention}round{}",
                 },
             },
+            hit_blue_seal = {
+                name = 'Blue Seal',
+                text = {
+                    'On {C:attention}Push{} or {C:attention}Lose{},',
+                    '{C:attention}Upgrade{} held in',
+                    'hand {C:attention}poker hand{}'
+                }
+            }
         },
         Untarot = {
             c_hit_unfool = {
@@ -457,7 +465,15 @@ return {
                     "On {C:attention}Push{},",
                     "{C:attention}Player{} wins",
                 }
-            }
+            },
+            j_hit_jackpot = {
+                name = "Jackpot",
+                text = {
+                    "If {C:attention}played hand{} contains {C:attention}3{}",
+                    "{C:attention}7s{}, add a {C:attention}Lucky{}",
+                    "{C:attention}7{} to deck"
+                }
+            },
         },
         MinorArcana = {
             ["Ace of hit_pentacles"] = {
@@ -526,6 +542,16 @@ return {
                     "{C:attention}5 rounds{}, then {C:red}Discard{}"
                 }
             },
+        },
+        Spectral = {
+            c_hit_trance = {
+                name = "Trance",
+                text = {
+                    "Add a {C:blue}Blue Seal{}",
+                    "to {C:attention}1{} selected",
+                    "card in your hand"
+                }
+            }
         }
     },
     misc = {
@@ -546,7 +572,8 @@ return {
             k_untarot = "Untarot",
             b_untarot_cards = "Untarot Cards",
             k_unarcana_pack = "Unarcana Pack",
-            ow_ex = "Ow!"
+            ow_ex = "Ow!",
+            k_lucky_ex = "Jackpot",
         },
         v_text = {
             ch_c_ante_hand_discard_reset = {"{C:blue}Hands{} and {C:red}Discards{} are only reset each {C:attention}Ante{}."},
@@ -559,6 +586,7 @@ return {
             c_blackjack = "Blackjack"
         },
         labels = {
+            hit_blue_seal = "Blue Seal"
         },
         ranks = {
             hit_0 = '0'
