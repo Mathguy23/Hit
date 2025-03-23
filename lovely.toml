@@ -434,8 +434,8 @@ position = 'after'
 payload = '''   if G.GAME.modifiers.dungeon then
         G.GAME.negate_hand = nil
         check_total_over_21()
-        if ((#G.deck.cards == 0) and (#G.hand.cards == 0)) then
-            G.STATE = G.STATES.NEW_ROUND
+        if ((#G.deck.cards == 0) and (#G.hand.cards == 0)) and not (G.GAME.hit_reshuffle_deck and (#G.discard.cards >= 0)) then
+            end_round()
         else
             if G.GAME.forced_stand then
                 G.GAME.forced_stand = nil
@@ -894,4 +894,66 @@ target = 'blind.lua'
 pattern = '''if self.name == 'The Arm' then'''
 position = 'at'
 payload = '''if (self.name == 'The Arm') and ((G.GAME.negate_hand or 1) >= 0) then'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''if #G.hand.cards < 1 and #G.deck.cards < 1 and #G.play.cards < 1 then
+    end_round()'''
+position = 'at'
+payload = '''if #G.hand.cards < 1 and #G.deck.cards < 1 and #G.play.cards < 1 then
+    if G.GAME.hit_reshuffle_deck and not G.GAME.hit_reshuffling then
+        G.GAME.hit_reshuffling = true
+        G.E_MANAGER:add_event(Event({
+            trigger = 'immediate',
+            func = function()
+                for i = 1, #G.discard.cards do
+                    draw_card(G.discard, G.deck, i*100/5, 'up')
+                end
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'immediate',
+                    func = function()
+                        G.deck:shuffle('player_deck')
+                        G.GAME.hit_reshuffling = false
+                        return true
+                    end
+                }))
+                return true
+            end
+        }))
+    elseif not G.GAME.hit_reshuffling then
+        end_round()
+    end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'game.lua'
+pattern = '''if #G.hand.cards < 1 and #G.deck.cards < 1 then
+            end_round()'''
+position = 'at'
+payload = '''if #G.hand.cards < 1 and #G.deck.cards < 1 then
+    if G.GAME.hit_reshuffle_deck and not G.GAME.hit_reshuffling then
+        G.GAME.hit_reshuffling = true
+        G.E_MANAGER:add_event(Event({
+            trigger = 'immediate',
+            func = function()
+                for i = 1, #G.discard.cards do
+                    draw_card(G.discard, G.deck, i*100/5, 'up')
+                end
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'immediate',
+                    func = function()
+                        G.deck:shuffle('player_deck')
+                        G.GAME.hit_reshuffling = false
+                        return true
+                    end
+                }))
+                return true
+            end
+        }))
+    elseif not G.GAME.hit_reshuffling then
+        end_round()
+    end'''
 match_indent = true

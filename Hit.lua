@@ -1813,7 +1813,7 @@ end
     SMODS.Blind	{
         loc_txt = {
             name = 'The Needle',
-            text = { 'Causes death if first', 'hand hand is \'Loss\'' }
+            text = { 'Causes death if first', 'hand is \'Loss\'' }
         },
         key = 'needle',
         name = "hit_The Needle",
@@ -2564,6 +2564,18 @@ SMODS.Back {
             end
         }))
     end
+}
+
+SMODS.Back {
+    key = 'mystic',
+    name = "Mystic Deck",
+    pos = { x = 0, y = 1 },
+    atlas = 'decks',
+    apply = function(self)
+        set_blackjack_mode()
+        G.GAME.hit_reshuffle_deck = true
+        G.GAME.starting_params.discards = 0
+    end,
 }
 
 old_inject = SMODS.inject_p_card

@@ -32,6 +32,16 @@ return {
                     "[{C:attention}MINOR ARCANA{}] = 8"
                 }
             },
+            b_hit_mystic = {
+                name = "Mystic Deck",
+                text = {
+                    "{C:attention}Blackjack Mode{}",
+                    "If {C:attention}deck{} and {C:attention}hand{} are empty,",
+                    "shuffle {C:attention}discard pile{} into {C:attention}deck{}",
+                    "{C:red}0{} discards per round"
+                }
+
+            }
         },
         Sleeve = {
             sleeve_hit_aced_sl = {
