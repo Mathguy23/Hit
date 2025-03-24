@@ -1079,7 +1079,7 @@ end
         config = {},
         pos = {x = 2, y = 0},
         in_pool = function(self)
-            return false
+            return G.GAME.modifiers.dungeon
         end,
     }
 
@@ -1181,7 +1181,7 @@ end
         config = {chips = 7},
         pos = {x = 0, y = 1},
         in_pool = function(self)
-            return false
+            return G.GAME.modifiers.dungeon
         end,
         loc_vars = function(self, info_queue, card)
             return {vars = {card and card.ability.chips or 7}}
@@ -1366,7 +1366,7 @@ end
         config = {},
         pos = {x = 1, y = 1},
         in_pool = function(self)
-            return false
+            return G.GAME.modifiers.dungeon
         end,
     }
 
@@ -3484,6 +3484,7 @@ bj_ban_list = {
         {id = 'j_acrobat'},
         {id = 'j_steel_joker'},
         {id = 'j_ticket'},
+        {id = 'j_midas_mask'},
         -- discard based
         {id = 'j_merry_andy'},
         -- stuntman
@@ -3505,6 +3506,9 @@ bj_ban_list = {
         {id = 'c_eris'},
         {id = 'c_devil'},
         {id = 'c_chariot'},
+        {id = 'm_gold'},
+        {id = 'm_steel'},
+        {id = 'Blue'},
         --- replaced cards
         {id = 'c_trance'},
     },
