@@ -3091,7 +3091,9 @@ function hit_minor_arcana_can_use(card)
     elseif name == "3 of hit_pentacles" then
         return true
     elseif name == "3 of hit_cups" then
-        return true
+        if G.hand and (#G.hand.cards >= 3) then
+            return true
+        end
     elseif name == "3 of hit_swords" then
         return true
     elseif name == "3 of hit_wands" then
