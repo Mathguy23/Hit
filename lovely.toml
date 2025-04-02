@@ -392,6 +392,7 @@ payload = '''if G.GAME.modifiers.dungeon then
             end
             power = power - rng
             local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[suit .. '_' .. rank], center, {})
+            _card.ability.enemy = true
             G.enemy_deck:emplace(_card)
         end
         ranks = {}
@@ -415,11 +416,13 @@ payload = '''if G.GAME.modifiers.dungeon then
                 end
             end
             local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[i .. '_' .. j], center, {})
+            _card.ability.enemy = true
             G.enemy_deck:emplace(_card)
         end
     end
     for i = 1, stones do
         local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS['H_A'], G.P_CENTERS['m_stone'], {})
+        _card.ability.enemy = true
         G.enemy_deck:emplace(_card)
     end
     G.enemy_deck:shuffle('enemy_deck')

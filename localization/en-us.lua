@@ -29,7 +29,7 @@ return {
                 name = "[DECK] ==",
                 text = {
                     "{C:attention}Blackjack Mode{}",
-                    "[{C:attention}MINOR ARCANA{}] = 8"
+                    "[{C:attention}MINOR ARCANA{}] = 12"
                 }
             },
             b_hit_mystic = {
@@ -122,6 +122,13 @@ return {
                 text = {
                     "{C:red}Deleted{} at end",
                     "of {C:attention}round{}",
+                },
+            },
+            perfect = {
+                name = "Perfect",
+                text = {
+                    "{C:attention}Hand sum{} is equal",
+                    "to {C:attention}bust limit{}",
                 },
             },
             hit_blue_seal = {
@@ -484,6 +491,22 @@ return {
                     "{C:attention}7{} to deck"
                 }
             },
+            j_hit_supernatural_stars = {
+                name = "Supernatural Stars",
+                text = {
+                    "On winning {C:green}Stand{}, Create",
+                    "a {C:spectral}Spectral{} card if hand",
+                    "contains at least {C:attention}7{} cards."
+                }
+            },
+            j_hit_perfect_crystal = {
+                name = "Perfect Crystal",
+                text = {
+                    "If hand is {C:attention}Perfect{},",
+                    "and has no {C:attention}Aces{},",
+                    "{X:mult,C:white} X#1# {} Mult"
+                }
+            }
         },
         MinorArcana = {
             ["Ace of hit_pentacles"] = {
@@ -539,17 +562,49 @@ return {
                 name = '',
                 text = {
                     "Add {C:attention}2 Fleeting{} {C:dark_edition}Foil{} {C:attention}Stone{}",
-                    "{C:attention}Cards{} to deck then ",
+                    "{C:attention}Cards{} to deck then",
                     "{C:attention}Push{}, then {C:red}Discard{}",
                 }
             },
             ["2 of hit_wands"] = {
                 name = '',
                 text = {
-                    "The 2 cards atop the deck will",
-                    "be shuffled to the {C:attention}top{} of the",
-                    "deck at the start of the {C:attention}next{}",
-                    "{C:attention}5 rounds{}, then {C:red}Discard{}"
+                    "Reveal the {C:attention}rank{} and {C:attention}suit{}",
+                    "of the {C:attention}2{} cards atop the",
+                    "deck, then {C:red}Discard{}"
+                }
+            },
+            ["3 of hit_pentacles"] = {
+                name = '',
+                text = {
+                    "Add a {C:attention}Fleeting{} card to {C:attention}hand{}",
+                    "which would make the hand {C:attention}Perfect{}",
+                    "if a {C:attention}rank{} that could do so",
+                    "{C:attention}exists{}, then {C:red}Discard{}"
+                }
+            },
+            ["3 of hit_cups"] = {
+                name = '',
+                text = {
+                    "Convert {C:attention}3{} cards in",
+                    "hand to a single random",
+                    "{C:attention}suit{}, then {C:green}Stand{}",
+                },
+            },
+            ["3 of hit_swords"] = {
+                name = '',
+                text = {
+                    "{C:red}Debuff{} {C:attention}foe's{} enhanced",
+                    "cards for the next",
+                    "{C:attention}3{} {C:green}stands{}, then {C:red}Discard{}",
+                }
+            },
+            ["3 of hit_wands"] = {
+                name = '',
+                text = {
+                    "If {C:attention}Bust{}, discard {C:attention}1{}",
+                    "selected card, then",
+                    "{C:attention}Hit{}, then {C:green}Stand{}"
                 }
             },
         },
