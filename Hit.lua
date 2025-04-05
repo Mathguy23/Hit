@@ -4,7 +4,7 @@
 --- PREFIX: hit
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Blackjack instead of Poker
---- VERSION: 1.0.0
+--- VERSION: 1.0.1
 ----------------------------------------------
 ------------MOD CODE -------------------------
 -------------Credits--------------------------
@@ -2585,6 +2585,9 @@ function set_blackjack_mode()
         end
     end
     G.GAME.untarot_rate = 4
+    if G.GAME.action_rate then
+        G.GAME.action_rate = 0
+    end
 end
 
 SMODS.Back {
