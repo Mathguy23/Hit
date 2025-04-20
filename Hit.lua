@@ -2561,7 +2561,21 @@ G.FUNCS.draw_from_deck_to_hand = function(e)
             local i = 1
             local j = 0
             while i + j <= hand_space do
-                if G.deck.cards[#G.deck.cards - i - j + 1] and G.deck.cards[#G.deck.cards - i - j + 1].config.card and hit_minor_arcana_suits[G.deck.cards[#G.deck.cards - i - j + 1].config.card.suit] and (#G.consumeables.cards < G.consumeables.config.card_limit) then
+                if G.deck.cards[#G.deck.cards - i - j + 1] and G.GAME.suits_drawn then
+                    for i2, j2 in pairs(SMODS.Suits) do
+                        if G.deck.cards[#G.deck.cards - i - j + 1]:is_suit(j2.key) then
+                            G.GAME.suits_drawn[j2.key] = true
+                        end
+                    end
+                    local count = 0
+                    for i2, j2 in pairs(G.GAME.suits_drawn) do
+                        count = count + 1
+                    end
+                    if count >= 4 then
+                        G.GAME.suits_drawn = nil
+                    end
+                end
+                if G.deck.cards[#G.deck.cards - i - j + 1] and G.deck.cards[#G.deck.cards - i - j + 1].config.card and hit_minor_arcana_suits[G.deck.cards[#G.deck.cards - i - j + 1].config.card.suit] and (#G.consumeables.cards + j < G.consumeables.config.card_limit) then
                     draw_card(G.deck,G.consumeables, 90,'up', nil, G.deck.cards[#G.deck.cards - i - j + 1])
                     j = j + 1
                 else
@@ -2569,20 +2583,6 @@ G.FUNCS.draw_from_deck_to_hand = function(e)
                     i = i + 1
                 end
                 if G.deck.cards[#G.deck.cards - i - j + 1] then
-                    if G.GAME.suits_drawn then
-                        for i2, j2 in pairs(SMODS.Suits) do
-                            if G.deck.cards[#G.deck.cards - i - j + 1]:is_suit(j2.key) then
-                                G.GAME.suits_drawn[j2.key] = true
-                            end
-                        end
-                        local count = 0
-                        for i2, j2 in pairs(G.GAME.suits_drawn) do
-                            count = count + 1
-                        end
-                        if count >= 4 then
-                            G.GAME.suits_drawn = nil
-                        end
-                    end
                     G.deck.cards[#G.deck.cards - i - j + 1]:set_sprites()
                 end
             end
@@ -3011,7 +3011,7 @@ function hit_minor_arcana_use(card)
         full_reset_cards_debuff()
         draw_card(card.area, G.discard, 100/5, 'down', nil, card)
     elseif name == "3 of hit_wands" then
-        G.FUNCS.discard_cards_from_highlighted()
+        G.FUNCS.discard_cards_from_highlighted(nil, true)
         G.GAME.hit_limit = G.GAME.hit_limit + 1
         G.GAME.forced_stand = true
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.2,
@@ -3352,6 +3352,20 @@ G.FUNCS.hit_use_minor_arcana = function(e)
             end
         }))
     end
+end
+
+G.FUNCS.hit_can_discard_minor_arcana = function(e)
+    if false then
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+    else
+        e.config.colour = G.C.FILTER
+        e.config.button = 'hit_discard_minor_arcana'
+    end
+end
+
+G.FUNCS.hit_discard_minor_arcana = function(e)
+    draw_card(e.config.ref_table.area, G.discard, 100/5, 'down', nil, e.config.ref_table)
 end
 
 if CardSleeves and CardSleeves.Sleeve then

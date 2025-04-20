@@ -642,7 +642,9 @@ payload = '''if v.ability.revert_base then
     end
 end
 v.ability.hit_hermit_indicator = nil
-v.ability.hit_moon_indicator = nil'''
+v.ability.hit_moon_indicator = nil
+v.ability['4_W_uses'] = nil
+G.GAME.suits_drawn = nil'''
 match_indent = true
 
 [[patches]]
@@ -808,6 +810,13 @@ payload = '''if card.area and (card.area == G.consumeables) and card.playing_car
       {n=G.UIT.C, config={ref_table = card, align = "cr",maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = 1, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'hit_use_minor_arcana', func = 'hit_can_use_minor_arcana'}, nodes={
         {n=G.UIT.B, config = {w=0.1,h=0.6}},
         {n=G.UIT.T, config={text = localize('b_use'),colour = G.C.UI.TEXT_LIGHT, scale = 0.55, shadow = true}}
+      }}
+    }}
+    sell =
+    {n=G.UIT.C, config={align = "cr"}, nodes={
+      {n=G.UIT.C, config={ref_table = card, align = "cr",maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, minh = 1, hover = true, shadow = true, colour = G.C.UI.BACKGROUND_INACTIVE, one_press = true, button = 'hit_discard_minor_arcana', func = 'hit_can_discard_minor_arcana'}, nodes={
+        {n=G.UIT.B, config = {w=0.1,h=0.6}},
+        {n=G.UIT.T, config={text = localize('b_discard'),colour = G.C.UI.TEXT_LIGHT, scale = 0.55, shadow = true}}
       }}
     }}
     local t = {
