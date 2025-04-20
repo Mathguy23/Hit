@@ -364,8 +364,8 @@ payload = '''if G.GAME.modifiers.dungeon then
         ranks = {'3', '3', '7', '7', '7', 'K', 'K', 'K', 'K', 'K', 'K', 'K', 'A'}
         suits = {'H', 'H', 'H', 'H'}
     elseif (blind and blind.name or '') == "Verdant Leaf" then
-        if G.GAME.hit_bust_limit and (G.GAME.hit_bust_limit >= 24) then
-            ranks = {'8', '8', '8', '8', '8', '8', '8', '8', '8', '8', '9', '9', '9'}
+        if G.GAME.hit_bust_limit and (G.GAME.hit_bust_limit >= 31) then
+            ranks = {'8', '8', '8', '8', '8', '8', '8', '8', '8', '7', '7', '7', '7'}
         elseif G.GAME.hit_bust_limit and (G.GAME.hit_bust_limit == 20) then
             ranks = {'7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '6', '6', '6'}
         else
