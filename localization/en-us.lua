@@ -13,7 +13,7 @@ return {
                 name = "Overload Deck",
                 text = {
                     "{C:attention}Blackjack Mode{}",
-                    "{C:attention}+3{} Bust Limit",
+                    "{C:attention}+10{} Bust Limit",
                 }
             },
             b_hit_arcane = {
@@ -89,7 +89,7 @@ return {
                 text = {
                     "Reverts to a {C:attention}#1#{}",
                     "of {C:attention}#2#{} at",
-                    "end of round"
+                    "in {C:attention}#3#{} rounds"
                 }
             },
             mega_ace = {
@@ -153,7 +153,7 @@ return {
                 text = {
                     "Converts up to {C:attention}#1#{}",
                     "selected cards to {C:attention}#2#s{}",
-                    "until end of round"
+                    "for {C:attention}#3#{} rounds"
                 }
             },
             c_hit_unhigh_priestess = {
@@ -192,7 +192,7 @@ return {
                 name = "The Reversed Lovers",
                 text = {
                     "Converts {C:attention}#1#{} selected",
-                    "card to a {C:attention}#2#{}",
+                    "cards to {C:attention}#2#s{}",
                 }
             },
             c_hit_unchariot = {
@@ -200,8 +200,7 @@ return {
                 text = {
                     "Converts up to {C:attention}#1#{}",
                     "selected cards to {C:attention}random{}",
-                    "{C:attention}ranks{}",
-
+                    "{C:attention}higher ranks{}"
                 }
             },
             c_hit_unjustice = {
@@ -297,8 +296,9 @@ return {
             c_hit_unsun = {
                 name = "The Reversed Sun",
                 text = {
-                    "{C:attention}Shuffle{} the {C:attention}ranks{} of",
-                    "selected cards",
+                    "Converts up to {C:attention}#1#{}",
+                    "selected cards to {C:attention}random{}",
+                    "{C:attention}lower ranks{}"
                 }
             },
             c_hit_unjudgement = {
@@ -352,8 +352,9 @@ return {
             m_hit_osmium = {
                 name = 'Osmium Card',
                 text = {
-                    "On {C:attention}Stand{}, {C:attention}+2{} to all",
-                    "{C:attention}hand sums{}",
+                    "On player {C:attention}Stand{}, {C:attention}+2{}",
+                    "hand sum. On enemy {C:attention}Stand{},",
+                    "{C:attention}+2{} enemy hand sum"
                 }
             },
         },
@@ -607,6 +608,38 @@ return {
                     "{C:attention}Hit{}, then {C:green}Stand{}"
                 }
             },
+            ["4 of hit_pentacles"] = {
+                name = '',
+                text = {
+                    "Shuffle all {C:attention}Aces{}",
+                    "in {C:attention}Full Deck{} to deck,",
+                    "then {C:red}Discard{}"
+                }
+            },
+            ["4 of hit_cups"] = {
+                name = '',
+                text = {
+                    "Lock score at {C:attention}0{}",
+                    "until {C:attention}4{} suits drawn",
+                    "{C:inactive}({C:attention}#1#{C:inactive}/{C:attention}4{C:inactive}){}"
+                }
+            },
+            ["4 of hit_swords"] = {
+                name = '',
+                text = {
+                    "Shuffle {C:attention}14 Fleeting Bonus{}",
+                    "{C:attention}Cards{} into {C:attention}deck{}, then {C:green}Stand{}",
+                }
+            },
+            ["4 of hit_wands"] = {
+                name = '',
+                text = {
+                    "Return the card atop the",
+                    "{C:attention}discard pile{} to hand, {C:red}Discard{}",
+                    "after {C:attention}4{} uses this {C:attention}round{}",
+                    "{C:inactive}({C:attention}#1#{C:inactive}/{C:attention}4{C:inactive}, {C:attention}#2#{C:inactive}){}",
+                }
+            }
         },
         Spectral = {
             c_hit_trance = {

@@ -4,7 +4,7 @@
 --- PREFIX: hit
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Blackjack instead of Poker
---- VERSION: 1.0.1
+--- VERSION: 1.0.2
 ----------------------------------------------
 ------------MOD CODE -------------------------
 -------------Credits--------------------------
@@ -556,7 +556,7 @@ end
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
                     local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
                     local og_base = G.hand.highlighted[i].config.card
-                    G.hand.highlighted[i].ability.revert_base = og_base
+                    G.hand.highlighted[i].ability.revert_base = {og_base, 4}
                 
                     G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_A'])
                     G.GAME.blind:debuff_card(G.hand.highlighted[i])
@@ -570,9 +570,9 @@ end
             G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
             delay(0.5)
         end,
-        config = {max_highlighted = 3},
+        config = {max_highlighted = 3, rounds = 4},
         loc_vars = function(self, info_queue, card)
-            return {vars = {card and card.ability.max_highlighted or 3, localize('Ace', 'ranks')}}
+            return {vars = {card and card.ability.max_highlighted or 3, localize('Ace', 'ranks'), card and card.ability.rounds or 4}}
         end
     }
 
@@ -813,7 +813,7 @@ end
             G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
             delay(0.5)
         end,
-        config = {max_highlighted = 1},
+        config = {max_highlighted = 2},
         loc_vars = function(self, info_queue, card)
             return {vars = {card and card.ability.max_highlighted or 1, '0'}}
         end
@@ -837,11 +837,18 @@ end
             for i=1, #G.hand.highlighted do
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
                     local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
-                    local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
-                    local rank = pseudorandom_element(ranks, pseudoseed('untarot2'))
-                
-                    G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_'..rank])
-                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    local ranks = {}
+                    local norm_nominal = G.hand.highlighted[i].base.nominal
+                    for i2, j2 in pairs(SMODS.Ranks) do
+                        if (j2.nominal > norm_nominal) and (not j2.in_pool or (type(j2.in_pool) ~= 'function') or j2:in_pool()) then
+                            table.insert(ranks, j2.card_key)
+                        end
+                    end
+                    if #ranks ~= 0 then
+                        local rank = pseudorandom_element(ranks, pseudoseed('untarot2'))
+                        G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_'..rank])
+                        G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    end
                     return true 
                 end }))
             end
@@ -1007,7 +1014,7 @@ end
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
                     local pool = {}
                     for j, k in pairs(G.P_CENTER_POOLS['Enhanced']) do
-                        if not k.in_pool or (type(k.in_pool) ~= 'function') or k:in_pool() then
+                        if not k.in_pool or (type(k.in_pool) ~= 'function') or k:in_pool() and not G.GAME.banned_keys[k.key] then
                             table.insert(pool, k)
                         end
                     end
@@ -1293,18 +1300,21 @@ end
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.15,func = function() G.hand.highlighted[i]:flip();play_sound('card1', percent);G.hand.highlighted[i]:juice_up(0.3, 0.3);return true end }))
             end
             delay(0.2)
-            local ranks = {}
-            for i=1, #G.hand.highlighted do
-                table.insert(ranks, SMODS.Ranks[G.hand.highlighted[i].base.value].card_key)
-            end
-            pseudoshuffle(ranks, pseudoseed('untarot'))
             for i=1, #G.hand.highlighted do
                 G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() 
                     local suit = SMODS.Suits[G.hand.highlighted[i].base.suit].card_key
-                    local rank = ranks[i] or 'A'
-                
-                    G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_' .. rank])
-                    G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    local ranks = {}
+                    local norm_nominal = G.hand.highlighted[i].base.nominal
+                    for i2, j2 in pairs(SMODS.Ranks) do
+                        if (j2.nominal < norm_nominal) and (not j2.in_pool or (type(j2.in_pool) ~= 'function') or j2:in_pool()) then
+                            table.insert(ranks, j2.card_key)
+                        end
+                    end
+                    if #ranks ~= 0 then
+                        local rank = pseudorandom_element(ranks, pseudoseed('untarot2'))
+                        G.hand.highlighted[i]:set_base(G.P_CARDS[suit..'_'..rank])
+                        G.GAME.blind:debuff_card(G.hand.highlighted[i])
+                    end
                     return true 
                 end }))
             end
@@ -1315,11 +1325,9 @@ end
             G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.2,func = function() G.hand:unhighlight_all(); return true end }))
             delay(0.5)
         end,
-        config = {},
-        can_use = function(self, card)
-            if (G.STATE == G.STATES.SELECTING_HAND or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) and (#G.hand.highlighted >= 1) then
-                return true
-            end
+        config = {max_highlighted = 4},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability.max_highlighted or 4}}
         end
     }
 
@@ -2561,6 +2569,20 @@ G.FUNCS.draw_from_deck_to_hand = function(e)
                     i = i + 1
                 end
                 if G.deck.cards[#G.deck.cards - i - j + 1] then
+                    if G.GAME.suits_drawn then
+                        for i2, j2 in pairs(SMODS.Suits) do
+                            if G.deck.cards[#G.deck.cards - i - j + 1]:is_suit(j2.key) then
+                                G.GAME.suits_drawn[j2.key] = true
+                            end
+                        end
+                        local count = 0
+                        for i2, j2 in pairs(G.GAME.suits_drawn) do
+                            count = count + 1
+                        end
+                        if count >= 4 then
+                            G.GAME.suits_drawn = nil
+                        end
+                    end
                     G.deck.cards[#G.deck.cards - i - j + 1]:set_sprites()
                 end
             end
@@ -2617,7 +2639,7 @@ SMODS.Back {
     atlas = 'decks',
     apply = function(self)
         set_blackjack_mode()
-        G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) + 3
+        G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) + 10
     end,
 }
 
@@ -2641,12 +2663,12 @@ SMODS.Back {
         set_blackjack_mode()
         G.E_MANAGER:add_event(Event({
             func = function()
-                for i = 1, 12 do
+                for i = 1, 16 do
                     local card = pseudorandom_element(G.playing_cards, pseudoseed('collect'))
                     card:remove()
                 end
-                bases = {'hit_P_A', 'hit_CP_A', 'hit_SW_A', 'hit_W_A', 'hit_P_2', 'hit_CP_2', 'hit_SW_2', 'hit_W_2', 'hit_P_3', 'hit_CP_3', 'hit_SW_3', 'hit_W_3'}
-                for i = 1, 12 do
+                bases = {'hit_P_A', 'hit_CP_A', 'hit_SW_A', 'hit_W_A', 'hit_P_2', 'hit_CP_2', 'hit_SW_2', 'hit_W_2', 'hit_P_3', 'hit_CP_3', 'hit_SW_3', 'hit_W_3', 'hit_P_4', 'hit_CP_4', 'hit_SW_4', 'hit_W_4'}
+                for i = 1, 16 do
                     local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[bases[i]], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
                     _card:set_sprites(_card.config.center)
                     G.deck:emplace(_card)
@@ -3014,6 +3036,54 @@ function hit_minor_arcana_use(card)
             end
         }))
         return
+    elseif name == "4 of hit_pentacles" then
+        local aces = {}
+        for _, j in ipairs({G.hand.cards, G.deck.cards, G.discard.cards}) do
+            for i = 1, #j do
+                if j[i]:get_id() == 14 then
+                    table.insert(aces, j[i])
+                end
+            end
+        end
+        for i, j in ipairs(aces) do
+            if j.area ~= G.deck then
+                draw_card(j.area, G.deck, i*100/5, 'down', nil, j)
+                shuffle_card_in_deck(j)
+            end
+        end
+        draw_card(card.area, G.discard, 100/5, 'down', nil, card)
+    elseif name == "4 of hit_cups" then
+        G.GAME.suits_drawn = {}
+        G.E_MANAGER:add_event(Event({
+            trigger = 'ease',
+            blocking = false,
+            ref_table = G.GAME,
+            ref_value = 'chips',
+            ease_to = 0,
+            delay =  0.5,
+            func = (function(t) return math.floor(t) end)
+        }))
+    elseif name == "4 of hit_swords" then
+        G.E_MANAGER:add_event(Event({trigger = 'after',
+        func = function()
+            for i = 1, 14 do
+                local suits = {'H', 'S', 'D', 'C'}
+                local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
+                local rank = pseudorandom_element(ranks, pseudoseed('untarot'))
+                local suit = pseudorandom_element(suits, pseudoseed('untarot'))
+                local card_ = create_playing_card({front = G.P_CARDS[suit..'_'..rank], center = G.P_CENTERS['m_bonus']}, G.deck, nil, nil, {G.C.SECONDARY_SET.Tarot})
+                card_.ability.fleeting = true
+                shuffle_card_in_deck(card_)
+            end
+            draw_card(card.area, G.discard, 100/5, 'down', nil, card)
+            return true
+        end}))
+    elseif name == "4 of hit_wands" then
+        card.ability['4_W_uses'] = (card.ability['4_W_uses'] or 4) - 1
+        draw_card(G.discard, G.hand, 100/5, 'down', nil, G.discard.cards[#G.discard.cards])
+        if card.ability['4_W_uses'] == 0 then
+            draw_card(card.area, G.discard, 100/5, 'down', nil, card)
+        end
     end
     G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.2,
         func = function()
@@ -3103,6 +3173,21 @@ function hit_minor_arcana_can_use(card)
         if G.hand.highlighted and (#G.hand.highlighted == 1) and G.GAME.hit_busted then
             return true
         end
+    elseif name == "4 of hit_pentacles" then
+        local aces = {}
+        for _, j in ipairs({G.hand.cards, G.deck.cards, G.discard.cards}) do
+            for i = 1, #j do
+                if j[i]:get_id() == 14 then
+                    return true
+                end
+            end
+        end
+    elseif name == "4 of hit_cups" then
+        return true
+    elseif name == "4 of hit_swords" then
+        return true
+    elseif name == "4 of hit_wands" then
+        return (#G.discard.cards > 0)
     end
     return false
 end
@@ -3119,6 +3204,26 @@ function hit_minor_arcana_loc_vars(card, info_queue)
         info_queue[#info_queue + 1] = G.P_CENTERS['e_foil']
     elseif name == "3 of hit_pentacles" then
         info_queue[#info_queue + 1] = {key = 'perfect', set = 'Other'}
+    elseif name == "4 of hit_cups" then
+        if not G.GAME.suits_drawn then
+            return {'None'}
+        end
+        local count = 0
+        for i, j in pairs(G.GAME.suits_drawn) do
+            count = count + 1
+        end
+        return {count}
+    elseif name == "4 of hit_swords" then
+        info_queue[#info_queue + 1] = G.P_CENTERS['m_bonus']
+        info_queue[#info_queue + 1] = {key = 'fleeting', set = 'Other'}
+    elseif name == "4 of hit_wands" then
+        local card_ = 'None'
+        if G.discard.cards[1] then
+            local rank = localize(G.discard.cards[#G.discard.cards].config.card.value, 'ranks')
+            local suit = localize(G.discard.cards[#G.discard.cards].config.card.suit, 'suits_plural')
+            card_ = rank .. ' of ' .. suit
+        end
+        return {4 - (card.ability['4_W_uses'] or 4), card_}
     end
     return {}
 end
@@ -3527,6 +3632,9 @@ if pc_add_cross_mod_card then
         loc_vars = function(specific_vars, info_queue, card)
             local config_thing = specific_vars.collect.config
             return {config_thing.chips}
+        end,
+        in_pool = function()
+            return G.GAME.modifiers.dungeon
         end
     }
 
@@ -3550,6 +3658,9 @@ if pc_add_cross_mod_card then
                 return true
             end
         end,
+        in_pool = function()
+            return G.GAME.modifiers.dungeon
+        end
     }
 
     pc_add_cross_mod_card {
@@ -3582,6 +3693,9 @@ if pc_add_cross_mod_card then
         loc_vars = function(specific_vars, info_queue, card)
             local config_thing = specific_vars.collect.config
             return {localize("Hearts", 'suits_plural'), config_thing.gain, config_thing.mult}
+        end,
+        in_pool = function()
+            return G.GAME.modifiers.dungeon
         end
     }
 
@@ -3615,6 +3729,9 @@ if pc_add_cross_mod_card then
         loc_vars = function(specific_vars, info_queue, card)
             local config_thing = specific_vars.collect.config
             return {config_thing.chips, config_thing.gain, config_thing.hit_hand_value}
+        end,
+        in_pool = function()
+            return G.GAME.modifiers.dungeon
         end
     }
 
@@ -3660,6 +3777,9 @@ if pc_add_cross_mod_card then
             local config_thing = specific_vars.collect.config
             info_queue[#info_queue+1] = {key = 'fleeting', set = 'Other'}
             return {config_thing.chips}
+        end,
+        in_pool = function()
+            return G.GAME.modifiers.dungeon
         end
     }
 end
