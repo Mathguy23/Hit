@@ -4,7 +4,7 @@
 --- PREFIX: hit
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Blackjack instead of Poker
---- VERSION: 1.0.2
+--- VERSION: 1.0.3
 ----------------------------------------------
 ------------MOD CODE -------------------------
 -------------Credits--------------------------
@@ -182,15 +182,15 @@ end
             if not G.GAME.modifiers.dungeon then
                 return {}
             end
-            local pair = get_X_same(2, hand)
+            local pair = get_X_same(2, hand, true)
             if next(pair) then
                 best_pair = pair[1]
                 best_card = nil
                 for i, j in ipairs(hand) do
                     if (j ~= best_pair[1]) and (j ~= best_pair[2]) then
-                        if not best_card then
+                        if not best_card and (j:get_id() > 0) then
                             best_card = j
-                        elseif j:get_nominal() > best_card:get_nominal() then
+                        elseif best_card and (j:get_nominal() > best_card:get_nominal()) then
                             best_card = j
                         end
                     end
@@ -299,9 +299,9 @@ end
                         end
                     end
                     if valid then
-                        if not best_card then
+                        if not best_card and (j:get_id() > 0) then
                             best_card = j
-                        elseif j:get_nominal() > best_card:get_nominal() then
+                        elseif best_card and (j:get_nominal() > best_card:get_nominal()) then
                             best_card = j
                         end
                     end
@@ -1417,6 +1417,10 @@ end
             in_pool = function(self)
                 return G.GAME.modifiers.dungeon
             end,
+            ease_background_colour = function(self)
+                ease_colour(G.C.DYN_UI.MAIN, HEX('a58547'))
+                ease_background_colour{new_colour = HEX('a58547'), special_colour = G.C.BLACK, contrast = 2}
+            end,
         }
     end
 
@@ -1444,6 +1448,10 @@ end
             draw_hand = true,
             in_pool = function(self)
                 return G.GAME.modifiers.dungeon
+            end,
+            ease_background_colour = function(self)
+                ease_colour(G.C.DYN_UI.MAIN, HEX('a58547'))
+                ease_background_colour{new_colour = HEX('a58547'), special_colour = G.C.BLACK, contrast = 2}
             end,
         }
         SMODS.Booster {
@@ -1474,6 +1482,34 @@ end
     end
 
 ------------------------
+
+SMODS.Booster {
+    key = 'minorarcana_normal_1',
+    atlas = 'boosters',
+    group_key = 'k_minorarcana_pack',
+    loc_txt = {
+        name = "Minor Arcana Pack",
+        text = {
+            "Choose {C:attention}#1#{} of up to",
+            "{C:attention}#2#{C:attention} Minor Arcana{} cards",
+            "to add to your deck"
+        }
+    },
+    weight = 1,
+    name = "Minor Arcana Pack",
+    pos = {x = 0, y = 2},
+    config = {extra = 3, choose = 1, name = "Minor Arcana Pack"},
+    create_card = function(self, card)
+        local bases = {'hit_P_A', 'hit_CP_A', 'hit_SW_A', 'hit_W_A', 'hit_P_2', 'hit_CP_2', 'hit_SW_2', 'hit_W_2', 'hit_P_3', 'hit_CP_3', 'hit_SW_3', 'hit_W_3', 'hit_P_4', 'hit_CP_4', 'hit_SW_4', 'hit_W_4'}
+        local base = pseudorandom_element(bases, pseudoseed('pack'))
+        local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[base], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+        return _card
+    end,
+    ease_background_colour = function(self)
+        ease_colour(G.C.DYN_UI.MAIN, HEX('a58547'))
+        ease_background_colour{new_colour = HEX('a58547'), special_colour = G.C.BLACK, contrast = 2}
+    end,
+}
 
 -----Jokers-------------
 
@@ -1712,7 +1748,7 @@ end
         cost = 6,
         config = {},
         calculate = function(self, card, context)
-            if context.stand and (context.cardarea == G.jokers) and (#G.hand.cards >= 7) and context.won then
+            if context.post_stand and (context.cardarea == G.jokers) and (#G.hand.cards == 7) and context.won then
                 G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
                 G.E_MANAGER:add_event(Event({
                     trigger = 'before',
@@ -1763,6 +1799,36 @@ end
                         Xmult_mod = card.ability.hit_x_mult
                     }
                 end
+            end
+        end,
+        in_pool = function(self)
+            return G.GAME.modifiers.dungeon, {allow_duplicates = false}
+        end,
+    }
+
+    SMODS.Joker {
+        key = 'big_chip',
+        name = "Big Chip",
+        rarity = 1,
+        atlas = 'jokers',
+        pos = {x = 4, y = 2},
+        cost = 5,
+        config = {bust_limit = 1},
+        loc_vars = function(self, info_queue, card)
+            return {vars = {card and card.ability and card.ability.bust_limit or 1}}
+        end,
+        add_to_deck = function(self, card, from_debuff)
+            G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) + 1
+            check_total_over_21()
+            if G.GAME.facing_blind then
+                G.GAME.blind:set_text()
+            end
+        end,
+        remove_from_deck = function(self, card, from_debuff)
+            G.GAME.hit_bust_limit = (G.GAME.hit_bust_limit or 21) - 1
+            check_total_over_21()
+            if G.GAME.facing_blind then
+                G.GAME.blind:set_text()
             end
         end,
         in_pool = function(self)
@@ -2136,23 +2202,6 @@ G.FUNCS.can_hit = function(e)
 end
 
 G.FUNCS.hit = function(e, no_state)
-    local valid = true
-    for i = 1, #G.hand.cards do
-        if G.hand.cards[i].calculate_exotic then
-            G.hand.cards[i]:calculate_exotic({hit = true, cardarea = G.hand})
-        end
-    end
-    if valid then
-        G.GAME.hit_limit = (G.hand and G.hand.cards and #G.hand.cards or 2) + 1
-    end
-    if G.GAME.blind.hits then
-        G.GAME.blind.hits = G.GAME.blind.hits + 1
-        if G.GAME.blind.hits == 3 then
-            G.GAME.forced_stand = true
-            G.GAME.blind.hits = 0
-        end
-        G.GAME.blind:set_text()
-    end
     if not no_state then
         G.E_MANAGER:add_event(Event({
             trigger = 'immediate',
@@ -2162,6 +2211,27 @@ G.FUNCS.hit = function(e, no_state)
                 return true
             end
         }))
+    end
+    local valid = true
+    local add_limit = 0
+    for i = 1, #G.hand.cards do
+        if G.hand.cards[i].calculate_exotic then
+            local result = G.hand.cards[i]:calculate_exotic({hit = true, cardarea = G.hand})
+            if result and result.add_limit then
+                add_limit = add_limit + result.add_limit
+            end
+        end
+    end
+    if valid then
+        G.GAME.hit_limit = (G.hand and G.hand.cards and #G.hand.cards or 2) + 1 + add_limit
+    end
+    if G.GAME.blind.hits then
+        G.GAME.blind.hits = G.GAME.blind.hits + 1
+        if G.GAME.blind.hits == 3 then
+            G.GAME.forced_stand = true
+            G.GAME.blind.hits = 0
+        end
+        G.GAME.blind:set_text()
     end
 end
 
@@ -2284,7 +2354,7 @@ G.FUNCS.stand = function(e)
             total = 0
         end
     end
-    SMODS.calculate_context({stand = true, cardarea = G.jokers, add_total = add_total , won = (bl_total < total) or (next(SMODS.find_card('j_hit_tiebreaker')) and (bl_total == total))})
+    SMODS.calculate_context({stand = true, cardarea = G.jokers, add_total = add_total})
     G.E_MANAGER:add_event(Event({
         trigger = 'immediate',
         func = function()
@@ -2338,6 +2408,7 @@ G.FUNCS.stand = function(e)
                         play_area_status_text("Win (" .. tostring(total) .. " > " .. tostring(bl_total) .. ")")
                     end
                 end
+                SMODS.calculate_context({post_stand = true, cardarea = G.jokers, add_total = add_total , won = true})
                 if G.GAME.blind and (G.GAME.blind.name == "hit_The Needle") and not G.GAME.blind.disabled then
                     G.E_MANAGER:add_event(Event({
                         trigger = 'immediate',
@@ -2401,6 +2472,7 @@ G.FUNCS.stand = function(e)
                         play_area_status_text("Push (" .. tostring(total) .. " = " .. tostring(bl_total) .. ")")
                     end
                 end
+                SMODS.calculate_context({post_stand = true, cardarea = G.jokers, add_total = add_total , won = false})
                 if G.GAME.blind and (G.GAME.blind.name == "hit_The Needle") and not G.GAME.blind.disabled then
                     G.E_MANAGER:add_event(Event({
                         trigger = 'immediate',
@@ -2453,6 +2525,7 @@ G.FUNCS.stand = function(e)
                         play_area_status_text("Loss (" .. tostring(total) .. " < " .. tostring(bl_total) .. ")")
                     end
                 end
+                SMODS.calculate_context({post_stand = true, cardarea = G.jokers, add_total = add_total , won = false})
                 if G.GAME.blind and (G.GAME.blind.name == "hit_The Needle") and not G.GAME.blind.disabled then
                     G.E_MANAGER:add_event(Event({
                         trigger = 'immediate',
@@ -2556,7 +2629,10 @@ end
 local old_draw_from_deck = G.FUNCS.draw_from_deck_to_hand
 G.FUNCS.draw_from_deck_to_hand = function(e)
     if G and G.GAME and G.GAME.modifiers and G.GAME.modifiers.dungeon and not (G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.SMODS_BOOSTER_OPENED) then
-        local hand_space =  math.max(0, (G.GAME.hit_limit or 2) - #G.hand.cards)
+        local hand_space =  math.min(2, math.max(0, (G.GAME.hit_limit or 2) - #G.hand.cards))
+        if (#G.hand.cards ~= 0) and (hand_space == 2) then
+            hand_space = 1
+        end
         if hand_space >= 1 then
             local i = 1
             local j = 0
@@ -2667,7 +2743,7 @@ SMODS.Back {
                     local card = pseudorandom_element(G.playing_cards, pseudoseed('collect'))
                     card:remove()
                 end
-                bases = {'hit_P_A', 'hit_CP_A', 'hit_SW_A', 'hit_W_A', 'hit_P_2', 'hit_CP_2', 'hit_SW_2', 'hit_W_2', 'hit_P_3', 'hit_CP_3', 'hit_SW_3', 'hit_W_3', 'hit_P_4', 'hit_CP_4', 'hit_SW_4', 'hit_W_4'}
+                local bases = {'hit_P_A', 'hit_CP_A', 'hit_SW_A', 'hit_W_A', 'hit_P_2', 'hit_CP_2', 'hit_SW_2', 'hit_W_2', 'hit_P_3', 'hit_CP_3', 'hit_SW_3', 'hit_W_3', 'hit_P_4', 'hit_CP_4', 'hit_SW_4', 'hit_W_4'}
                 for i = 1, 16 do
                     local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[bases[i]], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
                     _card:set_sprites(_card.config.center)
@@ -3012,6 +3088,14 @@ function hit_minor_arcana_use(card)
         draw_card(card.area, G.discard, 100/5, 'down', nil, card)
     elseif name == "3 of hit_wands" then
         G.FUNCS.discard_cards_from_highlighted(nil, true)
+        G.STATE = G.STATES.DRAW_TO_HAND
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    G.STATE_COMPLETE = false
+                    return true
+                end
+            }))
         G.GAME.hit_limit = G.GAME.hit_limit + 1
         G.GAME.forced_stand = true
         G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.2,
@@ -3125,7 +3209,7 @@ function hit_minor_arcana_can_use(card)
     if ((G.play and #G.play.cards > 0) or (G.CONTROLLER.locked) or (G.GAME.STOP_USE and G.GAME.STOP_USE > 0)) then  
         return false 
     end
-    if (G.STATE == G.STATES.HAND_PLAYED) and (G.STATE == G.STATES.DRAW_TO_HAND) and (G.STATE == G.STATES.PLAY_TAROT) then
+    if (G.STATE == G.STATES.HAND_PLAYED) or (G.STATE == G.STATES.DRAW_TO_HAND) or (G.STATE == G.STATES.PLAY_TAROT) then
         return false
     end
     if name == "Ace of hit_pentacles" then
@@ -3247,6 +3331,10 @@ SMODS.Suit {
         ['2'] = 1,
         ['3'] = 2,
         ['4'] = 3,
+        ['5'] = 4,
+        ['6'] = 5,
+        ['7'] = 6,
+        ['8'] = 7,
         hit_0 = 13,
     },
     hidden = true,
@@ -3271,6 +3359,10 @@ SMODS.Suit {
         ['2'] = 1,
         ['3'] = 2,
         ['4'] = 3,
+        ['5'] = 4,
+        ['6'] = 5,
+        ['7'] = 6,
+        ['8'] = 7,
         hit_0 = 13,
     },
     hidden = true,
@@ -3295,6 +3387,10 @@ SMODS.Suit {
         ['2'] = 1,
         ['3'] = 2,
         ['4'] = 3,
+        ['5'] = 4,
+        ['6'] = 5,
+        ['7'] = 6,
+        ['8'] = 7,
         hit_0 = 13,
     },
     hidden = true,
@@ -3319,6 +3415,10 @@ SMODS.Suit {
         ['2'] = 1,
         ['3'] = 2,
         ['4'] = 3,
+        ['5'] = 4,
+        ['6'] = 5,
+        ['7'] = 6,
+        ['8'] = 7,
         hit_0 = 13,
     },
     hidden = true,
@@ -3355,7 +3455,7 @@ G.FUNCS.hit_use_minor_arcana = function(e)
 end
 
 G.FUNCS.hit_can_discard_minor_arcana = function(e)
-    if false then
+    if ((G.play and #G.play.cards > 0) or (G.CONTROLLER.locked) or (G.GAME.STOP_USE and G.GAME.STOP_USE > 0)) or (G.STATE == G.STATES.HAND_PLAYED) or (G.STATE == G.STATES.DRAW_TO_HAND) or (G.STATE == G.STATES.PLAY_TAROT) then
         e.config.colour = G.C.UI.BACKGROUND_INACTIVE
         e.config.button = nil
     else
@@ -3782,7 +3882,9 @@ if pc_add_cross_mod_card then
                     return true
                 end
                 }))
-                G.GAME.hit_limit = (G.GAME.hit_limit or 2) + 1
+                return {
+                    add_limit = 1
+                }
             elseif context.is_face then
                 return true
             end
@@ -3866,6 +3968,7 @@ bj_ban_list = {
         {id = 'Blue'},
         --- replaced cards
         {id = 'c_trance'},
+        {id = 'sk_grm_cl_hoarder'},
     },
     banned_tags = {
         {id = 'tag_juggle'},
@@ -3895,6 +3998,13 @@ function G.UIDEF.view_enemy_deck(unplayed_only)
     if G.enemy_discard and G.enemy_discard.cards then
         for i = 1, #G.enemy_discard.cards do
             table.insert(all_cards, G.enemy_discard.cards[i])
+        end
+    end
+    if G.play and G.play.cards then
+        for i = 1, #G.play.cards do
+            if G.play.cards[i].ability.enemy then
+                table.insert(all_cards, G.play.cards[i])
+            end
         end
     end
 	G.VIEWING_DECK = true

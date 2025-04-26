@@ -336,32 +336,22 @@ payload = '''if G.GAME.modifiers.dungeon then
     end
     local suits = {'H', 'S', 'D', 'C'}
     local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
-    local power = (not G.GAME.modifiers.scaling and 1 or (G.GAME.modifiers.scaling == 1) and 1 or (G.GAME.modifiers.scaling == 2) and 1.3 or (G.GAME.modifiers.scaling == 3) and 1.5) * (0.33 * (G.GAME.round_resets.ante))
-    if power < 0 then
-        power = 0
-    end
+    local cards = {}
+    local power = (not G.GAME.modifiers.scaling and 1 or (G.GAME.modifiers.scaling == 1) and 1 or (G.GAME.modifiers.scaling == 2) and 1.25 or (G.GAME.modifiers.scaling == 3) and 1.5) * (10 * (G.GAME.round_resets.ante))
     local stones = 0
-    if (blind and blind.name or '') == "Small Blind" then
-        ranks = {'2', '3', '4', '5', '6', '8', '9', 'T', 'J', 'Q', 'K'}
-    elseif (blind and blind.name or '') == "The Goad" then
-        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
+    if (blind and blind.name or '') == "The Goad" then
         suits = {'H', 'D', 'C'}
     elseif (blind and blind.name or '') == "The Club" then
-        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         suits = {'H', 'D', 'S'}
     elseif (blind and blind.name or '') == "The Head" then
-        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         suits = {'C', 'D', 'S'}
     elseif (blind and blind.name or '') == "The Window" then
-        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         suits = {'C', 'H', 'S'}
     elseif (blind and blind.name or '') == "The Plant" then
-        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'A'}
+        ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'A'}
     elseif (blind and blind.name or '') == "Violet Vessel" then
-        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         stones = 10
     elseif (blind and blind.name or '') == "Crimson Heart" then
-        ranks = {'3', '3', '7', '7', '7', 'K', 'K', 'K', 'K', 'K', 'K', 'K', 'A'}
         suits = {'H', 'H', 'H', 'H'}
     elseif (blind and blind.name or '') == "Verdant Leaf" then
         if G.GAME.hit_bust_limit and (G.GAME.hit_bust_limit >= 31) then
@@ -371,57 +361,107 @@ payload = '''if G.GAME.modifiers.dungeon then
         else
             ranks = {'7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '8', '8', '8'}
         end
+        power = 0
     elseif (blind and blind.name or '') == "Amber Acorn" then
-        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
         for i = 1, 52 do
             local rank = pseudorandom_element(ranks, pseudoseed('acorn'))
             local suit = pseudorandom_element(suits, pseudoseed('acorn'))
-            local center = G.P_CENTERS['c_base']
-            local rng = 5 * pseudorandom('power_level')
-            power = power + rng
-            if pseudorandom('enhancing') > 1 / (0.1 * G.GAME.round_resets.ante + 0.9) then
-                if power >= 17 then
-                    center = G.P_CENTERS['m_glass']
-                elseif power >= 13 then
-                    center = G.P_CENTERS['m_lucky']
-                elseif power >= 9 then
-                    center = G.P_CENTERS['m_mult']
-                elseif power >= 6 then
-                    center = G.P_CENTERS['m_bonus']
-                end
-            end
-            power = power - rng
-            local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[suit .. '_' .. rank], center, {})
-            _card.ability.enemy = true
-            G.enemy_deck:emplace(_card)
+            table.insert(cards, {suit, rank, 'c_base'})
         end
         ranks = {}
         suits = {}
+    end
+    if (blind and blind.name or '') == "Small Blind" then
+        power = power - 20
     elseif (blind and blind.name or '') ~= "Big Blind" then
-        ranks = {'3', '3', '3', '5', '7', '7', '7', 'T', 'T', 'J', 'Q', 'K', 'A'}
+        power = power
+    else
+        power = power + 25
+    end
+    if power < 0 then
+        power = 0
     end
     for _, i in ipairs(suits) do
         for _, j in ipairs(ranks) do
-            local center = G.P_CENTERS['c_base']
-            local rng = 3.5 * pseudorandom('power_level')
-            if pseudorandom('enhancing') > 1 / (0.1 * G.GAME.round_resets.ante + 0.9) then
-                if power * rng >= 4 then
-                    center = G.P_CENTERS['m_glass']
-                elseif power * rng >= 3.5 then
-                    center = G.P_CENTERS['m_lucky']
-                elseif power * rng >= 2.2 then
-                    center = G.P_CENTERS['m_mult']
-                elseif power * rng >= 1.5 then
-                    center = G.P_CENTERS['m_bonus']
-                end
-            end
-            local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[i .. '_' .. j], center, {})
-            _card.ability.enemy = true
-            G.enemy_deck:emplace(_card)
+            table.insert(cards, {i, j, 'c_base'})
         end
     end
     for i = 1, stones do
-        local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS['H_A'], G.P_CENTERS['m_stone'], {})
+        table.insert(cards, {'H', 'A', 'm_stone'})
+    end
+    local fails = 0
+    while (power > 0) and (fails < 5) do
+        local index = 1 + math.floor(#cards * pseudorandom('enemy_deck_card'))
+        if cards[index] then
+            local card = cards[index]
+            local pool = {}
+            local rank_class = 1
+            if (card[2] == '3') or (card[2] == '7') or (card[2] == '8') or (card[2] == '9') then
+                rank_class = 2
+                table.insert(pool, {'rise', 4})
+            elseif (card[2] == 'T') or (card[2] == 'J') or (card[2] == 'Q') or (card[2] == 'K') or (card[2] == 'A') then
+                rank_class = 3
+                if (card[2] ~= 'A') then
+                    table.insert(pool, {'bump', 2})
+                end
+            else
+                table.insert(pool, {'rise2', 8})
+            end
+            local enhancement_class = 0
+            if (card[3] == 'm_bonus') or (card[3] == 'm_mult') then
+                enhancement_class = 1
+                table.insert(pool, {'enhance2', 10})
+            elseif (card[3] == 'm_lucky') or (card[3] == 'm_glass') or (card[3] == 'm_stone') then
+                enhancement_class = 2
+            elseif (card[3] == 'c_base') then
+                table.insert(pool, {'enhance1', 5})
+            end
+            local new_pool = {}
+            for i, j in ipairs(pool) do
+                if power >= j[2] then
+                    table.insert(new_pool, j)
+                end
+            end
+            pool = new_pool
+            if #pool > 0 then
+                if power >= pool[1][2] then
+                    power = power - pool[1][2]
+                    fails = 0
+                    if pool[1][1] == 'rise' then
+                        card[2] = pseudorandom_element({'3', '7', '8', '9'}, pseudoseed('power'))
+                    elseif pool[1][1] == 'rise2' then
+                        if (blind and blind.name or '') == "Crimson Heart" then
+                            card[2] = 'K'
+                        else
+                            card[2] = pseudorandom_element({'T', 'J', 'Q', 'K', 'A'}, pseudoseed('power'))
+                        end
+                    elseif pool[1][1] == 'bump' then
+                        if card[2] == 'T' then
+                            card[2] = 'J'
+                        elseif card[2] == 'J' then
+                            card[2] = 'Q'
+                        elseif card[2] == 'Q' then
+                            card[2] = 'K'
+                        elseif card[2] == 'K' then
+                            card[2] = 'A'
+                        end
+                    elseif pool[1][1] == 'enhance1' then
+                        card[3] = pseudorandom_element({'m_bonus', 'm_mult'}, pseudoseed('power'))
+                    elseif pool[1][1] == 'enhance2' then
+                        card[3] = pseudorandom_element({'m_lucky', 'm_glass', 'm_stone'}, pseudoseed('power'))
+                    end
+                else
+                    fails = fails + 1
+                end
+            else
+                fails = fails + 1
+            end
+        else
+            fails = fails + 1
+        end
+    end
+    for i = 1, #cards do
+        local _card = Card(G.enemy_deck.T.x, G.enemy_deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[cards[i][1] .. '_' .. cards[i][2]], G.P_CENTERS[cards[i][3]], {})
         _card.ability.enemy = true
         G.enemy_deck:emplace(_card)
     end
@@ -489,7 +529,7 @@ target = 'cardarea.lua'
 pattern = '''function CardArea:add_to_highlighted(card, silent)'''
 position = 'after'
 payload = '''   if (self == G.hand) and G.GAME and G.GAME.modifiers and G.GAME.modifiers.dungeon then
-        self.config.highlighted_limit = 100
+        self.config.highlighted_limit = 1000000
     end'''
 match_indent = true
 
@@ -1001,4 +1041,47 @@ payload = '''if not G.GAME.suits_drawn then
         func = (function(t) return math.floor(t) end)
     }))
 end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if center.consumeable then'''
+position = 'before'
+payload = '''if G and G.GAME and G.GAME.modifiers and G.GAME.modifiers.dungeon then
+    local changes = {
+        j_greedy_joker = {{'extra', 's_mult', 4}},
+        j_lusty_joker = {{'extra', 's_mult', 4}},
+        j_wrathful_joker = {{'extra', 's_mult', 4}},
+        j_gluttenous_joker = {{'extra', 's_mult', 4}},
+        j_8_ball = {{'extra', 3}},
+        j_scary_face = {{'extra', 45}},
+        j_even_steven = {{'extra', 6}},
+        j_odd_todd = {{'extra', 49}},
+        j_square = {{'extra', 'chip_mod', 16}},
+        j_business = {{'extra', 4}},
+        j_ancient = {{'extra', 2}},
+        j_castle = {{'extra', 'chip_mod', 4}},
+        j_smiley = {{'extra', 8}},
+        j_rough_gem = {{'extra', 3}},
+        j_bloodstone = {{'extra', 'odds', 1}},
+        j_arrowhead = {{'extra', 75}},
+        j_idol = {{'extra', 3}},
+        j_triboulet = {{'extra', 3}},
+    }
+    if self.config.center.key and changes[self.config.center.key] then
+        for i2, j2 in ipairs(changes[self.config.center.key]) do
+            if #j2 == 2 then
+                self.ability[j2[1]] = j2[2]
+            else
+                local the_table = self.ability
+                for i3 = 1, #j2 - 2 do
+                    the_table = the_table[j2[i3]]
+                end
+                the_table[j2[#j2 - 1]] = j2[#j2]
+            end
+        end
+    end
+end
+'''
 match_indent = true

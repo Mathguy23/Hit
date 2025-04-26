@@ -29,7 +29,7 @@ return {
                 name = "[DECK] ==",
                 text = {
                     "{C:attention}Blackjack Mode{}",
-                    "[{C:attention}MINOR ARCANA{}] = 12"
+                    "[{C:attention}MINOR ARCANA{}] = 16"
                 }
             },
             b_hit_mystic = {
@@ -497,7 +497,7 @@ return {
                 text = {
                     "On winning {C:green}Stand{}, Create",
                     "a {C:spectral}Spectral{} card if hand",
-                    "contains at least {C:attention}7{} cards."
+                    "contains exactly {C:attention}7{} cards."
                 }
             },
             j_hit_perfect_crystal = {
@@ -506,6 +506,12 @@ return {
                     "If hand is {C:attention}Perfect{},",
                     "and has no {C:attention}Aces{},",
                     "{X:mult,C:white} X#1# {} Mult"
+                }
+            },
+            j_hit_big_chip = {
+                name = "Big Chip",
+                text = {
+                    "{C:attention}+#1#{} Bust Limit",
                 }
             }
         },
@@ -672,6 +678,7 @@ return {
             k_unarcana_pack = "Unarcana Pack",
             ow_ex = "Ow!",
             k_lucky_ex = "Jackpot",
+            k_minorarcana_pack = "Minor Arcana Pack",
         },
         v_text = {
             ch_c_ante_hand_discard_reset = {"{C:blue}Hands{} and {C:red}Discards{} are only reset each {C:attention}Ante{}."},
