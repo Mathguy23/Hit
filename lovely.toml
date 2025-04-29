@@ -1061,7 +1061,7 @@ payload = '''if G and G.GAME and G.GAME.modifiers and G.GAME.modifiers.dungeon t
         j_square = {{'extra', 'chip_mod', 16}},
         j_business = {{'extra', 4}},
         j_ancient = {{'extra', 2}},
-        j_castle = {{'extra', 'chip_mod', 12}},
+        j_castle = {{'extra', 'chip_mod', 4}},
         j_smiley = {{'extra', 8}},
         j_rough_gem = {{'extra', 3}},
         j_bloodstone = {{'extra', 'odds', 1}},
@@ -1069,6 +1069,10 @@ payload = '''if G and G.GAME and G.GAME.modifiers and G.GAME.modifiers.dungeon t
         j_idol = {{'extra', 3}},
         j_triboulet = {{'extra', 3}},
     }
+    if SMODS.Mods["UnStable"] and SMODS.Mods["UnStable"].can_load and not SMODS.Mods["UnStable"].disabled then
+        changes['j_odd_todd'] = {{'extra', 'chips', 49}}
+        changes['j_even_steven'] = {{'extra', 'mult', 6}}
+    end
     if self.config.center.key and changes[self.config.center.key] then
         for i2, j2 in ipairs(changes[self.config.center.key]) do
             if #j2 == 2 then
