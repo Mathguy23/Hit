@@ -29,7 +29,7 @@ return {
                 name = "[DECK] ==",
                 text = {
                     "{C:attention}Blackjack Mode{}",
-                    "[{C:attention}MINOR ARCANA{}] = 16"
+                    "[{C:attention}MINOR ARCANA{}] = 32"
                 }
             },
             b_hit_mystic = {
@@ -129,6 +129,12 @@ return {
                 text = {
                     "{C:attention}Hand sum{} is equal",
                     "to {C:attention}bust limit{}",
+                },
+            },
+            suitless = {
+                name = "Suitless",
+                text = {
+                    "Has no suit",
                 },
             },
             hit_blue_seal = {
@@ -272,9 +278,9 @@ return {
             c_hit_untower = {
                 name = "The Reversed Tower",
                 text = {
-                    "Enhances {C:attention}#1#{} selected",
-                    "card into a",
-                    "{C:attention}#2#{}"
+                    "Enhances up to {C:attention}#1#{} selected cards",
+                    "into a {C:attention}#2#{} and adds",
+                    "{C:red}+#3#{} extra mult each"
                 }
             },
             c_hit_unstar = {
@@ -340,13 +346,10 @@ return {
                     "is not {C:attention}discarded{}",
                 }
             },
-            m_hit_crazy = {
-                name = 'Crazy Card',
+            m_hit_degraded = {
+                name = 'Degraded Card',
                 text = {
-                    "{C:chips}+#1#{} Chips",
-                    "no rank or suit",
-                    "Contributes {C:attention}-3{} or",
-                    "{C:attention}7{} to hand sums",
+                    "Has no suit",
                 }
             },
             m_hit_osmium = {
@@ -355,6 +358,15 @@ return {
                     "On player {C:attention}Stand{}, {C:attention}+2{}",
                     "hand sum. On enemy {C:attention}Stand{},",
                     "{C:attention}+2{} enemy hand sum"
+                }
+            },
+            m_hit_perfect = {
+                name = 'Perfect Card',
+                text = {
+                    "no rank or suit",
+                    "{C:blue}+#1#{} Chips, {X:mult,C:white} X#2# {} Mult",
+                    "Adds {C:attention}hand sum{} equal",
+                    "to the {C:attention}bust limit{}",
                 }
             },
         },
@@ -634,7 +646,7 @@ return {
                 name = '',
                 text = {
                     "Shuffle {C:attention}14 Fleeting Bonus{}",
-                    "{C:attention}Cards{} into {C:attention}deck{}, then {C:green}Stand{}",
+                    "{C:attention}Cards{} into {C:attention}deck{}, then {C:red}Discard{}",
                 }
             },
             ["4 of hit_wands"] = {
@@ -645,7 +657,41 @@ return {
                     "after {C:attention}4{} uses this {C:attention}round{}",
                     "{C:inactive}({C:attention}#1#{C:inactive}/{C:attention}4{C:inactive}, {C:attention}#2#{C:inactive}){}",
                 }
-            }
+            },
+            ["5 of hit_pentacles"] = {
+                name = '',
+                text = {
+                    "{C:red}Discards{} all {C:attention}face{}",
+                    "cards in {C:attention}deck{} and",
+                    "this {C:attention}card{}",
+                }
+            },
+            ["5 of hit_cups"] = {
+                name = '',
+                text = {
+                    "Mark all cards in hand",
+                    "as {C:attention}Suitless{} and Decrease",
+                    "their {C:attention}rank{} by {C:attention}1{}, then",
+                    "{C:green}Stand{} and {C:red}Discard{}"
+                }
+            },
+            ["5 of hit_swords"] = {
+                name = '',
+                text = {
+                    "{C:red}Discard{} all cards in",
+                    "hand then add a {C:attention}Perfect{}",
+                    "{C:attention}Card{} to hand, then",
+                    "{C:green}Stand{} and {C:red}Discard{}"
+                }
+            },
+            ["5 of hit_wands"] = {
+                name = '',
+                text = {
+                    "{C:attention}+5{} bust limit this",
+                    "hand, then {C:attention}Hit{} twice",
+                    "{C:inactive}(Currently {C:attention}#1#{C:inactive} Bust Limit){}",
+                }
+            },
         },
         Spectral = {
             c_hit_trance = {

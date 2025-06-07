@@ -337,7 +337,7 @@ payload = '''if G.GAME.modifiers.dungeon then
     local suits = {'H', 'S', 'D', 'C'}
     local ranks = {'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
     local cards = {}
-    local power = (not G.GAME.modifiers.scaling and 1 or (G.GAME.modifiers.scaling == 1) and 1 or (G.GAME.modifiers.scaling == 2) and 1.25 or (G.GAME.modifiers.scaling == 3) and 1.5) * (10 * (G.GAME.round_resets.ante))
+    local power = (not G.GAME.modifiers.scaling and 1 or (G.GAME.modifiers.scaling == 1) and 1 or (G.GAME.modifiers.scaling == 2) and 1.25 or (G.GAME.modifiers.scaling == 3) and 1.5) * 10 * (1.55 ^ (G.GAME.round_resets.ante))
     local stones = 0
     if (blind and blind.name or '') == "The Goad" then
         suits = {'H', 'D', 'C'}
@@ -389,8 +389,9 @@ payload = '''if G.GAME.modifiers.dungeon then
     for i = 1, stones do
         table.insert(cards, {'H', 'A', 'm_stone'})
     end
+    power = power * 1
     local fails = 0
-    while (power > 0) and (fails < 5) do
+    while (power > 0) and (fails < 50) do
         local index = 1 + math.floor(#cards * pseudorandom('enemy_deck_card'))
         if cards[index] then
             local card = cards[index]
@@ -410,11 +411,11 @@ payload = '''if G.GAME.modifiers.dungeon then
             local enhancement_class = 0
             if (card[3] == 'm_bonus') or (card[3] == 'm_mult') then
                 enhancement_class = 1
-                table.insert(pool, {'enhance2', 10})
+                table.insert(pool, {'enhance2', 6})
             elseif (card[3] == 'm_lucky') or (card[3] == 'm_glass') or (card[3] == 'm_stone') then
                 enhancement_class = 2
             elseif (card[3] == 'c_base') then
-                table.insert(pool, {'enhance1', 5})
+                table.insert(pool, {'enhance1', 3})
             end
             local new_pool = {}
             for i, j in ipairs(pool) do
@@ -480,7 +481,13 @@ payload = '''   if G.GAME.modifiers.dungeon then
         if ((#G.deck.cards == 0) and (#G.hand.cards == 0)) and not (G.GAME.hit_reshuffle_deck and (#G.discard.cards >= 0)) then
             end_round()
         else
-            if G.GAME.forced_stand then
+            if hit_post_hit_func then
+                G.STATE = G.STATES.DRAW_TO_HAND
+                G.STATE_COMPLETE = false
+                delay(0.5)
+                hit_post_hit_func()
+                hit_post_hit_func = nil
+            elseif G.GAME.forced_stand then
                 G.GAME.forced_stand = nil
                 G.GAME.blind:set_text()
                 G.GAME.blind:wiggle()
@@ -820,7 +827,7 @@ target = 'card.lua'
 pattern = '''self.highlighted = is_higlighted'''
 position = 'after'
 payload = '''if self.playing_card and not self.children.use_button then
-        if self.highlighted and self.area and self.area == G.consumeables then
+    if self.highlighted and self.area and self.area == G.consumeables then
         local x_off = (self.ability.consumeable and -0.1 or 0)
         self.children.use_button = UIBox{
             definition = G.UIDEF.use_and_sell_buttons(self), 
@@ -836,6 +843,9 @@ payload = '''if self.playing_card and not self.children.use_button then
         self.children.use_button:remove()
         self.children.use_button = nil
     end
+elseif self.children.use_button then
+    self.children.use_button:remove()
+    self.children.use_button = nil
 end'''
 match_indent = true
 
@@ -894,7 +904,13 @@ for i = 1, #G.consumeables.cards do
 end
 for i = 1, #pool do
     if pool[i].config.card and hit_minor_arcana_suits[pool[i].config.card.suit] then
-        draw_card(G.consumeables,G.deck, 90,'down', nil, pool[i])
+    G.E_MANAGER:add_event(Event({
+        trigger = 'immediate',
+        func = function()
+            draw_card(G.consumeables,G.deck, 90,'down', nil, pool[i])
+            return true
+        end
+    }))
     end
 end'''
 match_indent = true
@@ -904,7 +920,8 @@ match_indent = true
 target = 'functions/common_events.lua'
 pattern = '''--Fill all remaining info if this is the main desc'''
 position = 'before'
-payload = '''if card and card.ability and card.ability.fleeting then info_queue[#info_queue+1] = {key = 'fleeting', set = 'Other'} end'''
+payload = '''if card and card.ability and card.ability.fleeting then info_queue[#info_queue+1] = {key = 'fleeting', set = 'Other'} end
+if card and card.ability and card.ability.hit_suitless then info_queue[#info_queue+1] = {key = 'suitless', set = 'Other'} end'''
 match_indent = true
 
 [[patches]]
@@ -1088,4 +1105,16 @@ payload = '''if G and G.GAME and G.GAME.modifiers and G.GAME.modifiers.dungeon t
     end
 end
 '''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'functions/state_events.lua'
+pattern = '''-- context.after calculations'''
+position = 'before'
+payload = '''if G.GAME.temporary_bust_limit then
+    G.GAME.hit_bust_limit = ( G.GAME.hit_bust_limit or 21) - G.GAME.temporary_bust_limit
+    G.GAME.temporary_bust_limit = nil
+    G.GAME.blind:set_text()
+end'''
 match_indent = true
