@@ -4,7 +4,7 @@
 --- PREFIX: hit
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Blackjack instead of Poker
---- VERSION: 1.1.0
+--- VERSION: 1.1.0a
 ----------------------------------------------
 ------------MOD CODE -------------------------
 -------------Credits--------------------------
@@ -1549,7 +1549,7 @@ SMODS.Booster {
         local ranks = {'A', '2', '3', '4', '5', '6', '7', '8'}
         local suit = pseudorandom_element(suits, pseudoseed('pack_suit'))
         local rank = pseudorandom_element(ranks, pseudoseed('pack_rank'))
-        local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS[suit .. '_' .. rank], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+        local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS['hit_' .. suit .. '_' .. rank], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
         return _card
     end,
     ease_background_colour = function(self)
