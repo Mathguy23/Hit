@@ -4,7 +4,7 @@
 --- PREFIX: hit
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Blackjack instead of Poker
---- VERSION: 1.2.0
+--- VERSION: 1.2.1
 ----------------------------------------------
 ------------MOD CODE -------------------------
 -------------Credits--------------------------
@@ -3819,7 +3819,7 @@ function hit_minor_arcana_can_use(card)
         end
         return false
     elseif name == "6 of hit_wands" then
-        if G.hand and G.hand.cards and G.GAME.hit_hand_perfect then
+        if G.hand and G.hand.cards and G.GAME.hit_hand_perfect and not G.GAME.hit_busted and not G.GAME.stood and (#G.deck.cards >= 1) and (#G.hand.cards <= G.hand.config.real_card_limit) then
             return true
         end
         return false
