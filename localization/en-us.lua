@@ -29,7 +29,7 @@ return {
                 name = "[DECK] ==",
                 text = {
                     "{C:attention}Blackjack Mode{}",
-                    "[{C:attention}MINOR ARCANA{}] = 32"
+                    "[{C:attention}MINOR ARCANA{}] = 36"
                 }
             },
             b_hit_mystic = {
@@ -92,6 +92,12 @@ return {
                     "in {C:attention}#3#{} rounds"
                 }
             },
+            orig_suit = {
+                name = "Original Suit",
+                text = {
+                    "{C:attention}#1#{}",
+                }
+            },
             mega_ace = {
                 text = {
                     "Mega Ace",
@@ -135,6 +141,15 @@ return {
                 name = "Suitless",
                 text = {
                     "Has no suit",
+                },
+            },
+            suits_map = {
+                name = "Respective Suits",
+                text = {
+                    "{C:spades}Spades{} > {C:hit_swords}Swords",
+                    "{C:hearts}Hearts{} > {C:hit_cups}Cups",
+                    "{C:clubs}Clubs{} > {C:hit_wands}Wands",
+                    "{C:diamonds}Diamonds{} > {C:hit_pentacles}Pentacles"
                 },
             },
             hit_blue_seal = {
@@ -580,7 +595,7 @@ return {
             ["2 of hit_swords"] = {
                 name = '',
                 text = {
-                    "Add {C:attention}2 Fleeting{} {C:dark_edition}Foil{} {C:attention}Stone{}",
+                    "Shuffle {C:attention}2 Fleeting{} {C:dark_edition}Foil{} {C:attention}Stone{}",
                     "{C:attention}Cards{} to deck then",
                     "{C:attention}Push{}, then {C:red}Discard{}",
                 }
@@ -692,6 +707,47 @@ return {
                     "{C:inactive}(Currently {C:attention}#1#{C:inactive} Bust Limit){}",
                 }
             },
+            ["6 of hit_pentacles"] = {
+                name = '',
+                text = {
+                    "Lose {C:red}-$2{}, Increases rank",
+                    "of up to {C:attention}1{} selected",
+                    "card by {C:attention}1{}, then {C:green}Stand{}"
+                }
+            },
+            ["6 of hit_cups"] = {
+                name = '',
+                text = {
+                    "Your {C:attention}playing cards{} this round,",
+                    "will also be considered their",
+                    "{C:attention}original{} suit, then {C:red}Discard{}"
+                }
+            },
+            ["6 of hit_swords"] = {
+                name = '',
+                text = {
+                    "Convert {C:attention}1 Enhanced{} card",
+                    "in hand to a {C:attention}Glass Card{},",
+                    "then {C:red}Discard{}"
+                }
+            },
+            ["6 of hit_wands"] = {
+                name = '',
+                text = {
+                    "If hand is {C:attention}Perfect{}, set",
+                    "hands to {C:blue}6{}, then {C:attention}Hit{}",
+                }
+            },
+            ["7 of hit_cups"] = {
+                name = '',
+                text = {
+                    "{C:green}#1# in 4{} chance to Convert",
+                    "up to {C:attention}3{} cards in hand to their",
+                    "respective {C:attention}Minor Arcana{} suits,",
+                    "for {C:attention}2{} rounds then {C:red}Discard{},",
+                    "otherwise {C:green}Stand{}"
+                }
+            },
         },
         Spectral = {
             c_hit_trance = {
@@ -701,7 +757,16 @@ return {
                     "to {C:attention}1{} selected",
                     "card in your hand"
                 }
-            }
+            },
+            c_hit_ectoplasm = {
+                name = "Ectoplasm",
+                text = {
+                    "Add {C:dark_edition}Negative{} to",
+                    "a random {C:attention}Joker,",
+                    "{C:red}+#1#{} {C:attention}random{} cards",
+                    "added to {C:attention}Full Deck{}"
+                }
+            },
         }
     },
     misc = {
@@ -740,7 +805,9 @@ return {
             hit_blue_seal = "Blue Seal"
         },
         ranks = {
-            hit_0 = '0'
+            hit_0 = '0',
+            hit_Page = 'Page',
+            hit_Knight = 'Knight',
         },
         suits_singular = {
             hit_pentacles = "Pentacle",
@@ -771,17 +838,14 @@ return {
                 "hands, only the highest ranked card scores"
             },
             ["hit_Court"] = {
-                "2 face cards. They may be played",
-                "with up to 3 other unscored cards"
+                "2 face cards.",
             },
             ["hit_Duo"] = {
                 "2 cards that share the same rank and another",
-                "card of another rank. They may be played",
-                "with up to 2 other unscored cards"
+                "card of another rank.",
             },
             ["hit_Batch"] = {
-                "3 cards that share the same suit. They may",
-                "be played with up to 2 other unscored cards"
+                "3 cards that share the same suit.",
             },
             ["hit_Blackjack"] = {
                 "Cards where hand sum is",
@@ -789,12 +853,10 @@ return {
             },
             ["hit_Duo+"] = {
                 "3 or more cards that share the same rank and",
-                "another card of another rank. They may be played",
-                "with up to 1 other unscored card"
+                "another card of another rank.",
             },
             ["hit_Batch+"] = {
-                "4 cards that share the same suit. They may",
-                "be played with up to 1 other unscored card"
+                "4 or more cards that share the same suit.",
             },
             ["hit_Blackjack Batch"] = {
                 "3 or more cards all the same suit where",

@@ -508,6 +508,9 @@ position = 'before'
 payload = '''if G.GAME.negate_hand then
     mult = G.GAME.negate_hand * mult
     G.GAME.negate_hand = nil
+    if (mult * hand_chips) < (-0.5 * G.GAME.blind.chips) then
+        mult = math.ceil(-0.5 * G.GAME.blind.chips / hand_chips)
+    end
     G.E_MANAGER:add_event(Event({
         trigger = 'before',
         delay = 0.8,
@@ -691,7 +694,8 @@ end
 v.ability.hit_hermit_indicator = nil
 v.ability.hit_moon_indicator = nil
 v.ability['4_W_uses'] = nil
-G.GAME.suits_drawn = nil'''
+G.GAME.suits_drawn = nil
+v.ability.hit_has_original_suit = nil'''
 match_indent = true
 
 [[patches]]
@@ -736,7 +740,10 @@ payload = '''if card and card.ability and card.ability.hit_hermit_indicator then
 if card and card.ability and card.ability.shuffle_bottom and not card.ability.hit_hermit_indicator then info_queue[#info_queue+1] = {key = 'hit_hermit_indicator', set = 'Other', vars = {card.ability.shuffle_bottom}} end
 if card and card.ability and card.ability.hit_moon_indicator then info_queue[#info_queue+1] = {key = 'hit_moon_indicator', set = 'Other', vars = {card.ability.hit_moon_indicator}} end
 if card and card.ability and card.ability.shuffle_top and not card.ability.hit_moon_indicator then info_queue[#info_queue+1] = {key = 'hit_moon_indicator', set = 'Other', vars = {card.ability.shuffle_top}} end
-if card and card.ability and card.ability.revert_base then info_queue[#info_queue+1] = {key = 'revert_base', set = 'Other', vars = {localize(card.ability.revert_base[1].value, 'ranks'), localize(card.ability.revert_base[1].suit, 'suits_plural'), card.ability.revert_base[2]}} end'''
+if card and card.ability and card.ability.revert_base then info_queue[#info_queue+1] = {key = 'revert_base', set = 'Other', vars = {localize(card.ability.revert_base[1].value, 'ranks'), localize(card.ability.revert_base[1].suit, 'suits_plural'), card.ability.revert_base[2]}} end
+if card and card.ability and card.ability.fleeting then info_queue[#info_queue+1] = {key = 'fleeting', set = 'Other'} end
+if card and card.ability and card.ability.hit_suitless then info_queue[#info_queue+1] = {key = 'suitless', set = 'Other'} end
+if card and card.ability and card.ability.hit_has_original_suit then info_queue[#info_queue+1] = {key = 'orig_suit', set = 'Other', vars = {localize(card.ability.hit_original_suit, 'suits_plural')}} end'''
 match_indent = true
 
 [[patches]]
@@ -913,15 +920,6 @@ for i = 1, #pool do
     }))
     end
 end'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = 'functions/common_events.lua'
-pattern = '''--Fill all remaining info if this is the main desc'''
-position = 'before'
-payload = '''if card and card.ability and card.ability.fleeting then info_queue[#info_queue+1] = {key = 'fleeting', set = 'Other'} end
-if card and card.ability and card.ability.hit_suitless then info_queue[#info_queue+1] = {key = 'suitless', set = 'Other'} end'''
 match_indent = true
 
 [[patches]]
@@ -1116,5 +1114,25 @@ payload = '''if G.GAME.temporary_bust_limit then
     G.GAME.hit_bust_limit = ( G.GAME.hit_bust_limit or 21) - G.GAME.temporary_bust_limit
     G.GAME.temporary_bust_limit = nil
     G.GAME.blind:set_text()
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''if initial then self.base.original_value = self.base.value end'''
+position = 'after'
+payload = '''if initial then
+    self.ability.hit_original_suit = self.base.suit
+end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = 'card.lua'
+pattern = '''ease_dollars(-self.cost)'''
+position = 'at'
+payload = '''if not self.ability or not self.ability.no_redeem_cost then
+    ease_dollars(-self.cost)
 end'''
 match_indent = true
