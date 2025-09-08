@@ -511,6 +511,8 @@ payload = '''if G.GAME.negate_hand then
     if (mult * hand_chips) < (-0.5 * G.GAME.blind.chips) then
         mult = math.ceil(-0.5 * G.GAME.blind.chips / hand_chips)
     end
+    G.GAME.current_round.current_hand.mult = tostring(mult)
+    SMODS.Scoring_Parameters['mult'].current = mult
     G.E_MANAGER:add_event(Event({
         trigger = 'before',
         delay = 0.8,

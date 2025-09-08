@@ -4,7 +4,7 @@
 --- PREFIX: hit
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Blackjack instead of Poker
---- VERSION: 1.2.1
+--- VERSION: 1.2.2
 ----------------------------------------------
 ------------MOD CODE -------------------------
 -------------Credits--------------------------
