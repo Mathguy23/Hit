@@ -328,6 +328,7 @@ position = 'after'
 payload = '''if G.GAME.modifiers.dungeon then
     G.GAME.hit_busted = nil
     G.GAME.hit_limit = 2
+    local make_jokers = false
     for i = #G.enemy_deck.cards, 1, -1 do
         if G.enemy_deck.cards[i] and not G.enemy_deck.cards[i].removed then G.enemy_deck.cards[i]:remove() end
     end
@@ -373,10 +374,13 @@ payload = '''if G.GAME.modifiers.dungeon then
     end
     if (blind and blind.name or '') == "Small Blind" then
         power = power - 20
-    elseif (blind and blind.name or '') ~= "Big Blind" then
+    elseif (blind and blind.name or '') == "Big Blind" then
         power = power
-    else
+    elseif (blind and blind.name or '') ~= '' then
         power = power + 25
+        if G.GAME.blind_on_deck == 'Boss' then
+            make_jokers = true
+        end
     end
     if power < 0 then
         power = 0
@@ -467,6 +471,17 @@ payload = '''if G.GAME.modifiers.dungeon then
         G.enemy_deck:emplace(_card)
     end
     G.enemy_deck:shuffle('enemy_deck')
+    if make_jokers then
+        local keys = { 'j_stencil', 'j_loyalty_card', 'j_fibonacci', 'j_hack', 'j_hiker', 'j_bull', 'j_selzer', 'j_sock_and_buskin', 'j_smeared', 'j_throwback', 'j_bloodstone', 'j_arrowhead', 'j_onyx_agate', 'j_oops', 'j_seeing_double', 'j_bootstraps' }
+        local key = pseudorandom_element(keys, pseudoseed('hit_boss_joker'))
+        local joker = SMODS.create_card {set = 'Joker', no_edition = true, key = key}
+        joker.ability.hit_rival = true
+        joker.ability.eternal = true
+        joker:set_edition('e_negative')
+        joker:add_to_deck()
+        joker:set_cost()
+        G.jokers:emplace(joker)
+    end
 end'''
 match_indent = true
 
@@ -477,6 +492,9 @@ pattern = '''function Blind:drawn_to_hand()'''
 position = 'after'
 payload = '''   if G.GAME.modifiers.dungeon then
         G.GAME.negate_hand = nil
+        for i = 1, #G.jokers.cards do
+            G.jokers.cards[i]:set_debuff()
+        end
         check_total_over_21()
         if ((#G.deck.cards == 0) and (#G.hand.cards == 0)) and not (G.GAME.hit_reshuffle_deck and (#G.discard.cards >= 0)) then
             end_round()
@@ -517,6 +535,9 @@ payload = '''if G.GAME.negate_hand then
         trigger = 'before',
         delay = 0.8,
         func = function()
+            for i = 1, #G.jokers.cards do
+                G.jokers.cards[i]:set_debuff()
+            end
             G.GAME.current_round.current_hand.mult = tostring(mult)
             G.hand_text_area.mult:update(0)
             return true
@@ -906,6 +927,11 @@ for i = 1, #G.playing_cards do
 end
 for i = 1, #delete_these do
     delete_these[i]:remove()
+end
+for i = 1, #G.jokers.cards do
+    if G.jokers.cards[i] and G.jokers.cards[i].ability and G.jokers.cards[i].ability.hit_rival then
+        SMODS.destroy_cards(G.jokers.cards[i], true, nil, true)
+    end
 end
 local pool = {}
 for i = 1, #G.consumeables.cards do

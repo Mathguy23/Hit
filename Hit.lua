@@ -4,7 +4,7 @@
 --- PREFIX: hit
 --- MOD_AUTHOR: [mathguy]
 --- MOD_DESCRIPTION: Blackjack instead of Poker
---- VERSION: 1.2.2
+--- VERSION: 1.3
 ----------------------------------------------
 ------------MOD CODE -------------------------
 -------------Credits--------------------------
@@ -18,6 +18,12 @@ SMODS.current_mod.set_debuff = function(card)
         return true
     end
     if card.ability.enemy and G.GAME.hit_3C_countdown_e and (card.config.center ~= G.P_CENTERS.c_base) then
+        return true
+    end
+    if card.ability.hit_loyal and ((G.GAME and G.GAME.negate_hand or 1) < 0) then
+        return true
+    end
+    if card.ability.hit_rival and not ((G.GAME and G.GAME.negate_hand or 1) < 0) then
         return true
     end
 end
@@ -80,6 +86,8 @@ SMODS.Atlas({ key = "stickers", atlas_table = "ASSET_ATLAS", path = "stickers.pn
         G['hit_suitless'] = Sprite(0, 0, G.CARD_W, G.CARD_H, G[self.atlas_table][self.key_noloc or self.key], {x = 0,y = 2})
     end
 })
+
+SMODS.Atlas({ key = "stickers2", atlas_table = "ASSET_ATLAS", path = "stickers2.png", px = 71, py = 95})
 
 SMODS.current_mod.custom_collection_tabs = function()
 	return { UIBox_button {
@@ -2050,7 +2058,7 @@ SMODS.Booster {
     SMODS.Blind {
         loc_txt = {
             name = 'The Steel',
-            text = { 'Every 5th hit stands', '#1# / 3' }
+            text = { 'Every 5th hit stands', '#1# / 5' }
         },
         key = 'steel',
         name = "The Steel",
@@ -2284,6 +2292,58 @@ SMODS.Enhancement {
     end,
     loc_vars = function(self, info_queue, card)
         return { vars = {card.ability.bonus, card.ability.x_mult} }
+    end
+}
+
+SMODS.Sticker {
+    key = 'loyal',
+    rate = 0.2,
+    atlas = 'stickers2',
+    pos = { x = 0, y = 0 },
+    colour = HEX 'CACA73',
+    badge_colour = HEX 'CACA73',
+    should_apply = function(self, card, center, area)
+        if G.GAME.modifiers and G.GAME.modifiers.dungeon and (((card.area == G.shop_jokers) and (G.shop_jokers ~= nil)) or ((card.area == G.pack_cards) and (G.pack_cards ~= nil))) and (card.ability.set == "Joker") and (pseudorandom(pseudoseed('loyal')) < 0.2) then
+            return true
+        end
+        return false
+    end,
+    loc_txt = {
+        name = "Loyal",
+        text = {
+            "{C:red}Debuffed{} during",
+            "Enemy {C:attention}hands{}",
+        },
+        label = "Loyal"
+    },
+    apply = function(self, card, val)
+        card.ability[self.key] = val
+        card:set_debuff()
+    end
+}
+
+SMODS.Sticker {
+    key = 'rival',
+    rate = 0,
+    atlas = 'stickers2',
+    pos = { x = 1, y = 0 },
+    colour = HEX 'CA7373',
+    badge_colour = HEX 'CA7373',
+    should_apply = function(self, card, center, area)
+        return false
+    end,
+    loc_txt = {
+        name = "Rival",
+        text = {
+            "{C:red}Debuffed{} unless during an",
+            "Enemy {C:attention}hand{}, {C:attention}destroyed{}",
+            "at {C:attention}end of round{}"
+        },
+        label = "Rival"
+    },
+    apply = function(self, card, val)
+        card.ability[self.key] = val
+        card:set_debuff()
     end
 }
 
@@ -2857,7 +2917,22 @@ G.FUNCS.stand = function(e)
                                 G.E_MANAGER:add_event(Event({
                                     trigger = 'immediate',
                                     func = function()
+                                        for i = 1, #G.jokers.cards do
+                                            G.jokers.cards[i]:set_debuff()
+                                        end
+                                        local save_played = {}
+                                        local save_played_round = {}
+                                        for i, j in pairs(G.GAME.hands) do
+                                            if j and j.played then
+                                                save_played[i] = j.played
+                                                save_played_round[i] = j.played_this_round
+                                            end
+                                        end
                                         G.FUNCS.evaluate_play()
+                                        for i, j in pairs(save_played) do
+                                            G.GAME.hands[i].played_this_round = save_played[i]
+                                            G.GAME.hands[i].played = save_played_round[i]
+                                        end
                                         return true
                                     end
                                 }))
@@ -3044,33 +3119,33 @@ SMODS.Back {
     end,
 }
 
-SMODS.Back {
-    key = 'temporary',
-    pos = {x = 0, y = 0},
-    name = "Temporary Deck",
-    apply = function(self)
-        set_blackjack_mode()
-        G.E_MANAGER:add_event(Event({
-            func = function()
-                local suits = {'P', 'W', 'CP', 'SW'}
-                local ranks = {'A', '2', '3', '4', '5', '6', '7', '8', '9'}
-                for i = 1, #suits * #ranks do
-                    local card = pseudorandom_element(G.playing_cards, pseudoseed('collect'))
-                    card:remove()
-                end
-                for i = 1, #suits do
-                    for j = 1, #ranks do
-                        local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS['hit_' .. suits[i] .. '_' .. ranks[j]], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
-                        _card:set_sprites(_card.config.center)
-                        G.deck:emplace(_card)
-                        table.insert(G.playing_cards, _card)
-                    end
-                end
-            return true
-            end
-        }))
-    end
-}
+-- SMODS.Back {
+--     key = 'temporary',
+--     pos = {x = 0, y = 0},
+--     name = "Temporary Deck",
+--     apply = function(self)
+--         set_blackjack_mode()
+--         G.E_MANAGER:add_event(Event({
+--             func = function()
+--                 local suits = {'P', 'W', 'CP', 'SW'}
+--                 local ranks = {'A', '2', '3', '4', '5', '6', '7', '8', '9'}
+--                 for i = 1, #suits * #ranks do
+--                     local card = pseudorandom_element(G.playing_cards, pseudoseed('collect'))
+--                     card:remove()
+--                 end
+--                 for i = 1, #suits do
+--                     for j = 1, #ranks do
+--                         local _card = Card(G.deck.T.x, G.deck.T.y, G.CARD_W, G.CARD_H, G.P_CARDS['hit_' .. suits[i] .. '_' .. ranks[j]], G.P_CENTERS['c_base'], {playing_card = G.playing_card})
+--                         _card:set_sprites(_card.config.center)
+--                         G.deck:emplace(_card)
+--                         table.insert(G.playing_cards, _card)
+--                     end
+--                 end
+--             return true
+--             end
+--         }))
+--     end
+-- }
 
 SMODS.Back {
     key = 'mystic',

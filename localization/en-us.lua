@@ -738,6 +738,15 @@ return {
                     "hands to {C:blue}6{}, then {C:attention}Hit{}",
                 }
             },
+            ["7 of hit_pentacles"] = {
+                name = '',
+                text = {
+                    "Shuffle {C:attention}7 #1#{} into",
+                    "{C:attention}Full Deck{}, then destroy",
+                    "this card",
+                    "{C:inactive, s:0.8}(Rank and count changes each round){}"
+                }
+            },
             ["7 of hit_cups"] = {
                 name = '',
                 text = {
