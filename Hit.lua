@@ -30,7 +30,7 @@ end
 
 SMODS.Atlas({ key = "tags", atlas_table = "ASSET_ATLAS", path = "tags.png", px = 34, py = 34})
 
-SMODS.Atlas({ key = "decks", atlas_table = "ASSET_ATLAS", path = "backs.png", px = 71, py = 95})
+SMODS.Atlas({ key = "decks", atlas_table = "ASSET_ATLAS", path = "Backs.png", px = 71, py = 95})
 
 SMODS.Atlas({ key = "sleeves", atlas_table = "ASSET_ATLAS", path = "Sleeves.png", px = 71, py = 95})
 
